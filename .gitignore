@@ -13,6 +13,7 @@ dist-ssr
 *.local
 .gemini
 .env
+.gitflow
 
 # Editor directories and files
 .vscode/*
