@@ -1,14 +1,14 @@
 .card_container{
     background-color: #fff;
-    width: 20%;
-    padding: 1.5rem 0;
+    width: 40%;
+    padding: 1.2rem 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 1.5rem;
+    gap: 1.2rem;
     border-radius: 1rem;
-    -webkit-box-shadow: 6px 8px 10px 2px rgba(0,0,0,0.5); 
+    -webkit-box-shadow: 5px 8px 20px 1px rgba(22, 14, 14, 0.5); 
     box-shadow: 5px 8px 20px 1px rgba(0,0,0,0.1);
 }
 

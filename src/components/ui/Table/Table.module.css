@@ -1,12 +1,12 @@
 .table_container{
-    margin: 4rem;
     background-color: #fff;
-    width: 55%;
+    width: 100%;
+    max-width: 100%;
     overflow-x: auto;
     padding: .8rem;
-    border-radius: 1.5rem;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 
-                0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    border-radius: 1.2rem;
+    box-shadow: 5px 8px 20px 1px rgba(0, 0, 0, 0.05), 
+                5px 8px 20px 1px rgba(0, 0, 0, 0.05);
 }
 
 .table{
