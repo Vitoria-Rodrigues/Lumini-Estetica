@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import Home from "@/pages/Home.tsx";
+import Home from "@/pages/Home/Home";
 
 export const router = createBrowserRouter([
   {
