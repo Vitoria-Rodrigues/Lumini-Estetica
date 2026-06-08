@@ -1,6 +1,10 @@
 .btn_principal{
     font-weight: bold;
     font-size: 1rem;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
     text-align: center;
     background-color: #b77761;
     color: #fff;
@@ -10,6 +14,10 @@
     width: var(--btn-width, auto);
     box-sizing: border-box;
     cursor: pointer;
+}
+
+.btn_icon {
+    font-size: 1.2rem;
 }
 
 .btn_principal:hover {
