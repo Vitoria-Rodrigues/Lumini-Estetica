@@ -1,14 +1,23 @@
+import type { CSSProperties } from "react";
 import classes from "./Button.module.css";
 
 type ButtonProps = {
-    title: string,
+    title: string;
+    padding?: string;
+    onClick?: () => void;
 }
 
-const Button = ({title}: ButtonProps) => {
+const Button = ({ title, padding, onClick}: ButtonProps) => {
+  const dynamicStyle = {
+    "--btn-padding": padding
+  } as CSSProperties;
+
   return (
-    <div>
-      <button className={`${classes.btn_principal} ${classes.btn_primary_size}`}>{title}</button>
-    </div>
+    <button className={classes.btn_principal} 
+      style={dynamicStyle}
+      onClick={onClick}>
+      {title}
+    </button>
   )
 }
 
