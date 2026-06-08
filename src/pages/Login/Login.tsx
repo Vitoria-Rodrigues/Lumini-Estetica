@@ -23,7 +23,7 @@ const Login = () => {
         </div>
         <input type="password" placeholder="Digite a sua senha"/> 
       </div>
-          <Button title="Entrar"/>
+          <Button title="Entrar" padding=".6rem" width="80%" />
     </div>
 
     </div>

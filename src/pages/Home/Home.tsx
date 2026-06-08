@@ -3,6 +3,7 @@ import classes from "./Home.module.css";
 //Components
 import Sidebar from "@/components/layout/Sidebar/Sidebar";
 import { Card, Table, Button } from "@/components/ui";
+import { RiAddFill } from "react-icons/ri";
 
 
 const Home = () => {
@@ -38,7 +39,7 @@ const Home = () => {
                         <p>08:30</p>
                       </div>
                   </div>
-                  <Button title="Consulta"/>
+                  <Button title="Consulta" icon={RiAddFill} padding=".6rem" width="100%"/>
                 </div>
               </div>
         </div>
