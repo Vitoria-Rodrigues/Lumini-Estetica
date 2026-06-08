@@ -4,12 +4,14 @@ import classes from "./Button.module.css";
 type ButtonProps = {
     title: string;
     padding?: string;
+    width?: string;
     onClick?: () => void;
 }
 
-const Button = ({ title, padding, onClick}: ButtonProps) => {
+const Button = ({ title, padding, width, onClick}: ButtonProps) => {
   const dynamicStyle = {
-    "--btn-padding": padding
+    "--btn-padding": padding,
+    "--btn-width": width
   } as CSSProperties;
 
   return (
