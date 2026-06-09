@@ -1,0 +1,17 @@
+.search_container{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.search_container input{
+    width: 50%;
+    padding: .7rem;
+    font-weight: 500;
+    outline: none;
+    border-radius: .3rem;
+    border: 1px solid #ccc;
+    -webkit-box-shadow: 3px 5px 10px 5px rgba(0,0,0,0.6); 
+    box-shadow: 4px 5px 10px 3px rgba(0,0,0,0.12);
+}
