@@ -1,11 +1,10 @@
 //CSS
 import classes from "./Customer.module.css";
 
-
 //Components and Layouts
-import Sidebar from "@/components/layout/Sidebar/Sidebar";
+import { Sidebar, Search } from "@/components/layout";
 import { Button, Table } from "@/components/ui";
-import Search from "@/components/layout/Search/Search";
+
 
 //Icon
 import { RiAddFill } from "react-icons/ri";
