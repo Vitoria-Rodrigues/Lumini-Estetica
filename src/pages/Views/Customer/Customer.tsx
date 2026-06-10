@@ -2,10 +2,10 @@
 import classes from "./Customer.module.css";
 
 
-//Components
+//Components and Layouts
 import Sidebar from "@/components/layout/Sidebar/Sidebar";
 import { Button, Table } from "@/components/ui";
-
+import Search from "@/components/layout/Search/Search";
 
 //Icon
 import { RiAddFill } from "react-icons/ri";
@@ -23,6 +23,9 @@ const Customer = () => {
           <h3>Cliente</h3>
           <Button title={"Cliente"} icon={RiAddFill} padding=".6rem" width="15%"/>
         </span>
+        <div className={classes.search_container}>
+          <Search />
+        </div>
         <Table />
       </div>
     </div>

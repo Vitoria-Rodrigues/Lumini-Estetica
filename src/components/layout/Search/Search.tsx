@@ -26,7 +26,7 @@ const Search = ({ placeholder = "Buscar..." }: SearchProps) => {
         title="Buscar" 
         onClick={handleSearchClick}
         padding=".6rem" 
-        width="10%"
+        width="15%"
       />
     </div>
   )
