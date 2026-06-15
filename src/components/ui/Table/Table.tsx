@@ -1,12 +1,12 @@
 import classes from "./Table.module.css";
 
-interface Column<T>{
+export interface Column<T>{
     label: string;
     key: keyof T | 'actions';
     render?: (item: T) => React.ReactNode;
 }
 
-interface TableProps<T>  {
+export interface TableProps<T>  {
     columns: Column<T>[];
     data: T[];
 }
