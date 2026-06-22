@@ -35,7 +35,7 @@ export type RegisterType = keyof RegisterDataMap;
 export interface FieldConfig<T extends RegisterType> {
     name: keyof RegisterDataMap[T];
     label: string;
-    type: "text" | "number" | "email" | "tel" | "select" | "date";
+    type: "text" | "number" | "email" | "tel" | "select" | "date" | "password";
     placeholder?: string;
     required?: boolean;
     option?: string[];
