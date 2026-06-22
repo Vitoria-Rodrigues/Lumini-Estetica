@@ -1,4 +1,4 @@
-export interface CostumerData{
+export interface CustomerData{
     name: string;
     email: string;
     phone: string;
@@ -25,7 +25,7 @@ export interface ProcedureData{
 }
 
 export interface RegisterDataMap{
-    costumer: CostumerData;
+    customer: CustomerData;
     employee: EmployeeData;
     procedure: ProcedureData;
 }
