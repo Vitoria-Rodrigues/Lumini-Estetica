@@ -23,21 +23,32 @@
 }
 
 .nav_link li {
+    list-style: none;
+}
+
+.link_item {
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 0.8rem 1.2rem;
+   padding: 0.8rem 1.2rem;
     border-radius: 1rem;
     color: #000;
+    text-decoration: none; 
     cursor: pointer;
     transition: transform 0.3s ease, background-color 0.3s ease; 
-    will-change: transform; 
+    will-change: transform;
+    width: 100%;     
+    box-sizing: border-box;
 }
 
-.nav_link li.active {
-    background-color: #f6ece9;
-    transform: translateX(10px); 
+.link_item:hover {
+    background-color: #fcf6f4; 
 }
+
+.link_item.active {
+    background-color: #f6ece9;
+   transform: translateX(10px); 
+ }
 
 .side_icon {
     font-size: 1.3rem;
@@ -51,11 +62,10 @@
 }
 
 .log_out {
-    margin-top: auto;
+    margin-top: 2.5rem;
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 0.8rem 1.2rem;
     cursor: pointer;
 }
 
