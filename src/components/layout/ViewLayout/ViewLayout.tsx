@@ -1,5 +1,4 @@
 import React from "react";
-import Sidebar from "../Sidebar/Sidebar";
 import classes from "./ViewLayout.module.css";
 
 interface ViewLayoutProps {
@@ -16,13 +15,7 @@ const ViewLayout: React.FC<ViewLayoutProps> = ({
   children,
 }) => {
   return (
-    <div className={classes.container}>
-      <Sidebar />
-      <div className={classes.content}>
-        <div className={classes.employee}>
-          <p className={classes.employee_name}>Olá, Nicole</p>
-          <p className={classes.employee_role}>Atendente</p>
-        </div>
+    <>
         <span className={classes.title_container}>
           <h3>{title}</h3>
           {actionButton}
@@ -33,8 +26,7 @@ const ViewLayout: React.FC<ViewLayoutProps> = ({
           </div>
         )}
         {children}
-      </div>
-    </div>
+    </>
   );
 };
 
