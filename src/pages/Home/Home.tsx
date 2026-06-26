@@ -1,7 +1,6 @@
 import classes from "./Home.module.css";
 
 //Components
-import { Sidebar } from "@/components/layout";
 import { Card, Table, Button } from "@/components/ui";
 import { RiAddFill } from "react-icons/ri";
 
