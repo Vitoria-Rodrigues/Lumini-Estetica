@@ -1,36 +1,3 @@
-.container {
-    width: 100%;
-    height: 100vh;
-    display: flex;
-    gap: 1rem;
-}
-
-.content {
-    display: flex;
-    flex: 1;
-    margin: 1rem 3rem;
-    flex-direction: column;
-    flex-wrap: nowrap;
-}
-
-.employee {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    margin-bottom: 4rem;
-    margin-right: 3rem;
-}
-
-.employee_name {
-    font-weight: 600;
-    font-size: 1.1rem;
-}
-
-.employee_role {
-    font-weight: 600;
-    color: #b2b2b2;
-}
-
 .title_container {
     display: flex;
     justify-content: space-between;
