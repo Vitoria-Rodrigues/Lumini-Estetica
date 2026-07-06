@@ -4,6 +4,13 @@ import './styles/App.css';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './routes';
 
+//Auth
+import { AuthProvider } from './contexts/AuthContext';
+
 export default function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  );
 }
