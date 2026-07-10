@@ -27,10 +27,11 @@
 }
 
 .link_item {
+    background-color: #fff;
     display: flex;
     align-items: center;
     gap: 1rem;
-   padding: 0.8rem 1.2rem;
+    padding: 0.8rem 1.2rem;
     border-radius: 1rem;
     color: #000;
     text-decoration: none; 
@@ -39,6 +40,7 @@
     will-change: transform;
     width: 100%;     
     box-sizing: border-box;
+    border: none;
 }
 
 .link_item:hover {

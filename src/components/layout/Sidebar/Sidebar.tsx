@@ -1,4 +1,6 @@
 import { NavLink } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext/useAuth";
+
 
 //Logo
 import LogoM from "../../../assets/lumini-mulher.png";
@@ -11,7 +13,12 @@ import { TfiLayoutGrid2 } from "react-icons/tfi";
 import classes from "./Sidebar.module.css";
 
 const Sidebar = () => {
+  const { signOut } = useAuth();
   const getLink = ({ isActive } : {isActive: boolean }) => isActive ? `${classes.link_item} ${classes.active}` : classes.link_item;
+
+  const handleLogout = async () => {
+  await signOut();
+};
 
   return (
     <div className={classes.sidebar_container}>
@@ -56,10 +63,10 @@ const Sidebar = () => {
             </li>
           </ul>
         <div className={classes.log_out}>
-            <NavLink to="/login" className={getLink}>
-              <span className={classes.side_icon}><FiLogOut /></span>
-              <span className={classes.side_text_log}>Logout</span>
-            </NavLink>
+          <button onClick={handleLogout} className={classes.link_item}>
+            <span className={classes.side_icon}><FiLogOut /></span>
+            <span className={classes.side_text_log}>Logout</span>
+          </button>
         </div>
         </div>
     </div>
