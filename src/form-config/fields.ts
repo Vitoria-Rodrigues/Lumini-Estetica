@@ -11,7 +11,7 @@ export const REGISTER_FIELDS: { [K in RegisterType]: FieldConfig<K>[] } = {
         { name: "name", label: "Nome:", type: "text", required: true },
         { name: "cpf", label: "CPF:", type: "text", placeholder: "111.111.111-11",required: true },
         { name: "phone", label: "Telefone:", type: "tel", placeholder: "(11)91111-11110", required: true },
-        { name: "role", label: "Função:", type: "text", required: true },
+        { name: "role", label: "Função:", type: "select", required: true, option: ["esteticista", "recepcionista", "massagista", "depiladora", "admin"]},
         { name: "specialty", label: "Especialidade:", type: "text", required: true },
         { name: "salary", label: "Salario:", type: "number", required: true },
         { name: "email", label: "Email:", type: "email", placeholder: "email@exemple.com", required: true },
