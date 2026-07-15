@@ -1,32 +1,36 @@
 import { supabase } from "@/services/supabase";
 import type { EmployeeData } from "@/form-config/types";
+import { FunctionsHttpError } from "@supabase/supabase-js";
 
 export type AppRole = "admin" | "recepcionista" | "esteticista" | "massagista" | "depiladora";
 
 export const employeeService = {
     async createEmployee(data: EmployeeData) {
-        const {data: authData, error: authError} = await supabase.auth.admin.createUser({
-            email: data.email,
-            password: data.password,
-            email_confirm: true,
-            user_metadata: {
-                app_role: data.role,
-            },
+        const { data: response, error } = await supabase.functions.invoke("create-employee", {
+            body: data,
         });
 
-        if(authError) throw authError;
+        if (error) {
+            if (error instanceof FunctionsHttpError) {
+                try {
+                    const errorJson = await error.context.json();
+                    console.error("[Edge Function Error Details]:", errorJson);
+                    throw new Error(errorJson.error || errorJson.message || "Erro interno da Edge Function");
+                } catch (parseError) {
+                    // Se não for um JSON válido ou não tiver os campos, repassa o erro original
+                    if (parseError instanceof Error && parseError.message !== "Erro interno da Edge Function") {
+                        throw parseError;
+                    }
+                }
+            }
+            throw error;
+        }
 
-        const userId = authData.user.id;
+        if (response && response.error) {
+            throw new Error(response.error);
+        }
 
-        const {error: profileError} = await supabase.from("Funcionario").update({
-            name: data.name,
-            cpf: data.cpf,
-            phone: data.phone ?? null,
-            specialty: data.specialty,
-            salary: data.salary ?? null,
-        }).eq("user_id", userId);
-
-        if(profileError) throw profileError;
+        return response;
     },
 
     async listEmployees(){
