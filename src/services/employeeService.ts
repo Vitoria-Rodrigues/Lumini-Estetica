@@ -6,7 +6,8 @@ export type AppRole = "admin" | "recepcionista" | "esteticista" | "massagista" |
 
 export const employeeService = {
     async createEmployee(data: EmployeeData) {
-        const { data: response, error } = await supabase.functions.invoke("create-employee", {
+        const { data: response, error } = await supabase.functions
+        .invoke("create-employee", {
             body: data,
         });
 
@@ -34,21 +35,38 @@ export const employeeService = {
     },
 
     async listEmployees(){
-        const { data, error } = await supabase.from("Funcionario").select("*");
+        const { data, error } = await supabase.from("Funcionario")
+        .select("*");
 
         if(error) throw error;
 
         return data;
     },
 
+    async updateEmployee(userId: string, data: Partial<EmployeeData>){
+        const { error } = await supabase.from("Funcionario")
+        .update({
+            name:data.name,
+            cpf: data.cpf,
+            phone: data.phone ?? null,
+            salary: data.salary ?? null,
+            specialty: data.specialty,
+            app_role: data.role
+        }).eq("user_id", userId);
+
+        if(error) throw error;
+    },
+
     async deletEmployee(userId: string) {
-        const { error } = await supabase.from("Funcionario").delete().eq("user_id", userId);
+        const { error } = await supabase.from("Funcionario")
+        .delete().eq("user_id", userId);
 
         if(error) throw error;
     },
 
     async getMyProfile(){
-        const { data, error } = await supabase.from("Funcionario").select("*").single();
+        const { data, error } = await supabase.from("Funcionario")
+        .select("*").single();
 
         if(error) throw error;
 

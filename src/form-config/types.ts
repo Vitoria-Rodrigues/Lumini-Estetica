@@ -6,6 +6,7 @@ export interface CustomerData{
 }
 
 export interface EmployeeData{
+    user_id?: string;
     name: string;
     cpf: string;
     phone?: string;
@@ -14,6 +15,7 @@ export interface EmployeeData{
     salary?: number;
     email: string;
     password: string;
+    app_role: string;
 }
 
 export interface ProcedureData{
