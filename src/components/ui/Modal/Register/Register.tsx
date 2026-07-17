@@ -10,21 +10,33 @@ interface RegisterProps<T extends RegisterType>{
     onSubmit: (data: RegisterDataMap[T]) => void;
     isSubmitting?: boolean;
     dynamicOptions?: Partial<Record<keyof RegisterDataMap[T], string[]>>;
+    initialValues?: Partial<RegisterDataMap[T]> | null;
 }
 
-const Register = <T extends RegisterType> ({isOpen, onClose, type, onSubmit, isSubmitting = false, dynamicOptions}: RegisterProps<T>) => {
+const Register = <T extends RegisterType> ({isOpen, 
+    onClose, 
+    type, 
+    onSubmit, 
+    isSubmitting = false, 
+    dynamicOptions,
+    initialValues}: RegisterProps<T>) => {
 
 const [formData, setFormaData] = useState<Partial<RegisterDataMap[T]>>({});
 
 useEffect(() => {
     if(isOpen) {
-        const initialData = {} as Partial<RegisterDataMap[T]>;
-
-        REGISTER_FIELDS[type].forEach((field) => {
-            initialData[field.name] = "" as unknown as RegisterDataMap[T][keyof RegisterDataMap[T]];
-        });
-
-        setFormaData(initialData);
+        if(initialValues){
+            setFormaData(initialValues);
+        }
+        else{
+            const initialData = {} as Partial<RegisterDataMap[T]>;
+    
+            REGISTER_FIELDS[type].forEach((field) => {
+                initialData[field.name] = "" as unknown as RegisterDataMap[T][keyof RegisterDataMap[T]];
+            });
+    
+            setFormaData(initialData);
+        }
     }
 }, [isOpen, type]);
 
@@ -55,7 +67,7 @@ useEffect(() => {
     <div className={classes.overlay} onClick={isSubmitting ? undefined: onClose}>
       <div className={classes.modal_content} onClick={(e) => e.stopPropagation()}>
         <header className={classes.modal_header}>
-            <h2>Cadastrar {TITLE_MAP[type]}</h2>
+            <h2>{initialValues ? "Editar" : "Cadastrar"} {TITLE_MAP[type]}</h2>
         </header>
         <form onSubmit={handleSubmit} className={classes.form}>
             <div className={classes.fields_container}>
