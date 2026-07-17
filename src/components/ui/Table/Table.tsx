@@ -2,32 +2,42 @@ import classes from "./Table.module.css";
 
 export interface Column<T>{
     label: string;
-    key: keyof T | 'actions';
+    key: keyof T | "actions";
     render?: (item: T) => React.ReactNode;
 }
 
 export interface TableProps<T>  {
-    columns: Column<T>[];
-    data: T[];
+    columns?: Column<T>[];
+    data?: T[];
 }
 
-const Table = () => {
+const Table = <T,>({ columns = [], data = []}: TableProps<T>) => {
   return (
     <div className={classes.table_container}>
        <table className={classes.table}>
         <thead className={classes.table_head}>
             <tr>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
+                {columns.map((col, idx) => (
+                    <th key={idx}>{col.label}</th>
+                ))}
             </tr>
         </thead>
         <tbody className={classes.table_body}>
-            <tr className={classes.table_line}>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-            </tr>
+            {data.length === 0 ? (
+                <tr>
+                    <td colSpan={columns.length} style={ {textAlign: "center", padding: "2rem"}}></td>
+                </tr>
+            ) : (
+                data.map((item, rowIdx) => (
+                    <tr key={rowIdx} className={classes.table_line}>
+                        {columns.map((col, colIdx) => (
+                            <td key={colIdx}>
+                                {col.render ? col.render(item) : String(item[col.key as keyof T] ?? "")}
+                            </td>
+                        ))}
+                    </tr>
+                ))
+            )}
         </tbody>
         </table> 
     </div>
