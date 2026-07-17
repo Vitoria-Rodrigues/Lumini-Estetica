@@ -1,60 +1,174 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-//Components
+// Components
 import { ViewLayout, Search } from "@/components/layout";
 import { Button, Table, Register } from "@/components/ui";
 
-//Services
+// Services
 import { employeeService } from "@/services/employeeService";
 
-//Types
-import type { EmployeeData } from "@/form-config/types";
+//Utils
+import { formatCPF, formatPhone } from "@/utils/formatters";
 
-//Icon
+// Types
+import type { EmployeeData } from "@/form-config/types";
+import type { Column } from "@/components/ui/Table/Table";
+
+// Icons
 import { RiAddFill } from "react-icons/ri";
+import { FaRegTrashAlt } from "react-icons/fa";
+import { BsBrush } from "react-icons/bs";
 
 const Professional = () => {
+  const [employees, setEmployees] = useState<EmployeeData[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<EmployeeData | null>(null);
+
+  const fetchEmployees = async () => {
+    try {
+      const data = await employeeService.listEmployees();
+      if (data) {
+        setEmployees(data as EmployeeData[]);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar funcionarios: ", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  const handleEditClick = (employee: EmployeeData) => {
+    setEditingEmployee(employee);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteClick = async (userId?: string) => {
+    if (!userId) {
+      alert("Erro: ID do profissional não encontrado.");
+      return;
+    }
+    if (window.confirm("Tem certeza que deseja excluir este profissional?")) {
+      try {
+        await employeeService.deletEmployee(userId);
+        alert("Profissional excluido com sucesso!");
+        fetchEmployees();
+      } catch (error) {
+        console.error("Erro ao excluir: ", error);
+        alert("Erro ao excluir profissional.");
+      }
+    }
+  };
 
   const handleRegisterSubmit = async (data: EmployeeData) => {
-    try{
+    try {
       setIsSubmitting(true);
-      await employeeService.createEmployee(data);
-      alert("Profissional cadastrar com sucesso!");
+      if (editingEmployee) {
+        // Editing
+        if (!editingEmployee.user_id) {
+          alert("Erro: ID do profissional não encontrado.");
+          return;
+        }
+        await employeeService.updateEmployee(editingEmployee.user_id, data);
+        alert("Profissional atualizado com sucesso!");
+      } else {
+        // Creating
+        await employeeService.createEmployee(data);
+        alert("Profissional cadastrado com sucesso!");
+      }
       setIsModalOpen(false);
-
+      setEditingEmployee(null);
+      fetchEmployees();
     } catch (error) {
-      console.error("Erro ao cadastrar profissional:", error);
-      const errorMessage = error instanceof Error ? error.message : "Não foi possível cadastrar.";
+      console.error("Erro ao salvar profissional:", error);
+      const errorMessage = error instanceof Error ? error.message : "Não foi possível salvar.";
       alert(`Erro: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingEmployee(null);
+  };
+
+  const columns: Column<EmployeeData>[] = [
+    { label: "Nome", key: "name" },
+    { label: "CPF", key: "cpf", render: (employee) => formatCPF(employee.cpf)},
+    { label: "Telefone", key: "phone", render: (employee) => formatPhone(employee.phone)},
+    { label: "Função", key: "app_role" },
+    { label: "Especialidade", key: "specialty" },
+    {
+      label: "Ações",
+      key: "actions",
+      render: (employee) => (
+        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
+          <button
+            onClick={() => handleEditClick(employee)}
+            style={{
+              background: "#B25E21",
+              border: "none",
+              cursor: "pointer",
+              color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              padding: ".5rem 1.2rem",
+              borderRadius: "1rem",
+            }}
+            title="Editar profissional"
+          >
+            <BsBrush size={16} />
+          </button>
+          <button
+            onClick={() => handleDeleteClick(employee.user_id)}
+            style={{
+              background: "#9D1806",
+              border: "none",
+              cursor: "pointer",
+              color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              padding: ".5rem 1.2rem",
+              borderRadius: "1rem",
+            }}
+            title="Excluir profissional"
+          >
+            <FaRegTrashAlt size={16} />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <ViewLayout
       title="Funcionário"
       actionButton={
-        <Button 
-          title={"Funcionário"} 
-          icon={RiAddFill} 
-          padding=".6rem" 
+        <Button
+          title={"Funcionário"}
+          icon={RiAddFill}
+          padding=".6rem"
           width="15%"
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setEditingEmployee(null);
+            setIsModalOpen(true);
+          }}
         />
       }
       searchComponent={<Search placeholder="Digite o nome do profissional.." />}
     >
-      <Table />
+      <Table columns={columns} data={employees} />
 
       <Register
         type="employee"
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
         onSubmit={handleRegisterSubmit}
         isSubmitting={isSubmitting}
+        initialValues={editingEmployee}
       />
     </ViewLayout>
   );
