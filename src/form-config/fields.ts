@@ -3,14 +3,14 @@ import type { FieldConfig, RegisterType } from "./types";
 export const REGISTER_FIELDS: { [K in RegisterType]: FieldConfig<K>[] } = {
     customer: [
         { name: "name", label: "Nome:", type: "text", required: true },
-        { name: "email", label: "E-mail:", type: "email", required: true },
-        { name: "phone", label: "Telefone:", type: "tel", required: true },
+        { name: "cpf", label: "CPF:", type: "text", placeholder: "111.111.111-11", required: true, maxLength: 14},
+        { name: "phone", label: "Telefone:", type: "tel", required: true, maxLength: 14 },
         { name: "birthDate", label: "Date de Nascimento:", type: "date" },
     ],
     employee: [
         { name: "name", label: "Nome:", type: "text", required: true },
-        { name: "cpf", label: "CPF:", type: "text", placeholder: "111.111.111-11",required: true },
-        { name: "phone", label: "Telefone:", type: "tel", placeholder: "(11)91111-11110", required: true },
+        { name: "cpf", label: "CPF:", type: "text", placeholder: "111.111.111-11",required: true, maxLength: 14 },
+        { name: "phone", label: "Telefone:", type: "tel", placeholder: "(11)91111-11110", required: true, maxLength: 14 },
         { name: "role", label: "Função:", type: "select", required: true, option: ["esteticista", "recepcionista", "massagista", "depiladora", "admin"]},
         { name: "specialty", label: "Especialidade:", type: "text", required: true },
         { name: "salary", label: "Salario:", type: "number", required: true },

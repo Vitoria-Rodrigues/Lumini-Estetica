@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import type { RegisterType, RegisterDataMap } from "@/form-config/types";
 import { REGISTER_FIELDS, TITLE_MAP } from "@/form-config/fields";
 import classes from "./Register.module.css";
+import { formatCPF, formatPhone } from "@/utils/formatters";
+
 
 interface RegisterProps<T extends RegisterType>{
     isOpen: boolean;
@@ -45,8 +47,15 @@ useEffect(() => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         if(isSubmitting) return;
 
-        const { name, value, type: inputType } = e.target;
+        let { name, value, type: inputType } = e.target;
  
+        if (name === "cpf") {
+        value = formatCPF(value);
+
+        } else if (name === "phone"){
+            value = formatPhone(value);
+        } 
+
         setFormaData((prev) => ({
             ...prev,
             [name as keyof RegisterDataMap[T]]: inputType === "number" 
@@ -101,6 +110,7 @@ useEffect(() => {
                                 placeholder={field.placeholder || ""}
                                 required={field.required}
                                 onChange={handleChange}
+                                maxLength={field.maxLength}
                                 disabled={isSubmitting}/>
                             )}
                         </div>

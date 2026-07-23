@@ -1,6 +1,6 @@
 export interface CustomerData{
     name: string;
-    email: string;
+    cpf: string;
     phone: string;
     birthDate: string;
 }
@@ -39,6 +39,7 @@ export interface FieldConfig<T extends RegisterType> {
     label: string;
     type: "text" | "number" | "email" | "tel" | "select" | "date" | "password";
     placeholder?: string;
+    maxLength?: number;
     required?: boolean;
     option?: string[];
 }
