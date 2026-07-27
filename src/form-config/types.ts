@@ -41,7 +41,7 @@ export interface FieldConfig<T extends RegisterType> {
     placeholder?: string;
     maxLength?: number;
     required?: boolean;
-    option?: string[];
+    option?: string[] | { label: string; value: string }[];
 }
 
 
