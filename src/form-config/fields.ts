@@ -23,7 +23,7 @@ export const REGISTER_FIELDS: { [K in RegisterType]: FieldConfig<K>[] } = {
         { name: "description", label: "Descrição:", type: "text", placeholder: "Explique brevemente sobre o procedimento", required: true },
         { name: "price", label: "Preço:", type: "number", required: true },
         { name: "duration", label: "Duração:", type: "text", required: true },
-        { name: "category", label: "Categoria:", type: "select", required: true },
+        { name: "category", label: "Categoria:", type: "select", required: true, option:["corporal", "facial"]},
     ],
 };
 

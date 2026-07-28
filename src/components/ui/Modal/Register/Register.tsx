@@ -4,14 +4,13 @@ import { REGISTER_FIELDS, TITLE_MAP } from "@/form-config/fields";
 import classes from "./Register.module.css";
 import { formatCPF, formatPhone } from "@/utils/formatters";
 
-
 interface RegisterProps<T extends RegisterType>{
     isOpen: boolean;
     onClose: () => void;
     type: T;
     onSubmit: (data: RegisterDataMap[T]) => void;
     isSubmitting?: boolean;
-    dynamicOptions?: Partial<Record<keyof RegisterDataMap[T], string[]>>;
+    dynamicOptions?: Partial<Record<keyof RegisterDataMap[T], string[] | { label: string; value: string }[]>>;
     initialValues?: Partial<RegisterDataMap[T]> | null;
 }
 
@@ -85,8 +84,12 @@ useEffect(() => {
                     const rawValue = formData[field.name];
                     const value = String(rawValue ?? "");
 
-                    const selectOptions = (dynamicOptions?.[field.name as keyof RegisterDataMap[T]])
+                    const rawOptions = (dynamicOptions?.[field.name as keyof RegisterDataMap[T]])
                     || field.option || [];
+
+                    const selectOptions = rawOptions.map(opt =>
+                        typeof opt === "string" ? { label: opt, value: opt } : opt
+                    );
 
                     return (
                         <div key={fieldName} className={classes.form_group}>
@@ -99,7 +102,7 @@ useEffect(() => {
                                 disabled={isSubmitting}>
                                     <option value="">Selecione uma opção..</option>
                                     {selectOptions.map((opt) => (
-                                        <option key={opt} value={opt}>{opt}</option>
+                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
                                     ))}
                                 </select> 
                             ) : (
