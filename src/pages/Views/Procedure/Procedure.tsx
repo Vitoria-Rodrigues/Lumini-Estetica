@@ -12,6 +12,8 @@ import type { Column } from "@/components/ui/Table/Table";
 
 //icon
 import { RiAddFill } from "react-icons/ri";
+import { BsBrush } from "react-icons/bs";
+import { FaRegTrashAlt } from "react-icons/fa";
 
 const Procedure = () => {
   const [procedure, setProcedure] = useState<ProcedureDbRow[]>([]);
@@ -20,6 +22,7 @@ const Procedure = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [categories, setCategories] = useState<categoryDbRow[]>([]);
+  const [editingProcedure, setEditingProcedure] = useState<ProcedureDbRow | null>(null);
 
   useEffect(() => {
     categoryService.listCategories().then(setCategories);
@@ -45,13 +48,45 @@ const Procedure = () => {
     loadProcedure();
   }, []);
 
+  const handleEditClick = (proc: ProcedureDbRow) => {
+    setEditingProcedure(proc);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteClick = async (idProcedure?: string) => {
+    if (!idProcedure) {
+      alert("Erro: ID do procedimento não encontrado");
+      return;
+    }
+    if (window.confirm("Tem certeza que deseja excluir este procedimento?")) {
+      try {
+        await procedureService.deleteProcedure(idProcedure);
+        alert("Procedimento excluído com sucesso!");
+        loadProcedure();
+      } catch (err) {
+        console.error("Erro ao excluir: ", err);
+        alert("Erro ao excluir procedimento.");
+      }
+    }
+  };
+
   const handleRegisterSubmit = async (data: ProcedureData) => {
     try {
       setIsSubmitting(true);
+      if (editingProcedure) {
+        if (!editingProcedure.id_prodecimento) {
+          alert("Erro: ID do procedimento não encontrado");
+          return;
+        }
+        await procedureService.updateProcedure(editingProcedure.id_prodecimento, data);
+        alert("Procedimento atualizado com sucesso!");
+      } else {
         await procedureService.createProcedure(data);
         alert("Procedimento cadastrado com sucesso!");
-        setIsModalOpen(false);
-        loadProcedure();
+      }
+      setIsModalOpen(false);
+      setEditingProcedure(null);
+      loadProcedure();
     } catch (error) {
       console.error("Erro ao salvar o procedimento:", error);
       alert("Erro ao salvar o procedimento. Verifique os dados e tente novamente.");
@@ -62,6 +97,7 @@ const Procedure = () => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setEditingProcedure(null);
   };
 
   const columns: Column<ProcedureDbRow>[] = [
@@ -81,6 +117,46 @@ const Procedure = () => {
         return cat ? cat.descricao : (proc.category || "");
       }
     },
+    {
+      label: "Ações",
+      key: "actions",
+      render: (proc) => (
+        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
+          <button
+            onClick={() => handleEditClick(proc)}
+            style={{
+              background: "#B25E21",
+              border: "none",
+              cursor: "pointer",
+              color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              padding: ".5rem 1.2rem",
+              borderRadius: "1rem",
+            }}
+            title="Editar procedimento"
+          >
+            <BsBrush size={16} />
+          </button>
+          <button
+            onClick={() => handleDeleteClick(proc.id_prodecimento)}
+            style={{
+              background: "#9D1806",
+              border: "none",
+              cursor: "pointer",
+              color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              padding: ".5rem 1.2rem",
+              borderRadius: "1rem",
+            }}
+            title="Excluir procedimento"
+          >
+            <FaRegTrashAlt size={16} />
+          </button>
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -93,6 +169,7 @@ const Procedure = () => {
           padding=".6rem" 
           width="15%"
           onClick={() => {
+            setEditingProcedure(null);
             setIsModalOpen(true);
           }}
         />
@@ -114,6 +191,7 @@ const Procedure = () => {
         onSubmit={handleRegisterSubmit}
         isSubmitting={isSubmitting} 
         dynamicOptions={{category: categories.map(c => ({ label: c.descricao, value: c.id_category }))}}
+        initialValues={editingProcedure}
       />
     </ViewLayout>
   );
