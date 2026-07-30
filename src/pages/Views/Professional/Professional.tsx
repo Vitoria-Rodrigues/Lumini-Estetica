@@ -7,6 +7,9 @@ import { Button, Table, Register } from "@/components/ui";
 // Services
 import { employeeService } from "@/services/employeeService";
 
+//Context
+import { Toaster } from "@/components/ui";
+
 //Utils
 import { formatCPF, formatPhone } from "@/utils/formatters";
 
@@ -18,12 +21,14 @@ import type { Column } from "@/components/ui/Table/Table";
 import { RiAddFill } from "react-icons/ri";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { BsBrush } from "react-icons/bs";
+import { useToaster } from "@/contexts/ToasterContext/useToaster";
 
 const Professional = () => {
   const [employees, setEmployees] = useState<EmployeeData[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<EmployeeData | null>(null);
+  const { addToast } = useToaster();
 
   const fetchEmployees = async () => {
     try {
@@ -33,6 +38,7 @@ const Professional = () => {
       }
     } catch (error) {
       console.error("Erro ao carregar funcionarios: ", error);
+      addToast("Erro ao carregar os clientes", "error");
     }
   };
 
@@ -47,17 +53,17 @@ const Professional = () => {
 
   const handleDeleteClick = async (userId?: string) => {
     if (!userId) {
-      alert("Erro: ID do profissional não encontrado.");
+      addToast("Erro: ID do profissional não encontrado", "error");
       return;
     }
     if (window.confirm("Tem certeza que deseja excluir este profissional?")) {
       try {
         await employeeService.deletEmployee(userId);
-        alert("Profissional excluido com sucesso!");
+        addToast("Profissional excluido com sucesso!", "success");
         fetchEmployees();
       } catch (error) {
         console.error("Erro ao excluir: ", error);
-        alert("Erro ao excluir profissional.");
+        addToast("Erro ao excluir profissional", "error");
       }
     }
   };
@@ -68,23 +74,24 @@ const Professional = () => {
       if (editingEmployee) {
         // Editing
         if (!editingEmployee.user_id) {
-          alert("Erro: ID do profissional não encontrado.");
+          addToast("ID do profissional não encontrado", "error");
           return;
         }
         await employeeService.updateEmployee(editingEmployee.user_id, data);
-        alert("Profissional atualizado com sucesso!");
+        addToast("Profissional atualizado com sucesso!", "success");
       } else {
         // Creating
         await employeeService.createEmployee(data);
-        alert("Profissional cadastrado com sucesso!");
+        addToast("Profissional cadastrado com sucesso!", "success");
       }
+
       setIsModalOpen(false);
       setEditingEmployee(null);
       fetchEmployees();
+
     } catch (error) {
       console.error("Erro ao salvar profissional:", error);
-      const errorMessage = error instanceof Error ? error.message : "Não foi possível salvar.";
-      alert(`Erro: ${errorMessage}`);
+      addToast("Erro ao salvar profissional", "error");
     } finally {
       setIsSubmitting(false);
     }

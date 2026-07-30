@@ -10,6 +10,9 @@ import { ViewLayout, Search } from "@/components/layout";
 import { Button, Table, Register } from "@/components/ui";
 import type { Column } from "@/components/ui/Table/Table";
 
+//Context
+import { useToaster } from "@/contexts/ToasterContext/useToaster";
+
 //Icon
 import { RiAddFill } from "react-icons/ri";
 import { BsBrush } from "react-icons/bs";
@@ -17,25 +20,21 @@ import { FaRegTrashAlt } from "react-icons/fa";
 
 const Customer = () => {
   const [customers, setCustomers] = useState<CustomerDbRow[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [editingCustomer, setEditingCustomer] = useState<CustomerDbRow | null>(null);
+  const { addToast } = useToaster();
+
 
   const loadCustomer = async () => {
     try {
-      setIsLoading(true);
-      setError(null);
       const data = await customerService.listCustomers();
         if (data) {
           setCustomers(data);
         }
     } catch (err) {
       console.error("Erro ao carregar clientes: ", err);
-      setError("Erro ao carregar clientes.");
-    } finally {
-      setIsLoading(false);
+      addToast("Erro ao carregar os clientes", "error");
     }
   };
 
@@ -50,17 +49,18 @@ const Customer = () => {
 
   const handleDeleteClick = async (idCliente?: string) => {
     if(!idCliente) {
-      alert("Erro: ID do cliente não encontrado");
+      addToast("Erro ao editar dados.", "error");
       return
     }
     if(window.confirm("Tem certeza que deseja excluir este cliente?")){
       try {
         await customerService.deleteCustomer(idCliente);
-        alert("Cliente excluido com sucesso")
+        addToast("Cliente excluido com sucesso", "success");
         loadCustomer();
       } catch (error) {
         console.error("Erro ao excluir: ", error);
-        alert("Erro ao excluir cliente.");
+        addToast("Erro ao excluir cliente.", "error");
+        
       }
     }
   };
@@ -70,22 +70,21 @@ const Customer = () => {
       setIsSubmitting(true);
       if(editingCustomer){
         if(!editingCustomer.id_cliente){
-          alert("Erro: ID do cliente nao encontrado");
+          addToast("Erro ao editar dados.", "error");
           return;
         }
         await customerService.updateCustomer(editingCustomer.id_cliente, data);
-        alert("Cliente atualizado com sucesso!");
+        addToast("Cliente atualizado com sucesso!", "success");
       } else {
         await customerService.createCustomer(data);
-        alert("Cliente cadastrado com sucesso!");
+        addToast("Cliente cadastrado com sucesso!.", "success");
       }
       setIsModalOpen(false);
       setEditingCustomer(null);
       loadCustomer();
     } catch (err) {
+      addToast("Erro ao cadastrar o cliente.", "error");
       console.error("Erro ao cadastrar cliente:", err);
-      const errorMessage = err instanceof Error ? err.message : "Não foi possível salvar.";
-      alert(`Erro: ${errorMessage}`);
     } finally{
       setIsSubmitting(false);
     }
@@ -168,11 +167,8 @@ const Customer = () => {
     }
       searchComponent={<Search />}
     >
-      {isLoading ? 
-      ( <p>Carregando clientes..</p>) : 
-      error ? (<p style={{ color: "red"}}>{error}</p>) :
-       (<Table columns={columns} data={customers} />)
-    }
+
+    <Table columns={columns} data={customers} />
     
     <Register 
     type="customer"
