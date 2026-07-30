@@ -5,6 +5,9 @@ import type { ProcedureData } from "@/form-config/types";
 import { procedureService, type ProcedureDbRow } from "@/services/procedureService";
 import { categoryService, type categoryDbRow } from "@/services/categoryService";
 
+//Context
+import { useToaster } from "@/contexts/ToasterContext/useToaster";
+
 //Components
 import { ViewLayout, Search } from "@/components/layout";
 import { Button, Table, Register } from "@/components/ui";
@@ -17,12 +20,11 @@ import { FaRegTrashAlt } from "react-icons/fa";
 
 const Procedure = () => {
   const [procedure, setProcedure] = useState<ProcedureDbRow[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [categories, setCategories] = useState<categoryDbRow[]>([]);
   const [editingProcedure, setEditingProcedure] = useState<ProcedureDbRow | null>(null);
+  const { addToast } = useToaster();
 
   useEffect(() => {
     categoryService.listCategories().then(setCategories);
@@ -30,17 +32,13 @@ const Procedure = () => {
 
   const loadProcedure = async () => {
     try {
-      setIsLoading(true);
-      setError(null);
       const data = await procedureService.listProcedures();
       if (data) {
         setProcedure(data);
       }
     } catch (error) {
-      console.error("Erro ao carregar os procedimentos: ", error);
-      setError("Erro ao carregar procedimentos.");
-    } finally {
-      setIsLoading(false);
+      console.error("Erro: ", error);
+      addToast("Erro ao carregar os procedimentos", "error");
     }
   };
 
@@ -56,16 +54,17 @@ const Procedure = () => {
   const handleDeleteClick = async (idProcedure?: string) => {
     if (!idProcedure) {
       alert("Erro: ID do procedimento não encontrado");
+      addToast("Erro ao carregar os procedimentos", "error");
       return;
     }
     if (window.confirm("Tem certeza que deseja excluir este procedimento?")) {
       try {
         await procedureService.deleteProcedure(idProcedure);
-        alert("Procedimento excluído com sucesso!");
+        addToast("Procedimento excluído com sucesso!", "success");
         loadProcedure();
       } catch (err) {
         console.error("Erro ao excluir: ", err);
-        alert("Erro ao excluir procedimento.");
+        addToast("Erro ao excluir procedimento", "error");
       }
     }
   };
@@ -75,21 +74,21 @@ const Procedure = () => {
       setIsSubmitting(true);
       if (editingProcedure) {
         if (!editingProcedure.id_prodecimento) {
-          alert("Erro: ID do procedimento não encontrado");
+          addToast("ID do procedimento não encontrado", "error");
           return;
         }
         await procedureService.updateProcedure(editingProcedure.id_prodecimento, data);
-        alert("Procedimento atualizado com sucesso!");
+        addToast("Procedimento atualizado com sucesso!", "success");
       } else {
         await procedureService.createProcedure(data);
-        alert("Procedimento cadastrado com sucesso!");
+        addToast("Procedimento cadastrado com sucesso!", "success");
       }
       setIsModalOpen(false);
       setEditingProcedure(null);
       loadProcedure();
     } catch (error) {
       console.error("Erro ao salvar o procedimento:", error);
-      alert("Erro ao salvar o procedimento. Verifique os dados e tente novamente.");
+      addToast("Erro ao salvar o procedimento.", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -176,13 +175,8 @@ const Procedure = () => {
       }
       searchComponent={<Search placeholder="Digite o nome do procedimento.." />}
     >
-      {isLoading ? (
-        <p>Carregando procedimentos..</p>
-      ) : error ? (
-        <p style={{ color: "red" }}>{error}</p>
-      ) : (
+
         <Table columns={columns} data={procedure} />
-      )}
 
       <Register 
         type="procedure"
