@@ -7,7 +7,7 @@ import { formatCPF, formatPhone } from "@/utils/formatters";
 
 //Components
 import { ViewLayout, Search } from "@/components/layout";
-import { Button, Table, Register } from "@/components/ui";
+import { Button, Table, Register, TableSkeleton } from "@/components/ui";
 import type { Column } from "@/components/ui/Table/Table";
 
 //Context
@@ -20,6 +20,7 @@ import { FaRegTrashAlt } from "react-icons/fa";
 
 const Customer = () => {
   const [customers, setCustomers] = useState<CustomerDbRow[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [editingCustomer, setEditingCustomer] = useState<CustomerDbRow | null>(null);
@@ -28,6 +29,7 @@ const Customer = () => {
 
   const loadCustomer = async () => {
     try {
+      setIsLoading(true);
       const data = await customerService.listCustomers();
         if (data) {
           setCustomers(data);
@@ -35,6 +37,8 @@ const Customer = () => {
     } catch (err) {
       console.error("Erro ao carregar clientes: ", err);
       addToast("Erro ao carregar os clientes", "error");
+    } finally{
+      setIsLoading(false);
     }
   };
 
@@ -168,7 +172,11 @@ const Customer = () => {
       searchComponent={<Search />}
     >
 
-    <Table columns={columns} data={customers} />
+    {isLoading ? (
+      <TableSkeleton rows={5} columns={columns.length} />
+    ) : (
+      <Table columns={columns} data={customers} />
+    )}
     
     <Register 
     type="customer"

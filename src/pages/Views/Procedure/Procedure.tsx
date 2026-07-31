@@ -10,7 +10,7 @@ import { useToaster } from "@/contexts/ToasterContext/useToaster";
 
 //Components
 import { ViewLayout, Search } from "@/components/layout";
-import { Button, Table, Register } from "@/components/ui";
+import { Button, Table, Register, TableSkeleton } from "@/components/ui";
 import type { Column } from "@/components/ui/Table/Table";
 
 //icon
@@ -20,6 +20,7 @@ import { FaRegTrashAlt } from "react-icons/fa";
 
 const Procedure = () => {
   const [procedure, setProcedure] = useState<ProcedureDbRow[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [categories, setCategories] = useState<categoryDbRow[]>([]);
@@ -32,6 +33,7 @@ const Procedure = () => {
 
   const loadProcedure = async () => {
     try {
+      setIsLoading(true);
       const data = await procedureService.listProcedures();
       if (data) {
         setProcedure(data);
@@ -39,6 +41,8 @@ const Procedure = () => {
     } catch (error) {
       console.error("Erro: ", error);
       addToast("Erro ao carregar os procedimentos", "error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -176,7 +180,11 @@ const Procedure = () => {
       searchComponent={<Search placeholder="Digite o nome do procedimento.." />}
     >
 
-        <Table columns={columns} data={procedure} />
+    {isLoading ? (
+      <TableSkeleton rows={5} columns={columns.length} />
+    ) : (
+      <Table columns={columns} data={procedure} />
+    )}
 
       <Register 
         type="procedure"

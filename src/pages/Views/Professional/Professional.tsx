@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 // Components
 import { ViewLayout, Search } from "@/components/layout";
-import { Button, Table, Register } from "@/components/ui";
+import { Button, Table, Register, TableSkeleton } from "@/components/ui";
 
 // Services
 import { employeeService } from "@/services/employeeService";
@@ -25,6 +25,7 @@ import { useToaster } from "@/contexts/ToasterContext/useToaster";
 
 const Professional = () => {
   const [employees, setEmployees] = useState<EmployeeData[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<EmployeeData | null>(null);
@@ -32,6 +33,7 @@ const Professional = () => {
 
   const fetchEmployees = async () => {
     try {
+      setIsLoading(true);
       const data = await employeeService.listEmployees();
       if (data) {
         setEmployees(data as EmployeeData[]);
@@ -39,6 +41,8 @@ const Professional = () => {
     } catch (error) {
       console.error("Erro ao carregar funcionarios: ", error);
       addToast("Erro ao carregar os clientes", "error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -167,7 +171,11 @@ const Professional = () => {
       }
       searchComponent={<Search placeholder="Digite o nome do profissional.." />}
     >
+    {isLoading ? (
+      <TableSkeleton rows={5} columns={columns.length} />
+    ) : (
       <Table columns={columns} data={employees} />
+    )}
 
       <Register
         type="employee"
