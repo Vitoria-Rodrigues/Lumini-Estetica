@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react";
+
 import type { RegisterType, RegisterDataMap } from "@/form-config/types";
 import { REGISTER_FIELDS, TITLE_MAP } from "@/form-config/fields";
-import classes from "./Register.module.css";
+
 import { formatCPF, formatPhone } from "@/utils/formatters";
+
+import CustomSelect from "../../CustomSelect/CustomSelect";
+
+import classes from "./Register.module.css";
 
 interface RegisterProps<T extends RegisterType>{
     isOpen: boolean;
@@ -10,8 +15,21 @@ interface RegisterProps<T extends RegisterType>{
     type: T;
     onSubmit: (data: RegisterDataMap[T]) => void;
     isSubmitting?: boolean;
-    dynamicOptions?: Partial<Record<keyof RegisterDataMap[T], string[] | { label: string; value: string }[]>>;
+    dynamicOptions?: Partial<Record<keyof RegisterDataMap[T], string[] | { label: string; value: string; [key: string]: unknown }[]>>;
     initialValues?: Partial<RegisterDataMap[T]> | null;
+}
+function isSessionData(
+    type: RegisterType,
+    data: unknown
+): data is Partial<RegisterDataMap["session"]> {
+    return type === "session" && data !== null;
+}
+
+function isSessionOptions(
+    type: RegisterType,
+    options: unknown
+): options is Partial<Record<keyof RegisterDataMap["session"], { value: string; price: number }[]>> {
+    return type === "session" && options !== undefined;
 }
 
 const Register = <T extends RegisterType> ({isOpen, 
@@ -39,7 +57,38 @@ useEffect(() => {
             setFormaData(initialData);
         }
     }
-}, [isOpen, type]);
+}, [isOpen, type, initialValues]);
+
+useEffect(() => {
+    const rawData: unknown = formData;
+    const rawOpts: unknown = dynamicOptions;
+    if (isSessionData(type, rawData) && isSessionOptions(type, rawOpts)) {
+        const selectedProcedures = rawData.procedureIds;
+        const availableProcedures = rawOpts.procedureIds;
+
+        if (selectedProcedures && Array.isArray(selectedProcedures) && availableProcedures) {
+            const total = selectedProcedures.reduce((sum, id) => {
+                const proc = availableProcedures.find(p => p.value === id);
+                return sum + (proc?.price || 0);
+            }, 0);
+
+            if (rawData.price !== total) {
+                setFormaData(prev => ({
+                    ...prev,
+                    price: total
+                } as unknown as Partial<RegisterDataMap[T]>));
+            }
+        } else {
+            if (rawData.price !== 0) {
+                setFormaData(prev => ({
+                    ...prev,
+                    price: 0
+                } as unknown as Partial<RegisterDataMap[T]>));
+            }
+        }
+    }
+}, [formData, dynamicOptions, type]);
+
 
     if (!isOpen) return null;
 
@@ -84,11 +133,13 @@ useEffect(() => {
                     const rawValue = formData[field.name];
                     const value = String(rawValue ?? "");
 
-                    const rawOptions = (dynamicOptions?.[field.name as keyof RegisterDataMap[T]])
-                    || field.option || [];
+                    const dynamicOpts = dynamicOptions?.[field.name as keyof RegisterDataMap[T]];
+                    const rawOptions = dynamicOpts !== undefined
+                        ? dynamicOpts
+                        : (field.option && field.option.length > 0 ? field.option : []);
 
                     const selectOptions = rawOptions.map(opt =>
-                        typeof opt === "string" ? { label: opt, value: opt } : opt
+                        typeof opt === "string" ? { label: opt, value: opt } : { label: opt.label, value: opt.value }
                     );
 
                     return (
@@ -96,15 +147,35 @@ useEffect(() => {
                             <label htmlFor={fieldName}>{field.label}</label>
 
                             {field.type === "select" ? (
-                                <select id={fieldName}
-                                name={fieldName} value={value}
-                                required={field.required} onChange={handleChange}
-                                disabled={isSubmitting}>
-                                    <option value="">Selecione uma opção..</option>
-                                    {selectOptions.map((opt) => (
-                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                    ))}
-                                </select> 
+                            fieldName === "procedureIds" ? (
+        
+                            <CustomSelect
+                                options={selectOptions}
+                                selectedValues={Array.isArray(formData[field.name]) ? (formData[field.name] as string[]) : []}
+                                onChange={(values) => {
+                                    setFormaData((prev) => ({
+                                        ...prev,
+                                        [field.name]: values
+                                    }));
+                                }}
+                                placeholder="Selecione os procedimentos..."
+                            />
+                        ) : (
+                            <select 
+                                id={fieldName}
+                                name={fieldName} 
+                                value={value}
+                                required={field.required} 
+                                onChange={handleChange}
+                                disabled={isSubmitting}
+                            >
+                                <option value="">Selecione uma opção..</option>
+                                {selectOptions.map((opt) => (
+                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                            </select>
+                        )
+   
                             ) : (
                                 <input id={fieldName}
                                 name={fieldName}
@@ -114,7 +185,7 @@ useEffect(() => {
                                 required={field.required}
                                 onChange={handleChange}
                                 maxLength={field.maxLength}
-                                disabled={isSubmitting}/>
+                                disabled={field.disabled || isSubmitting}/>
                             )}
                         </div>
                     );

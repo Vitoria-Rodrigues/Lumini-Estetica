@@ -26,10 +26,21 @@ export interface ProcedureData{
     category: string;
 }
 
+export interface SessionData {
+    customerId: string;
+    employeeId: string;
+    procedureIds: string[];
+    date: string;
+    time: string;
+    notes?: string;
+    price: number;
+}
+
 export interface RegisterDataMap{
     customer: CustomerData;
     employee: EmployeeData;
     procedure: ProcedureData;
+    session: SessionData;
 }
 
 export type RegisterType = keyof RegisterDataMap;
@@ -41,7 +52,8 @@ export interface FieldConfig<T extends RegisterType> {
     placeholder?: string;
     maxLength?: number;
     required?: boolean;
-    option?: string[] | { label: string; value: string }[];
+    disabled?: boolean; 
+    option?: string[] | { label: string; value: string; [key: string]: unknown }[];
 }
 
 
