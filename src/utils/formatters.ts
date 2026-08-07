@@ -24,3 +24,27 @@ export const formatPhone = (phone: string | undefined | null): string => {
 
     return phone;
 }
+
+export const formatHour = (hour: string | undefined | null): string => {
+    if (!hour) return "";
+
+    const digits = hour.replace(/\D/g, "");
+
+    if (digits.length === 4) {
+        return digits.replace(/(\d{2})(\d{2})/, "$1:$2");
+    }
+
+    if (digits.length === 6) {
+        return digits.replace(/(\d{2})(\d{2})\d{2}/, "$1:$2");
+    }
+
+    if (/^\d{2}:\d{2}$/.test(hour)) {
+        return hour;
+    }
+
+    if (/^\d{2}:\d{2}:\d{2}$/.test(hour)) {
+        return hour.slice(0, 5);
+    }
+
+    return hour;
+};
