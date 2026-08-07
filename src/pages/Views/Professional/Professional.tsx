@@ -36,7 +36,7 @@ const Professional = () => {
       setIsLoading(true);
       const data = await employeeService.listEmployees();
       if (data) {
-        setEmployees(data as EmployeeData[]);
+        setEmployees(data as unknown as EmployeeData[]);
       }
     } catch (error) {
       console.error("Erro ao carregar funcionarios: ", error);

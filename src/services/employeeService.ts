@@ -4,6 +4,12 @@ import { FunctionsHttpError } from "@supabase/supabase-js";
 
 export type AppRole = "admin" | "recepcionista" | "esteticista" | "massagista" | "depiladora";
 
+export interface EmployeeDbRow {
+  id_funcionario: number;
+  user_id: string;
+  name: string;
+}
+
 export const employeeService = {
     async createEmployee(data: EmployeeData) {
         const { data: response, error } = await supabase.functions
@@ -34,13 +40,14 @@ export const employeeService = {
         return response;
     },
 
-    async listEmployees(){
+    async listEmployees(): Promise<EmployeeDbRow[]>{
         const { data, error } = await supabase.from("Funcionario")
-        .select("*");
+        .select("*")
+        .order("name", { ascending: true });
 
         if(error) throw error;
 
-        return data;
+        return (data || []) as EmployeeDbRow[];
     },
 
     async updateEmployee(userId: string, data: Partial<EmployeeData>){
