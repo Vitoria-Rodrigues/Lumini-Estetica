@@ -10,7 +10,7 @@ import { useToaster } from "@/contexts/ToasterContext/useToaster";
 
 //Components
 import { ViewLayout, Search } from "@/components/layout";
-import { Button, Table, Register, TableSkeleton } from "@/components/ui";
+import { Button, Table, Register, TableSkeleton, DescriptionPopover } from "@/components/ui";
 import type { Column } from "@/components/ui/Table/Table";
 
 //icon
@@ -105,7 +105,7 @@ const Procedure = () => {
 
   const columns: Column<ProcedureDbRow>[] = [
     { label: "Nome", key: "name" },
-    { label: "Descrição", key: "description" },
+    { label: "Descrição", key: "description", render: (item) => <DescriptionPopover text={item.description} /> },
     { 
       label: "Preço", 
       key: "price", 
