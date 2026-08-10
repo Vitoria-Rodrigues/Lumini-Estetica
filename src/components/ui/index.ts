@@ -5,3 +5,4 @@ export { default as TableSkeleton } from './Table/TableSkeleton';
 export { default as Register } from './Modal/Register/Register';
 export { default as Toaster } from './Toaster/Toaster';
 export { default as CustomSelect } from './CustomSelect/CustomSelect';
+export { default as DescriptionPopover } from './DescriptionPopover/DescriptionPopover';

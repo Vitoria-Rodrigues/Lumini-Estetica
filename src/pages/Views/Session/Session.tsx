@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 //Components
-import { Button, Table, TableSkeleton, Register } from "@/components/ui";
+import { Button, Table, TableSkeleton, Register, DescriptionPopover } from "@/components/ui";
 import { ViewLayout, Search } from "@/components/layout";
 import type { Column } from "@/components/ui/Table/Table";
 
@@ -195,7 +195,13 @@ const Session = () => {
     {
       label: "Procedimento",
       key: "id_procedimento",
-      render: (item) => item.Procedimento?.name || "Não informado",
+      render: (item) => {
+    const nomeProcedimento = item.Procedimento?.name || "Não informado";
+    if (nomeProcedimento === "Não informado") {
+      return nomeProcedimento;
+    }
+    return <DescriptionPopover text={nomeProcedimento} maxLength={30} />;
+  },
     },
     {
       label: "Data",
