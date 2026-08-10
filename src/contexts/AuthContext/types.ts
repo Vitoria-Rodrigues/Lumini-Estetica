@@ -1,8 +1,13 @@
 import type { ReactNode } from "react";
-import type { User, AuthError, AuthResponse } from "@supabase/supabase-js";
+import type { User as SupabaseUser, AuthError, AuthResponse } from "@supabase/supabase-js";
+
+export interface CustomUser extends SupabaseUser {
+    name?: string;
+    role?: string;
+}
 
 export interface AuthContextProps {
-    user: User | null;
+    user: CustomUser | null;
     loading: boolean;
     signUp: (email: string, password: string) => Promise<{ data: AuthResponse['data']; error: AuthError | null }>;
     signIn: (email: string, password: string) => Promise<{ data: AuthResponse['data']; error: AuthError | null }>;
