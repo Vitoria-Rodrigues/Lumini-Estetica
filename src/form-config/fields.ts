@@ -13,7 +13,7 @@ export const REGISTER_FIELDS: { [K in RegisterType]: FieldConfig<K>[] } = {
         { name: "phone", label: "Telefone:", type: "tel", placeholder: "(11)91111-1111", required: true, maxLength: 14 },
         { name: "role", label: "Função:", type: "select", required: true, option: ["esteticista", "recepcionista", "massagista", "depiladora", "admin"]},
         { name: "specialty", label: "Especialidade:", type: "text", required: true },
-        { name: "salary", label: "Salário:", type: "number", required: true },
+        { name: "salary", label: "Salário:", type: "text", required: true },
         { name: "email", label: "Email:", type: "email", placeholder: "email@exemple.com", required: true },
         { name: "password", label: "Senha:", type: "password", required: true },
     ],
@@ -21,7 +21,7 @@ export const REGISTER_FIELDS: { [K in RegisterType]: FieldConfig<K>[] } = {
     procedure: [
         { name: "name", label: "Nome do Procedimento:", type: "text", required: true },
         { name: "description", label: "Descrição:", type: "text", placeholder: "Explique brevemente sobre o procedimento", required: true },
-        { name: "price", label: "Preço:", type: "number", required: true },
+        { name: "price", label: "Preço:", type: "text", required: true },
         { name: "duration", label: "Duração:", type: "text", required: true },
         { name: "category", label: "Categoria:", type: "select", required: true, option:["corporal", "facial"]},
     ],
