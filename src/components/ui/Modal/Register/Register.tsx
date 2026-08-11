@@ -104,6 +104,19 @@ useEffect(() => {
             value = formatPhone(value);
         } 
 
+        if(name === "price") {
+            value = value.replace(",", ".");
+            value = value.replace(/[^0-9.]/g,"");
+            const parts = value.split(".");
+            if(parts.length > 2){
+                value = `${parts[0]}.${parts.slice(1).join("")}`;
+            }
+        }
+
+        if (name === "name") {
+        value = value.replace(/[^a-zA-ZÀ-ÿ\s]/g, "");
+        }
+
         setFormaData((prev) => ({
             ...prev,
             [name as keyof RegisterDataMap[T]]: inputType === "number" 
