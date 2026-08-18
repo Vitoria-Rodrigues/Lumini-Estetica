@@ -7,6 +7,7 @@ import { categoryService, type categoryDbRow } from "@/services/categoryService"
 
 //Context
 import { useToaster } from "@/contexts/ToasterContext/useToaster";
+import { useAuth } from "@/contexts/AuthContext/useAuth";
 
 //Components
 import { ViewLayout, Search } from "@/components/layout";
@@ -26,6 +27,9 @@ const Procedure = () => {
   const [categories, setCategories] = useState<categoryDbRow[]>([]);
   const [editingProcedure, setEditingProcedure] = useState<ProcedureDbRow | null>(null);
   const { addToast } = useToaster();
+  const { user } = useAuth();
+
+  const canModify = user?.role === "admin";
 
   useEffect(() => {
     categoryService.listCategories().then(setCategories);
@@ -103,7 +107,7 @@ const Procedure = () => {
     setEditingProcedure(null);
   };
 
-  const columns: Column<ProcedureDbRow>[] = [
+  const baseColumns: Column<ProcedureDbRow>[] = [
     { label: "Nome", key: "name" },
     { label: "Descrição", key: "description", render: (item) => <DescriptionPopover text={item.description} /> },
     { 
@@ -120,52 +124,58 @@ const Procedure = () => {
         return cat ? cat.descricao : (proc.category || "");
       }
     },
-    {
-      label: "Ações",
-      key: "actions",
-      render: (proc) => (
-        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
-          <button
-            onClick={() => handleEditClick(proc)}
-            style={{
-              background: "#B25E21",
-              border: "none",
-              cursor: "pointer",
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              padding: ".5rem 1.2rem",
-              borderRadius: "1rem",
-            }}
-            title="Editar procedimento"
-          >
-            <BsBrush size={16} />
-          </button>
-          <button
-            onClick={() => handleDeleteClick(proc.id_prodecimento)}
-            style={{
-              background: "#9D1806",
-              border: "none",
-              cursor: "pointer",
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              padding: ".5rem 1.2rem",
-              borderRadius: "1rem",
-            }}
-            title="Excluir procedimento"
-          >
-            <FaRegTrashAlt size={16} />
-          </button>
-        </div>
-      ),
-    },
-  ];
+];
+    const columns: Column<ProcedureDbRow>[] = canModify
+  ? [
+      ...baseColumns,
+      {
+        label: "Ações",
+        key: "actions" as keyof ProcedureDbRow | "actions", // Garante o tipo exato da chave
+        render: (proc: ProcedureDbRow) => (
+          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
+            <button
+              onClick={() => handleEditClick(proc)}
+              style={{
+                background: "#B25E21",
+                border: "none",
+                cursor: "pointer",
+                color: "#fff",
+                display: "flex",
+                alignItems: "center",
+                padding: ".5rem 1.2rem",
+                borderRadius: "1rem",
+              }}
+              title="Editar procedimento"
+            >
+              <BsBrush size={16} />
+            </button>
+            <button
+              onClick={() => handleDeleteClick(proc.id_prodecimento)}
+              style={{
+                background: "#9D1806",
+                border: "none",
+                cursor: "pointer",
+                color: "#fff",
+                display: "flex",
+                alignItems: "center",
+                padding: ".5rem 1.2rem",
+                borderRadius: "1rem",
+              }}
+              title="Excluir procedimento"
+            >
+              <FaRegTrashAlt size={16} />
+            </button>
+          </div>
+        ),
+      },
+    ] : baseColumns;
+
 
   return (
     <ViewLayout
       title="Procedimento"
       actionButton={
+        canModify ? (
         <Button 
           title={"Procedimento"} 
           icon={RiAddFill} 
@@ -176,6 +186,7 @@ const Procedure = () => {
             setIsModalOpen(true);
           }}
         />
+      ) : undefined
       }
       searchComponent={<Search placeholder="Digite o nome do procedimento.." />}
     >

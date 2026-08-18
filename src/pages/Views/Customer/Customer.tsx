@@ -12,6 +12,7 @@ import type { Column } from "@/components/ui/Table/Table";
 
 //Context
 import { useToaster } from "@/contexts/ToasterContext/useToaster";
+import { useAuth } from "@/contexts/AuthContext/useAuth";
 
 //Icon
 import { RiAddFill } from "react-icons/ri";
@@ -25,6 +26,9 @@ const Customer = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [editingCustomer, setEditingCustomer] = useState<CustomerDbRow | null>(null);
   const { addToast } = useToaster();
+  const { user } = useAuth();
+
+  const canModify = user?.role === "admin" || user?.role === "recepcionista";
 
 
   const loadCustomer = async () => {
@@ -99,7 +103,7 @@ const Customer = () => {
     setEditingCustomer(null);
   }
 
-  const columns: Column<CustomerDbRow>[] = [
+  const baseColumns: Column<CustomerDbRow>[] = [
     { label: "Nome", key: "name" },
     { label: "CPF", key: "cpf", render: (customer) => formatCPF(customer.cpf) },
     { label: "Telefone", key: "phone", render: (customer) => formatPhone(customer.phone) },
@@ -115,52 +119,58 @@ const Customer = () => {
         return customer.birthDate;
       }
     },
-    {
-        label: "Ações",
-        key: "actions",
-        render: (customer) => (
-          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
-            <button
-              onClick={() => handleEditClick(customer)}
-              style={{
-                background: "#B25E21",
-                border: "none",
-                cursor: "pointer",
-                color: "#fff",
-                display: "flex",
-                alignItems: "center",
-                padding: ".5rem 1.2rem",
-                borderRadius: "1rem",
-              }}
-              title="Editar Cliente"
-            >
-              <BsBrush size={16} />
-            </button>
-            <button
-              onClick={() => handleDeleteClick(customer.id_cliente)}
-              style={{
-                background: "#9D1806",
-                border: "none",
-                cursor: "pointer",
-                color: "#fff",
-                display: "flex",
-                alignItems: "center",
-                padding: ".5rem 1.2rem",
-                borderRadius: "1rem",
-              }}
-              title="Excluir Cliente"
-            >
-              <FaRegTrashAlt size={16} />
-            </button>
-          </div>
-        ),
-      },
   ];
+    const columns: Column<CustomerDbRow>[] = canModify
+    ? [
+      ...baseColumns,
+      {
+          label: "Ações",
+          key: "actions",
+          render: (customer) => (
+            <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
+              <button
+                onClick={() => handleEditClick(customer)}
+                style={{
+                  background: "#B25E21",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  padding: ".5rem 1.2rem",
+                  borderRadius: "1rem",
+                }}
+                title="Editar Cliente"
+              >
+                <BsBrush size={16} />
+              </button>
+              <button
+                onClick={() => handleDeleteClick(customer.id_cliente)}
+                style={{
+                  background: "#9D1806",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  padding: ".5rem 1.2rem",
+                  borderRadius: "1rem",
+                }}
+                title="Excluir Cliente"
+              >
+                <FaRegTrashAlt size={16} />
+              </button>
+            </div>
+          ),
+        },
+    ] : baseColumns;
+
 
   return (
     <ViewLayout
       title="Cliente"
       actionButton={
+        canModify ? (
       <Button title={"Cliente"} 
       icon={RiAddFill} 
       padding=".6rem" width="15%"
@@ -168,6 +178,7 @@ const Customer = () => {
         setIsModalOpen(true);
       }}
       />
+    ) : undefined
     }
       searchComponent={<Search />}
     >

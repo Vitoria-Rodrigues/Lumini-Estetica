@@ -8,7 +8,7 @@ import { Button, Table, Register, TableSkeleton } from "@/components/ui";
 import { employeeService } from "@/services/employeeService";
 
 //Context
-import { Toaster } from "@/components/ui";
+import { useToaster } from "@/contexts/ToasterContext/useToaster";
 
 //Utils
 import { formatCPF, formatPhone } from "@/utils/formatters";
@@ -21,7 +21,6 @@ import type { Column } from "@/components/ui/Table/Table";
 import { RiAddFill } from "react-icons/ri";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { BsBrush } from "react-icons/bs";
-import { useToaster } from "@/contexts/ToasterContext/useToaster";
 
 const Professional = () => {
   const [employees, setEmployees] = useState<EmployeeData[]>([]);
@@ -30,7 +29,7 @@ const Professional = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<EmployeeData | null>(null);
   const { addToast } = useToaster();
-
+  
   const fetchEmployees = async () => {
     try {
       setIsLoading(true);
