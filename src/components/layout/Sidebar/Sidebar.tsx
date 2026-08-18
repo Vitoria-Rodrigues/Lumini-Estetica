@@ -1,7 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext/useAuth";
 
-
 //Logo
 import LogoM from "../../../assets/lumini-mulher.png";
 
@@ -15,6 +14,9 @@ import classes from "./Sidebar.module.css";
 const Sidebar = () => {
   const { signOut } = useAuth();
   const getLink = ({ isActive } : {isActive: boolean }) => isActive ? `${classes.link_item} ${classes.active}` : classes.link_item;
+  const { user } = useAuth();
+
+  const canSee = user?.role === "admin";
 
   const handleLogout = async () => {
   await signOut();
@@ -56,10 +58,12 @@ const Sidebar = () => {
               </NavLink>
             </li>
             <li>
+              { canSee ?
               <NavLink to="/professional" className={getLink}>
                 <span className={classes.side_icon}><FiUsers /></span>
                 <span className={classes.side_text}>Funcionario</span>
-              </NavLink>
+              </NavLink> : undefined
+               }
             </li>
           </ul>
         <div className={classes.log_out}>
