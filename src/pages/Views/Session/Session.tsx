@@ -11,9 +11,12 @@ import { type CustomerDbRow, customerService } from "@/services/customerService"
 import { employeeService, type EmployeeDbRow } from "@/services/employeeService";
 import { type ProcedureDbRow, procedureService } from "@/services/procedureService";
 import type { SessionData as FormSessionData } from "@/form-config/types";
+import type { SessionData } from "@/services/sessionService";
+
 
 //Context
 import { useToaster } from "@/contexts/ToasterContext/useToaster";
+import { useAuth } from "@/contexts/AuthContext/useAuth";
 
 //Utils
 import { formatHour } from "@/utils/formatters";
@@ -22,7 +25,7 @@ import { formatHour } from "@/utils/formatters";
 import { RiAddFill } from "react-icons/ri";
 import { FaCheck } from "react-icons/fa6";
 import { HiX } from "react-icons/hi";
-
+import { BsBrush } from "react-icons/bs";
 
 
 const Session = () => {
@@ -37,6 +40,10 @@ const Session = () => {
   const [editingSession, setEditingSession] = useState<SessionDbRow | null>(null);
 
   const { addToast } = useToaster();
+  const { user } = useAuth();
+
+  const canManage = user?.role === "admin" || user?.role === "recepcionista";
+  const isOperational = ["esteticista", "massagista", "depiladora"];
 
   const loadInitialData = async () => {
     try {
@@ -68,6 +75,24 @@ const Session = () => {
   const handleEditClick = (session: SessionDbRow) => {
     setEditingSession(session);
     setIsModalOpen(true);
+  };
+
+  const handleConfirmSession = async (session: SessionDbRow) => {
+    if (!session.id_consulta) return;
+
+    if (window.confirm("Confirmar que esta consulta foi realizada?")) {
+      try {
+        await sessionService.updateSession(session.id_consulta, {
+          ...session,
+          status: "Realizada",
+        }as unknown as Partial<SessionData>);
+        addToast("Consulta confirmada com sucesso!", "success");
+        loadInitialData();
+      } catch (error) {
+        console.error("Erro ao confirmar consulta:", error);
+        addToast("Erro ao confirmar consulta.", "error");
+      }
+    }
   };
 
   const handleDeleteClick = async (idConsulta?: string) => {
@@ -229,63 +254,95 @@ const Session = () => {
           : "R$ 0,00";
       },
     },
-    {
-      label: "Ações",
-      key: "actions",
-      render: (item) => (
-        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
-          <button
-            onClick={() => handleEditClick(item)}
-            style={{
-              background: "#06a120",
-              border: "none",
-              cursor: "pointer",
-              color: "#fff",
-              fontWeight: 700,
-              display: "flex",
-              alignItems: "center",
-              padding: ".5rem 1.2rem",
-              borderRadius: "1rem",
-            }}
-            title="Confirmar Consulta"
-          >
-            <FaCheck size={16} />
-          </button>
-          <button
-            onClick={() => handleDeleteClick(item.id_consulta)}
-            style={{
-              background: "#9D1806",
-              border: "none",
-              cursor: "pointer",
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              padding: ".5rem 1.2rem",
-              borderRadius: "1rem",
-            }}
-            title="Cancelar Consulta"
-          >
-            <HiX size={17} />
-          </button>
-        </div>
-      ),
-    },
+     ...(canManage || isOperational
+      ? [
+          {
+            label: "Ações",
+            key: "actions" as keyof SessionDbRow,
+            render: (item: SessionDbRow) => (
+              <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
+                {canManage && (
+                <button
+                  onClick={() => handleEditClick(item)}
+                  style={{
+                    background: "#B25E21",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#fff",
+                    fontWeight: 700,
+                    display: "flex",
+                    alignItems: "center",
+                    padding: ".5rem 1.2rem",
+                    borderRadius: "1rem",
+                  }}
+                  title="Editar Consulta"
+                >
+                  <BsBrush size={16} />
+                </button>
+                )}
+
+                {isOperational && (
+                  <button
+                  onClick={() => handleConfirmSession(item)}
+                  style={{
+                    background: "#06a120",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#fff",
+                    fontWeight: 700,
+                    display: "flex",
+                    alignItems: "center",
+                    padding: ".5rem 1.2rem",
+                    borderRadius: "1rem",
+                  }}
+                  title="Confirmar Consulta"
+                >
+                  <FaCheck size={16} />
+                </button>
+                )}
+
+                {canManage && (
+                <button
+                  onClick={() => handleDeleteClick(item.id_consulta)}
+                  style={{
+                    background: "#9D1806",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#fff",
+                    display: "flex",
+                    alignItems: "center",
+                    padding: ".5rem 1.2rem",
+                    borderRadius: "1rem",
+                  }}
+                  title="Cancelar Consulta"
+                >
+                  <HiX size={17} />
+                </button>
+                )}
+              </div>
+            ),
+          },
+        ]
+      : []),
   ];
+
 
   return (
     <ViewLayout
       title="Consulta"
       actionButton={
-        <Button
-          title={"Consulta"}
-          icon={RiAddFill}
-          padding=".6rem"
-          width="15%"
-          onClick={() => {
-            setEditingSession(null);
-            setIsModalOpen(true);
-          }}
-        />
+        canManage ? (
+          <Button
+            title={"Consulta"}
+            icon={RiAddFill}
+            padding=".6rem"
+            width="15%"
+            onClick={() => {
+              setEditingSession(null);
+              setIsModalOpen(true);
+            }}
+          />
+        ) : undefined
       }
       searchComponent={<Search placeholder="Digite o nome do cliente..." />}
     >
@@ -295,7 +352,7 @@ const Session = () => {
         <Table columns={columns} data={sessions} />
       )}
 
-      <Register  
+      <Register
         type="session"
         isOpen={isModalOpen}
         onClose={handleCloseModal}
