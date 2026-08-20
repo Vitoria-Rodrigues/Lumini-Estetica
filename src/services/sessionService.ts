@@ -1,5 +1,7 @@
 import { supabase } from "./supabase";
 
+export type SessionStatus = 'Pendente' | 'Realizada' | 'Cancelada';
+
 export interface SessionData{
     id_cliente: string;
     id_funcionario: string;
@@ -8,6 +10,7 @@ export interface SessionData{
     horario: string;
     observacoes?: string;
     valor_cobrado: number;
+    status?: SessionStatus;
 }
 
 export interface SessionDbRow{
@@ -20,10 +23,11 @@ export interface SessionDbRow{
     observacoes: string | null;
     created_at?: string;
     valor_cobrado: number;
+    status: SessionStatus;
 
-    Cliente?: { name: string };
-    Funcionario?: { name: string };
-    Procedimento?: { name: string; price: number };
+    Cliente?: { name: string } | null;
+    Funcionario?: { name: string } | null;
+    Procedimento?: { name: string; price: number } | null;
 }
 
 export interface SessionDbUpdate{
@@ -34,7 +38,24 @@ export interface SessionDbUpdate{
     horario?: string;
     observacoes?: string;
     valor_cobrado?: number;
+    status?: SessionStatus;
 }
+
+const SESSION_SELECT_FIELDS = `
+  id_consulta,
+  id_cliente,
+  id_funcionario,
+  id_procedimento,
+  data,
+  horario,
+  observacoes,
+  valor_cobrado,
+  created_at,
+  status,
+  Cliente(name),
+  Funcionario(name),
+  Procedimento(name, price)
+`;
 
 export const sessionService = {
     async createSession(data: SessionData): Promise<SessionDbRow> {
@@ -46,20 +67,7 @@ export const sessionService = {
             horario: data.horario,
             observacoes: data.observacoes,
             valor_cobrado: data.valor_cobrado
-        }).select(`
-            id_consulta,
-            id_cliente,
-            id_funcionario,
-            id_procedimento,
-            data,
-            horario,
-            observacoes,
-            valor_cobrado,
-            created_at,
-            Cliente(name),
-            Funcionario(name),
-            Procedimento(name, price)
-            `).single();
+        }).select(SESSION_SELECT_FIELDS).single();
 
         if (error) throw error;
         if (!response) throw new Error("Nenhum dado retornado ao agendar a consulta");
@@ -69,20 +77,7 @@ export const sessionService = {
     async listSessions(): Promise<SessionDbRow[]> {
         const { data, error } = await supabase
             .from("Consulta")
-            .select(`
-                id_consulta,
-                id_cliente,
-                id_funcionario,
-                id_procedimento,
-                data,
-                horario,
-                observacoes,
-                valor_cobrado,
-                created_at,
-                Cliente(name),
-                Funcionario(name),
-                Procedimento(name, price)
-            `)
+            .select(SESSION_SELECT_FIELDS)
             .order("data", { ascending: true })
             .order("horario", { ascending: true });
 
@@ -99,7 +94,8 @@ export const sessionService = {
         if (data.horario !== undefined) updateData.horario = data.horario;
         if (data.observacoes !== undefined) updateData.observacoes = data.observacoes;
         if (data.valor_cobrado !== undefined) updateData.valor_cobrado = data.valor_cobrado;
-
+        if (data.status !== undefined) updateData.status = data.status;
+        
         const { error } = await supabase.from("Consulta").update(updateData).eq("id_consulta", id_consulta);
 
         if(error) throw error;
