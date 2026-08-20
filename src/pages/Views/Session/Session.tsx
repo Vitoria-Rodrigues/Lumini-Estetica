@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button, Table, TableSkeleton, Register, DescriptionPopover } from "@/components/ui";
 import { ViewLayout, Search } from "@/components/layout";
 import type { Column } from "@/components/ui/Table/Table";
+import { RescheduleModal } from "@/components/ui/Modal/RescheduleModal/RescheduleModal";
 
 // Services
 import { type SessionDbRow, sessionService } from "@/services/sessionService";
@@ -11,8 +12,7 @@ import { type CustomerDbRow, customerService } from "@/services/customerService"
 import { employeeService, type EmployeeDbRow } from "@/services/employeeService";
 import { type ProcedureDbRow, procedureService } from "@/services/procedureService";
 import type { SessionData as FormSessionData } from "@/form-config/types";
-import type { SessionData } from "@/services/sessionService";
-
+import type{ SessionData, SessionStatus } from "@/services/sessionService";
 
 //Context
 import { useToaster } from "@/contexts/ToasterContext/useToaster";
@@ -25,7 +25,6 @@ import { formatHour } from "@/utils/formatters";
 import { RiAddFill } from "react-icons/ri";
 import { FaCheck } from "react-icons/fa6";
 import { HiX } from "react-icons/hi";
-import { BsBrush } from "react-icons/bs";
 
 
 const Session = () => {
@@ -37,13 +36,19 @@ const Session = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [editingSession, setEditingSession] = useState<SessionDbRow | null>(null);
+  const [rescheduleSession, setRescheduleSession] = useState<SessionDbRow | null>(null);
+  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
 
   const { addToast } = useToaster();
   const { user } = useAuth();
 
   const canManage = user?.role === "admin" || user?.role === "recepcionista";
   const isOperational = ["esteticista", "massagista", "depiladora"];
+  const statusConfig: Record<SessionStatus, { label: string; color: string; bgColor: string }> = {   
+   Pendente:  { label: 'Pendente',  color: '#d29a00', bgColor: '#F5EBCE' },
+   Realizada: { label: 'Realizada', color: '#199400', bgColor: '#E3F3DB' },
+   Cancelada: { label: 'Cancelada', color: '#d00404', bgColor: '#ffe7e7' },
+ };
 
   const loadInitialData = async () => {
     try {
@@ -72,11 +77,6 @@ const Session = () => {
     loadInitialData();
   }, []);
 
-  const handleEditClick = (session: SessionDbRow) => {
-    setEditingSession(session);
-    setIsModalOpen(true);
-  };
-
   const handleConfirmSession = async (session: SessionDbRow) => {
     if (!session.id_consulta) return;
 
@@ -95,82 +95,69 @@ const Session = () => {
     }
   };
 
-  const handleDeleteClick = async (idConsulta?: string) => {
-    if (!idConsulta) {
-      addToast("Erro ao identificar a consulta.", "error");
-      return;
-    }
-    if (window.confirm("Tem certeza que deseja excluir esta consulta?")) {
-      try {
-        await sessionService.deleteSession(idConsulta);
-        addToast("Consulta excluída com sucesso!", "success");
-        loadInitialData();
-      } catch (error) {
-        console.error("Erro ao excluir consulta:", error);
-        addToast("Erro ao excluir consulta.", "error");
-      }
-    }
-  };
+  const handleOpenCancelModal = (session: SessionDbRow) => {
+     setRescheduleSession(session);
+     setIsRescheduleOpen(true);
+   };
+
+   const handleRescheduleSubmit = async (sessionId: string, newDate: string, newTime: string) => {
+     try {
+       await sessionService.updateSession(sessionId, {
+         data: newDate,
+         horario: newTime,
+         status: "Pendente",
+       });
+       addToast("Consulta reagendada com sucesso!", "success");
+       loadInitialData();
+     } catch (err) {
+       addToast("Erro ao reagendar consulta.", "error");
+     }
+   };
+
+   const handleDefinitiveCancelSubmit = async (sessionId: string) => {
+     try {
+       await sessionService.deleteSession(sessionId);
+       addToast("Consulta cancelada com sucesso!", "success");
+       loadInitialData();
+     } catch (err) {
+       addToast("Erro ao cancelar consulta.", "error");
+     }
+   };
 
   const handleRegisterSubmit = async (data: FormSessionData) => {
-    try {
-      setIsSubmitting(true);
+  try {
+    setIsSubmitting(true);
 
-      if (editingSession) {
-        if (!editingSession.id_consulta) {
-          addToast("Erro ao editar a consulta.", "error");
-          return;
-        }
+    const promises = data.procedureIds.map((procedureId) => {
+      const proc = procedures.find((p) => p.id_prodecimento === procedureId);
+      const price = proc ? proc.price : 0;
 
-        const selectedProcedureId = data.procedureIds[0] || editingSession.id_procedimento;
-        const proc = procedures.find(p => p.id_prodecimento === selectedProcedureId);
-        const price = proc ? proc.price : undefined;
+      return sessionService.createSession({
+        id_cliente: data.customerId,
+        id_funcionario: data.employeeId,
+        id_procedimento: procedureId,
+        data: data.date,
+        horario: data.time,
+        observacoes: data.notes || "",
+        valor_cobrado: price,
+      });
+    });
 
-        await sessionService.updateSession(editingSession.id_consulta, {
-          id_cliente: data.customerId,
-          id_funcionario: data.employeeId,
-          id_procedimento: selectedProcedureId,
-          data: data.date,
-          horario: data.time,
-          observacoes: data.notes || "",
-          valor_cobrado: price,
-        });
+    await Promise.all(promises);
+    addToast("Consulta(s) agendada(s) com sucesso!", "success");
 
-        addToast("Consulta atualizada com sucesso!", "success");
-      } else {
-        const promises = data.procedureIds.map((procedureId) => {
-          const proc = procedures.find(p => p.id_prodecimento === procedureId);
-          const price = proc ? proc.price : 0;
-
-          return sessionService.createSession({
-            id_cliente: data.customerId,
-            id_funcionario: data.employeeId,
-            id_procedimento: procedureId,
-            data: data.date,
-            horario: data.time,
-            observacoes: data.notes || "",
-            valor_cobrado: price,
-          });
-        });
-
-        await Promise.all(promises);
-        addToast("Consulta(s) agendada(s) com sucesso!", "success");
-      }
-
-      setIsModalOpen(false);
-      setEditingSession(null);
-      loadInitialData();
-    } catch (err) {
-      console.error("Erro ao salvar consulta:", err);
-      addToast("Erro ao salvar a consulta.", "error");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    setIsModalOpen(false);
+    loadInitialData();
+  } catch (err) {
+    console.error("Erro ao salvar consulta:", err);
+    addToast("Erro ao salvar a consulta.", "error");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setEditingSession(null);
   };
 
   const customerOptions = customers.map((c) => ({
@@ -195,16 +182,7 @@ const Session = () => {
     procedureIds: procedureOptions,
   };
 
-  const initialValues = editingSession
-    ? {
-        customerId: editingSession.id_cliente,
-        employeeId: editingSession.id_funcionario,
-        procedureIds: [editingSession.id_procedimento],
-        date: editingSession.data,
-        time: editingSession.horario,
-        notes: editingSession.observacoes || "",
-      }
-    : null;
+  const initialValues = null;
 
   const columns: Column<SessionDbRow>[] = [
     {
@@ -245,6 +223,27 @@ const Session = () => {
       key: "horario", render: (session) => formatHour(session.horario)
     },
     {
+      label: "Status",
+      key: "status", 
+      render: (item) => {
+      const config = statusConfig[item.status] || statusConfig.Pendente;
+      return (
+        <span
+          style={{
+            padding: '0.25rem 0.75rem',
+            borderRadius: '9999px',
+            fontSize: '0.8rem',
+            fontWeight: 600,
+            color: config.color,
+            backgroundColor: config.bgColor,
+          }}
+        >
+          {config.label}
+        </span>
+      );
+      }
+    },
+    {
       label: "Valor Total",
       key: "id_procedimento",
       render: (item) => {
@@ -254,33 +253,21 @@ const Session = () => {
           : "R$ 0,00";
       },
     },
-     ...(canManage || isOperational
+    ...(canManage || isOperational
       ? [
           {
             label: "Ações",
             key: "actions" as keyof SessionDbRow,
-            render: (item: SessionDbRow) => (
-              <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
-                {canManage && (
-                <button
-                  onClick={() => handleEditClick(item)}
-                  style={{
-                    background: "#B25E21",
-                    border: "none",
-                    cursor: "pointer",
-                    color: "#fff",
-                    fontWeight: 700,
-                    display: "flex",
-                    alignItems: "center",
-                    padding: ".5rem 1.2rem",
-                    borderRadius: "1rem",
-                  }}
-                  title="Editar Consulta"
-                >
-                  <BsBrush size={16} />
-                </button>
-                )}
+            render: (item: SessionDbRow) => {
+              const isActionAllowed = item.status === "Pendente" || 
+              item.status === "Cancelada";
 
+              if (!isActionAllowed) {
+                return null;
+              }
+              
+              return(
+              <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
                 {isOperational && (
                   <button
                   onClick={() => handleConfirmSession(item)}
@@ -303,7 +290,7 @@ const Session = () => {
 
                 {canManage && (
                 <button
-                  onClick={() => handleDeleteClick(item.id_consulta)}
+                  onClick={() => handleOpenCancelModal(item)}
                   style={{
                     background: "#9D1806",
                     border: "none",
@@ -314,21 +301,21 @@ const Session = () => {
                     padding: ".5rem 1.2rem",
                     borderRadius: "1rem",
                   }}
-                  title="Cancelar Consulta"
+                  title="Cancelar / Reagendar Consulta"
                 >
                   <HiX size={17} />
                 </button>
                 )}
               </div>
-            ),
+              )
+            },
           },
         ]
       : []),
   ];
 
-
   return (
-    <ViewLayout
+     <ViewLayout
       title="Consulta"
       actionButton={
         canManage ? (
@@ -338,7 +325,6 @@ const Session = () => {
             padding=".6rem"
             width="15%"
             onClick={() => {
-              setEditingSession(null);
               setIsModalOpen(true);
             }}
           />
@@ -361,6 +347,15 @@ const Session = () => {
         dynamicOptions={sessionDynamicOptions}
         initialValues={initialValues}
       />
+
+      <RescheduleModal
+        isOpen={isRescheduleOpen}
+        session={rescheduleSession}
+        onClose={() => setIsRescheduleOpen(false)}
+        onReschedule={handleRescheduleSubmit}
+        onCancelDefinitive={handleDefinitiveCancelSubmit}
+      />
+
     </ViewLayout>
   );
 };

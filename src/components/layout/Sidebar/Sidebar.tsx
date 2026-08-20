@@ -42,7 +42,7 @@ const Sidebar = () => {
             <li>
               <NavLink to="/appointment" className={getLink}>
                 <span className={classes.side_icon}><FaRegCalendarAlt /></span>
-                <span className={classes.side_text}>Agendamento</span>
+                <span className={classes.side_text}>Agenda</span>
               </NavLink>
             </li>
             <li>

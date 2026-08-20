@@ -4,6 +4,7 @@ import type { User as SupabaseUser, AuthError, AuthResponse } from "@supabase/su
 export interface CustomUser extends SupabaseUser {
     name?: string;
     role?: string;
+    employeeId?: string;
 }
 
 export interface AuthContextProps {
