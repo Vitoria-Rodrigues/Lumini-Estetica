@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
             const { data: employee, error } = await supabase
                 .from("Funcionario")
-                .select("name, app_role")
+                .select("id_funcionario, name, app_role")
                 .eq("user_id", supabaseUser.id)
                 .maybeSingle();
 
@@ -38,7 +38,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             return {
                 ...supabaseUser,
                 name,
-                role
+                role,
+                employeeId: employee?.id_funcionario ? String(employee.id_funcionario) : undefined
             };
         } catch (err) {
             console.error("[AuthContext] Erro inesperado ao buscar perfil do funcionário:", err);
