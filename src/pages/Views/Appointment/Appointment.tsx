@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 // Components
 import { ViewLayout, Search } from "@/components/layout";
@@ -17,7 +17,7 @@ import { useAuth } from "@/contexts/AuthContext/useAuth";
 import { useToaster } from "@/contexts/ToasterContext/useToaster";
 
 // Utils
-import { formatHour } from "@/utils/formatters";
+import { formatHour, formatCPF } from "@/utils/formatters";
 
 //Icons
 import { BsBrush } from "react-icons/bs";
@@ -43,6 +43,7 @@ const Appointment = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingSession, setEditingSession] = useState<SessionDbRow | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const { user } = useAuth();
   const { addToast } = useToaster();
@@ -81,21 +82,38 @@ const Appointment = () => {
     loadData();
   }, []);
 
-  const filteredSessions = sessions.filter((session) => {
-    const matchesDate = session.data === selectedDate;
+  const filteredSessions = useMemo(() => {
+    return sessions.filter((session) => {
+      const matchesDate = session.data === selectedDate;
+      if(!matchesDate) return false;
 
-    if (!matchesDate) return false;
+      if(isOperational){
+        if(String(session.id_funcionario) !== String(user?.employeeId)) return false;
+      } else if(selectedEmployeeId) {
+        if(String(session.id_funcionario) !== selectedEmployeeId) return false;
+      }
 
-    if (isOperational) {
-      return String(session.id_funcionario) === String(user?.employeeId);
-    }
+      if(searchQuery.trim()){
+        const term = searchQuery.trim().toLowerCase();
+        const termCleanDigits = searchQuery.replace(/\D/g, "");
 
-    if (selectedEmployeeId) {
-      return String(session.id_funcionario) === selectedEmployeeId;
-    }
+        const employeeName = session.Funcionario?.name?.toLowerCase() || "";
+        const rawCpf = session.Cliente?.cpf || "";
+        const cleanCpf = rawCpf.replace(/\D/g, "");
+        const formattedCpf = formatCPF(rawCpf);
 
-    return true;
-  });
+        const matchesName = employeeName.includes(term);
+        const matchesCleanCpf = termCleanDigits.length > 0 && cleanCpf.includes(termCleanDigits);
+        const matchesFormattedCpf = formattedCpf.includes(term);
+
+        if(!matchesName && !matchesCleanCpf && !matchesFormattedCpf){
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [sessions, selectedDate, isOperational, user?.employeeId, selectedEmployeeId, searchQuery]);
 
   const handleEditClick = (session: SessionDbRow) => {
     setEditingSession(session);
@@ -308,7 +326,10 @@ const initialValues = editingSession
       </div>
       }
         searchComponent={
-        <Search placeholder="Filtrar por nome do cliente..." />
+        <Search placeholder="Filtrar por nome do profissional ou CPF do cliente..." 
+        value={searchQuery}
+        onChange={(val) => setSearchQuery(val)}
+        />
       }
         >
       {isLoading ? (
