@@ -28,7 +28,28 @@ const Professional = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<EmployeeData | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  
   const { addToast } = useToaster();
+
+  const filteredEmployees = employees.filter((employees) => {
+      if(!searchQuery.trim()) return true;
+  
+      const term = searchQuery.trim().toLowerCase();
+      const termCleanDigits = searchQuery.replace(/\D/g, "");
+  
+      const customerName = employees.name?.toLowerCase();
+      const rawCpf = employees.cpf || "";
+      const cleanCpf = rawCpf.replace(/\D/g, "");
+      const formattedCpf = formatCPF(rawCpf);
+  
+      const matchesName = customerName.includes(term);
+      const matchesCleanCpf = termCleanDigits.length > 0 && cleanCpf.includes(termCleanDigits);
+  
+      const matchesFormattedCpf = formattedCpf.includes(term);
+  
+      return matchesName || matchesCleanCpf || matchesFormattedCpf;
+    });
   
   const fetchEmployees = async () => {
     try {
@@ -168,12 +189,15 @@ const Professional = () => {
           }}
         />
       }
-      searchComponent={<Search placeholder="Digite o nome do profissional.." />}
+      searchComponent={<Search placeholder="Digite o nome ou CPF do profissional" 
+      value={searchQuery}
+      onChange={(val) => setSearchQuery(val)}
+      />}
     >
     {isLoading ? (
       <TableSkeleton rows={5} columns={columns.length} />
     ) : (
-      <Table columns={columns} data={employees} />
+      <Table columns={columns} data={filteredEmployees} />
     )}
 
       <Register
