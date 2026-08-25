@@ -26,10 +26,24 @@ const Procedure = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [categories, setCategories] = useState<categoryDbRow[]>([]);
   const [editingProcedure, setEditingProcedure] = useState<ProcedureDbRow | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
   const { addToast } = useToaster();
   const { user } = useAuth();
 
   const canModify = user?.role === "admin";
+
+  const filteredProcedure = procedure.filter((procedure) => {
+    if(!searchQuery.trim()) return true;
+
+    const term = searchQuery.trim().toLowerCase();
+    const procedureName = procedure.name?.toLowerCase();
+
+    const matchesName = procedureName.includes(term);
+
+    return matchesName;
+
+  });
 
   useEffect(() => {
     categoryService.listCategories().then(setCategories);
@@ -188,13 +202,17 @@ const Procedure = () => {
         />
       ) : undefined
       }
-      searchComponent={<Search placeholder="Digite o nome do procedimento.." />}
-    >
+      searchComponent={<Search placeholder="Digite o nome do procedimento.." 
+      value={searchQuery}
+      onChange={(val) => setSearchQuery(val)}
+      />
+      }
+        >
 
     {isLoading ? (
       <TableSkeleton rows={5} columns={columns.length} />
     ) : (
-      <Table columns={columns} data={procedure} />
+      <Table columns={columns} data={filteredProcedure} />
     )}
 
       <Register 

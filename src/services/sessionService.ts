@@ -25,7 +25,7 @@ export interface SessionDbRow{
     valor_cobrado: number;
     status: SessionStatus;
 
-    Cliente?: { name: string } | null;
+    Cliente?: { name: string, cpf: string } | null;
     Funcionario?: { name: string } | null;
     Procedimento?: { name: string; price: number } | null;
 }
