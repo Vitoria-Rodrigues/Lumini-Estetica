@@ -19,7 +19,7 @@ import { useToaster } from "@/contexts/ToasterContext/useToaster";
 import { useAuth } from "@/contexts/AuthContext/useAuth";
 
 //Utils
-import { formatHour } from "@/utils/formatters";
+import { formatHour, formatCPF } from "@/utils/formatters";
 
 //Icons
 import { RiAddFill } from "react-icons/ri";
@@ -38,6 +38,7 @@ const Session = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [rescheduleSession, setRescheduleSession] = useState<SessionDbRow | null>(null);
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const { addToast } = useToaster();
   const { user } = useAuth();
@@ -50,6 +51,26 @@ const Session = () => {
    Cancelada: { label: 'Cancelada', color: '#d00404', bgColor: '#ffe7e7' },
  };
 
+  const filteredSessions = sessions.filter((session) => {
+    if(!searchQuery.trim()) return true;
+
+    const term = searchQuery.trim().toLowerCase();
+    const termCleanDigits = searchQuery.replace(/\D/g, "");
+    
+    const customerName = session.Cliente?.name?.toLowerCase() || "";
+    const rawCpf = session.Cliente?.cpf || "";
+    const cleanCpf = rawCpf.replace(/\D/g, ""); 
+    const formattedCpf = formatCPF(rawCpf);
+  
+    const matchesName = customerName.includes(term);
+    const matchesCleanCpf = termCleanDigits.length > 0 && cleanCpf.includes(termCleanDigits);
+  
+    const matchesFormattedCpf = formattedCpf.includes(term);
+  
+    return matchesName || matchesCleanCpf || matchesFormattedCpf;
+  });
+
+  
   const loadInitialData = async () => {
     try {
       setIsLoading(true);
@@ -330,12 +351,14 @@ const Session = () => {
           />
         ) : undefined
       }
-      searchComponent={<Search placeholder="Digite o nome do cliente..." />}
+      searchComponent={<Search placeholder="Buscar por um nome ou CPF.."
+      value={searchQuery}
+      onChange={(val) => setSearchQuery(val)} />}
     >
       {isLoading ? (
         <TableSkeleton rows={5} columns={columns.length} />
       ) : (
-        <Table columns={columns} data={sessions} />
+        <Table columns={columns} data={filteredSessions} />
       )}
 
       <Register
