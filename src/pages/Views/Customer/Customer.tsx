@@ -25,11 +25,31 @@ const Customer = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [editingCustomer, setEditingCustomer] = useState<CustomerDbRow | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  
   const { addToast } = useToaster();
   const { user } = useAuth();
 
   const canModify = user?.role === "admin" || user?.role === "recepcionista";
 
+  const filteredCustomer = customers.filter((customers) => {
+    if(!searchQuery.trim()) return true;
+
+    const term = searchQuery.trim().toLowerCase();
+    const termCleanDigits = searchQuery.replace(/\D/g, "");
+
+    const customerName = customers.name?.toLowerCase();
+    const rawCpf = customers.cpf || "";
+    const cleanCpf = rawCpf.replace(/\D/g, "");
+    const formattedCpf = formatCPF(rawCpf);
+
+    const matchesName = customerName.includes(term);
+    const matchesCleanCpf = termCleanDigits.length > 0 && cleanCpf.includes(termCleanDigits);
+
+    const matchesFormattedCpf = formattedCpf.includes(term);
+
+    return matchesName || matchesCleanCpf || matchesFormattedCpf;
+  });
 
   const loadCustomer = async () => {
     try {
@@ -180,13 +200,16 @@ const Customer = () => {
       />
     ) : undefined
     }
-      searchComponent={<Search />}
+      searchComponent={<Search placeholder="Buscar por nome ou CPF do cliente"
+        value={searchQuery}
+        onChange={(val) => setSearchQuery(val)}
+      />}
     >
 
     {isLoading ? (
       <TableSkeleton rows={5} columns={columns.length} />
     ) : (
-      <Table columns={columns} data={customers} />
+      <Table columns={columns} data={filteredCustomer} />
     )}
     
     <Register 
