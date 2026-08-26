@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext/useAuth";
 //Components
 import { ViewLayout, Search } from "@/components/layout";
 import { Button, Table, Register, TableSkeleton, DescriptionPopover } from "@/components/ui";
+import { ConfirmModal } from "@/components/ui";
 import type { Column } from "@/components/ui/Table/Table";
 
 //icon
@@ -27,6 +28,8 @@ const Procedure = () => {
   const [categories, setCategories] = useState<categoryDbRow[]>([]);
   const [editingProcedure, setEditingProcedure] = useState<ProcedureDbRow | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [procedureToDelete, setProcedureToDelete] = useState<string | null>(null);
 
   const { addToast } = useToaster();
   const { user } = useAuth();
@@ -79,15 +82,22 @@ const Procedure = () => {
       addToast("Erro ao carregar os procedimentos", "error");
       return;
     }
-    if (window.confirm("Tem certeza que deseja excluir este procedimento?")) {
-      try {
-        await procedureService.deleteProcedure(idProcedure);
-        addToast("Procedimento excluído com sucesso!", "success");
-        loadProcedure();
-      } catch (err) {
-        console.error("Erro ao excluir: ", err);
-        addToast("Erro ao excluir procedimento", "error");
-      }
+    setProcedureToDelete(idProcedure);
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if(!procedureToDelete) return;
+    try {
+      await procedureService.deleteProcedure(procedureToDelete);
+      addToast("Procedimento excluido com sucesso!", "success");
+      loadProcedure();
+    } catch (error) {
+      console.error("Erro ao excluir: ", error);
+      addToast("Erro ao excluir procedimento", "error");
+    }finally {
+      setIsConfirmOpen(false);
+      setProcedureToDelete(null);
     }
   };
 
@@ -214,6 +224,14 @@ const Procedure = () => {
     ) : (
       <Table columns={columns} data={filteredProcedure} />
     )}
+
+    <ConfirmModal
+     isOpen={isConfirmOpen}
+     title="Excluir Procedimento"
+     description="Tem certeza que deseja excluir este procedimento?"
+     onConfirm={handleConfirmDelete}
+     onClose={() => setIsConfirmOpen(false)}
+    />
 
       <Register 
         type="procedure"

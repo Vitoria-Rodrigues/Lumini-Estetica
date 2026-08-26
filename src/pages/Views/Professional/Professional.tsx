@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 // Components
 import { ViewLayout, Search } from "@/components/layout";
 import { Button, Table, Register, TableSkeleton } from "@/components/ui";
+import { ConfirmModal } from "@/components/ui";
 
 // Services
 import { employeeService } from "@/services/employeeService";
@@ -29,7 +30,9 @@ const Professional = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<EmployeeData | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<string | null>(null);
+
   const { addToast } = useToaster();
 
   const filteredEmployees = employees.filter((employees) => {
@@ -80,15 +83,22 @@ const Professional = () => {
       addToast("Erro: ID do profissional não encontrado", "error");
       return;
     }
-    if (window.confirm("Tem certeza que deseja excluir este profissional?")) {
-      try {
-        await employeeService.deletEmployee(userId);
-        addToast("Profissional excluido com sucesso!", "success");
-        fetchEmployees();
-      } catch (error) {
-        console.error("Erro ao excluir: ", error);
-        addToast("Erro ao excluir profissional", "error");
-      }
+    setEmployeeToDelete(userId);
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () =>{
+    if(!employeeToDelete) return;
+    try {
+      await employeeService.deletEmployee(employeeToDelete);
+      addToast("Profissional excluido com sucesso!", "success");
+      fetchEmployees();
+    } catch (error) {
+      console.error("Erro ao excluir: ", error);
+      addToast("Erro ao excluir profissional", "error");
+    } finally {
+      setIsConfirmOpen(false);
+      setEmployeeToDelete(null);
     }
   };
 
@@ -200,6 +210,14 @@ const Professional = () => {
       <Table columns={columns} data={filteredEmployees} />
     )}
 
+    <ConfirmModal
+     isOpen={isConfirmOpen}
+     title="Excluir Profissional"
+     description="Tem certeza que deseja excluir este profissional?"
+     onConfirm={handleConfirmDelete}
+     onClose={() => setIsConfirmOpen(false)}
+    />
+
       <Register
         type="employee"
         isOpen={isModalOpen}
@@ -212,4 +230,4 @@ const Professional = () => {
   );
 };
 
-export default Professional;
+export default Professional; 
