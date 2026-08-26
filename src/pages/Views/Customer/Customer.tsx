@@ -8,6 +8,7 @@ import { formatCPF, formatPhone } from "@/utils/formatters";
 //Components
 import { ViewLayout, Search } from "@/components/layout";
 import { Button, Table, Register, TableSkeleton } from "@/components/ui";
+import { ConfirmModal } from "@/components/ui";
 import type { Column } from "@/components/ui/Table/Table";
 
 //Context
@@ -26,7 +27,9 @@ const Customer = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [editingCustomer, setEditingCustomer] = useState<CustomerDbRow | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
+
   const { addToast } = useToaster();
   const { user } = useAuth();
 
@@ -78,19 +81,27 @@ const Customer = () => {
   const handleDeleteClick = async (idCliente?: string) => {
     if(!idCliente) {
       addToast("Erro ao editar dados.", "error");
-      return
+      return;
     }
-    if(window.confirm("Tem certeza que deseja excluir este cliente?")){
-      try {
-        await customerService.deleteCustomer(idCliente);
-        addToast("Cliente excluido com sucesso", "success");
-        loadCustomer();
-      } catch (error) {
-        console.error("Erro ao excluir: ", error);
-        addToast("Erro ao excluir cliente.", "error");
-        
-      }
+    setCustomerToDelete(idCliente);
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if(!customerToDelete) return;
+
+    try{
+      await customerService.deleteCustomer(customerToDelete);
+      addToast("Cliente excluido com sucesso", "success");
+      loadCustomer();
+    } catch(error) {
+      console.error("Error ao excluir: ", error);
+      addToast("Erro ao excluir cliente.", "error");
+    } finally{
+      setIsConfirmOpen(false);
+      setCustomerToDelete(null);
     }
+
   };
 
   const handleRegisterSubmit = async (data: CustomerData) => {
@@ -211,6 +222,14 @@ const Customer = () => {
     ) : (
       <Table columns={columns} data={filteredCustomer} />
     )}
+
+    <ConfirmModal
+     isOpen={isConfirmOpen}
+     title="Excluir Cliente"
+     description="Tem certeza que deseja excluir este cliente?"
+     onConfirm={handleConfirmDelete}
+     onClose={() => setIsConfirmOpen(false)}
+    />
     
     <Register 
     type="customer"

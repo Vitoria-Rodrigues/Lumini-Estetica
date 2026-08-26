@@ -107,3 +107,4 @@ export const RescheduleModal = ({
 
 }
 
+export default RescheduleModal;
