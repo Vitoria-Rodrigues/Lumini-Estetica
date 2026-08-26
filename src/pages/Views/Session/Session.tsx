@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 
 //Components
 import { Button, Table, TableSkeleton, Register, DescriptionPopover } from "@/components/ui";
+import { ConfirmModal } from "@/components/ui/Modal/ConfirmModal/ConfirmModal";
 import { ViewLayout, Search } from "@/components/layout";
 import type { Column } from "@/components/ui/Table/Table";
 import { RescheduleModal } from "@/components/ui/Modal/RescheduleModal/RescheduleModal";
@@ -39,6 +40,8 @@ const Session = () => {
   const [rescheduleSession, setRescheduleSession] = useState<SessionDbRow | null>(null);
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [sessionToComplete, setSessionToComplete] = useState<SessionDbRow | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const { addToast } = useToaster();
   const { user } = useAuth();
@@ -100,19 +103,26 @@ const Session = () => {
 
   const handleConfirmSession = async (session: SessionDbRow) => {
     if (!session.id_consulta) return;
+    setSessionToComplete(session);
+    setIsConfirmOpen(true);
+  };
 
-    if (window.confirm("Confirmar que esta consulta foi realizada?")) {
-      try {
-        await sessionService.updateSession(session.id_consulta, {
-          ...session,
-          status: "Realizada",
-        }as unknown as Partial<SessionData>);
-        addToast("Consulta confirmada com sucesso!", "success");
-        loadInitialData();
-      } catch (error) {
-        console.error("Erro ao confirmar consulta:", error);
-        addToast("Erro ao confirmar consulta.", "error");
-      }
+  const executeConfirmSession = async () => {
+    if(!sessionToComplete || !sessionToComplete.id_consulta) return;
+
+    try{
+      await sessionService.updateSession(sessionToComplete.id_consulta, {
+        ...sessionToComplete,
+        status: "Realizada",
+      } as unknown as Partial<SessionData>);
+      addToast("Consulta confirmada com sucesso!", "success");
+      loadInitialData();
+    } catch (error) {
+      console.error("Erro ao confirmar consulta: ", error);
+      addToast("Erro ao confirmar consulta", "error");
+    } finally {
+      setIsConfirmOpen(false);
+      setSessionToComplete(null);
     }
   };
 
@@ -370,6 +380,14 @@ const Session = () => {
         dynamicOptions={sessionDynamicOptions}
         initialValues={initialValues}
       />
+
+    <ConfirmModal
+     isOpen={isConfirmOpen}
+     title="Concluir Consulta"
+     description="Deseja confirmar que esta consulta foi realizada?"
+     onConfirm={executeConfirmSession}
+     onClose={() => setIsConfirmOpen(false)}
+    />
 
       <RescheduleModal
         isOpen={isRescheduleOpen}
