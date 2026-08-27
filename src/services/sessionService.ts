@@ -11,6 +11,8 @@ export interface SessionData{
     observacoes?: string;
     valor_cobrado: number;
     status?: SessionStatus;
+    edited_at?: string | null;
+    deleted_at?: string | null;
 }
 
 export interface SessionDbRow{
@@ -22,6 +24,8 @@ export interface SessionDbRow{
     horario: string;
     observacoes: string | null;
     created_at?: string;
+    edited_at?: string | null;
+    deleted_at?: string | null;
     valor_cobrado: number;
     status: SessionStatus;
 
@@ -39,6 +43,8 @@ export interface SessionDbUpdate{
     observacoes?: string;
     valor_cobrado?: number;
     status?: SessionStatus;
+    edited_at?: string;
+    deleted_at?: string | null;
 }
 
 const SESSION_SELECT_FIELDS = `
@@ -51,6 +57,8 @@ const SESSION_SELECT_FIELDS = `
   observacoes,
   valor_cobrado,
   created_at,
+  edited_at,
+  deleted_at,
   status,
   Cliente(name),
   Funcionario(name),
@@ -78,6 +86,7 @@ export const sessionService = {
         const { data, error } = await supabase
             .from("Consulta")
             .select(SESSION_SELECT_FIELDS)
+            .is("deleted_at", null)
             .order("data", { ascending: true })
             .order("horario", { ascending: true });
 
@@ -86,7 +95,9 @@ export const sessionService = {
     },
 
     async updateSession (id_consulta: string, data: Partial<SessionData>): Promise<void> {
-        const updateData: SessionDbUpdate = {};
+        const updateData: SessionDbUpdate = {
+            edited_at: new Date().toISOString()
+        };
         if (data.id_cliente !== undefined) updateData.id_cliente = data.id_cliente;
         if (data.id_funcionario !== undefined) updateData.id_funcionario = data.id_funcionario;
         if (data.id_procedimento !== undefined) updateData.id_procedimento = data.id_procedimento;
@@ -104,7 +115,7 @@ export const sessionService = {
     async deleteSession(id_consulta: string): Promise<void> {
         const { error } = await supabase
             .from("Consulta")
-            .delete()
+            .update({deleted_at: new Date().toISOString()})
             .eq("id_consulta", id_consulta);
 
         if (error) throw error;
