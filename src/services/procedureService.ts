@@ -4,6 +4,8 @@ import type { ProcedureData } from "@/form-config/types";
 export interface ProcedureDbRow extends ProcedureData {
     id_prodecimento: string;
     created_at?: string;
+    edited_at?: string | null;
+    deleted_at?: string | null;
 }
 
 export interface ProcedureDbUpdate {
@@ -12,6 +14,8 @@ export interface ProcedureDbUpdate {
     price?: number;
     duration?: string;
     id_categoria?: string;
+    edited_at?: string;
+    deleted_at?: string | null;
 }
 
 export const procedureService = {
@@ -31,7 +35,8 @@ export const procedureService = {
 
     async listProcedures(): Promise<ProcedureDbRow[]> {
         const { data, error } = await supabase.from("Procedimento")
-            .select("id_prodecimento, name, description, price, duration, category: id_categoria, created_at")
+            .select("id_prodecimento, name, description, price, duration, category: id_categoria")
+            .is("deleted_at", null)
             .order("name", { ascending: true });
         
         if (error) throw error;
@@ -39,7 +44,9 @@ export const procedureService = {
     },
 
     async updateProcedure(id_prodecimento: string, data: Partial<ProcedureData>): Promise<void> {
-        const updateData: ProcedureDbUpdate = {};
+        const updateData: ProcedureDbUpdate = {
+            edited_at: new Date().toISOString()
+        };
         if (data.name !== undefined) updateData.name = data.name;
         if (data.description !== undefined) updateData.description = data.description;
         if (data.price !== undefined) updateData.price = data.price;
@@ -52,8 +59,10 @@ export const procedureService = {
     },
 
     async deleteProcedure(procedure_id: string): Promise<void> {
-        const { error } = await supabase.from("Procedimento").delete().eq("id_prodecimento", procedure_id);
+        const { error } = await supabase.from("Procedimento")
+        .update({deleted_at: new Date().toISOString()})
+        .eq("id_prodecimento", procedure_id);
 
         if (error) throw error;
     }
-};
+};
