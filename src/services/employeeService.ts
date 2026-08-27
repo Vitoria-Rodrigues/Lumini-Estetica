@@ -8,6 +8,8 @@ export interface EmployeeDbRow {
   id_funcionario: number;
   user_id: string;
   name: string;
+  edited_at?: string | null;  
+  deleted_at?: string | null;
 }
 
 export const employeeService = {
@@ -24,7 +26,6 @@ export const employeeService = {
                     console.error("[Edge Function Error Details]:", errorJson);
                     throw new Error(errorJson.error || errorJson.message || "Erro interno da Edge Function");
                 } catch (parseError) {
-                    // Se não for um JSON válido ou não tiver os campos, repassa o erro original
                     if (parseError instanceof Error && parseError.message !== "Erro interno da Edge Function") {
                         throw parseError;
                     }
@@ -42,7 +43,7 @@ export const employeeService = {
 
     async listEmployees(): Promise<EmployeeDbRow[]>{
         const { data, error } = await supabase.from("Funcionario")
-        .select("*")
+        .select("*").is("deleted_at", null)
         .order("name", { ascending: true });
 
         if(error) throw error;
@@ -58,7 +59,8 @@ export const employeeService = {
             phone: data.phone ?? null,
             salary: data.salary ?? null,
             specialty: data.specialty,
-            app_role: data.role
+            app_role: data.role,
+            edited_at: new Date().toISOString()
         }).eq("user_id", userId);
 
         if(error) throw error;
@@ -66,7 +68,8 @@ export const employeeService = {
 
     async deletEmployee(userId: string) {
         const { error } = await supabase.from("Funcionario")
-        .delete().eq("user_id", userId);
+        .update({deleted_at: new Date().toISOString})
+        .eq("user_id", userId);
 
         if(error) throw error;
     },
