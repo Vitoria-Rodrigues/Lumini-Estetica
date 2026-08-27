@@ -4,6 +4,8 @@ import type { CustomerData } from "@/form-config/types";
 export interface CustomerDbRow extends CustomerData {
     id_cliente: string; 
     created_at?: string;
+    edited_at?: string | null;
+    deleted_at?: string | null;
 }
 
 export interface CustomerDbUpdate {
@@ -11,6 +13,8 @@ export interface CustomerDbUpdate {
     cpf?: string;
     phone?: string;
     birthDate?: string;
+    edited_at?: string;
+    deleted_at?: string | null;
 }
 
 export const customerService = {
@@ -28,14 +32,17 @@ export const customerService = {
     },
 
     async listCustomers(): Promise<CustomerDbRow[]> {
-        const { data, error } = await supabase.from("Cliente").select("*").order("name", { ascending: true });
+        const { data, error } = await supabase.from("Cliente")
+        .select("*").is("deleted_at", null).order("name", { ascending: true });
 
         if (error) throw error;
         return (data || []) as CustomerDbRow[];
     },
 
     async updateCustomer(id_cliente: string, data: Partial<CustomerData>): Promise<void> {
-        const updateData: CustomerDbUpdate = {};
+        const updateData: CustomerDbUpdate = {
+            edited_at: new Date().toISOString()
+        };
         if (data.name !== undefined) updateData.name = data.name;
         if (data.cpf !== undefined) updateData.cpf = data.cpf;
         if (data.phone !== undefined) updateData.phone = data.phone;
@@ -47,7 +54,9 @@ export const customerService = {
     },
 
     async deleteCustomer(id_cliente: string): Promise<void> {
-        const { error } = await supabase.from("Cliente").delete().eq("id_cliente", id_cliente);
+        const { error } = await supabase.from("Cliente")
+        .update({deleted_at: new Date().toISOString() })
+        .eq("id_cliente", id_cliente);
 
         if (error) throw error;
     }
