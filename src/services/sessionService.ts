@@ -119,6 +119,20 @@ export const sessionService = {
             .eq("id_consulta", id_consulta);
 
         if (error) throw error;
+    },
+
+    async getTodaySession(): Promise<SessionDbRow[]> {
+        const todayStr = new Date().toISOString().split("T")[0];
+
+        const { data, error } = await supabase
+        .from("Consulta")
+        .select(SESSION_SELECT_FIELDS)
+        .eq("data", todayStr)
+        .is("deleted_at", null)
+        .order("horario", {ascending: true});
+
+        if(error) throw error;
+        return (data || []) as unknown as SessionDbRow[];
     }
 }
 
