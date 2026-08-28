@@ -1,11 +1,36 @@
+import { useEffect, useState } from "react";
 import classes from "./Home.module.css";
 
 //Components
-import { Card, Table, Button } from "@/components/ui";
+import { Card, Table, Button, DescriptionPopover } from "@/components/ui";
 import { RiAddFill } from "react-icons/ri";
+
+// Services
+import { sessionService } from "@/services/sessionService";
+import type { SessionDbRow } from '@/services/sessionService';
+
+//Utils
+import { formatHour } from "@/utils/formatters";
 
 
 const Home = () => {
+  const [todaySessions, setTodaySessions] = useState<SessionDbRow[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTodaySession() {
+      try {
+        const sessions = await sessionService.getTodaySession();
+        setTodaySessions(sessions);
+      } catch (error) {
+        console.error("Erro ao buscar consultas de hoje: ", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchTodaySession();
+  }, []);
+
   return (
       <>
         <span className={classes.title}>Dashboard</span>
@@ -27,11 +52,25 @@ const Home = () => {
                   <p>Clientes</p>
                   <p>Horario</p>
                 </div>
-                  <div className={classes.schedule_table}>
-                    <p className={classes.client_name}>Leticia Evangelista Oliveira da Silva</p>
-                    <p>08:30</p>
-                  </div>
-              </div>
+
+                {isLoading ? (
+                  <p className={classes.loading_text}>Carregando horários...</p>
+                ) : todaySessions.length === 0 ? (
+                  <p className={classes.empty_text}>Nenhuma consulta para hoje</p>
+                ) : (
+                  todaySessions.map((session) => (
+                    <div key={session.id_consulta} className={classes.schedule_table}>
+                      <p className={classes.client_name}>
+                        <DescriptionPopover 
+                          text={session.Cliente?.name || "Cliente não informado"} 
+                          maxLength={25} 
+                        />
+                      </p>
+                      <p className={classes.client_horario}>{formatHour(session.horario)}</p>
+                    </div>
+                  ))
+                )}
+                </div>
                 <Button title="Consulta" icon={RiAddFill} padding=".6rem" width="100%"/>
               </div>
             </div>
