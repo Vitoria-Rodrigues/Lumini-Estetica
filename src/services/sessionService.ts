@@ -2,6 +2,8 @@ import { supabase } from "./supabase";
 
 export type SessionStatus = 'Pendente' | 'Realizada' | 'Cancelada';
 
+export type PaymentStatus = 'Pendente' | 'Processando' | 'Pago' | 'Recusado';
+
 export interface SessionData{
     id_cliente: string;
     id_funcionario: string;
@@ -11,6 +13,7 @@ export interface SessionData{
     observacoes?: string;
     valor_cobrado: number;
     status?: SessionStatus;
+    status_pagamento?: PaymentStatus;
     edited_at?: string | null;
     deleted_at?: string | null;
 }
@@ -28,6 +31,7 @@ export interface SessionDbRow{
     deleted_at?: string | null;
     valor_cobrado: number;
     status: SessionStatus;
+    status_pagamento: PaymentStatus;
 
     Cliente?: { name: string, cpf: string } | null;
     Funcionario?: { name: string } | null;
@@ -43,6 +47,7 @@ export interface SessionDbUpdate{
     observacoes?: string;
     valor_cobrado?: number;
     status?: SessionStatus;
+    status_pagamento?: PaymentStatus;
     edited_at?: string;
     deleted_at?: string | null;
 }
@@ -60,7 +65,8 @@ const SESSION_SELECT_FIELDS = `
   edited_at,
   deleted_at,
   status,
-  Cliente(name),
+  status_pagamento,
+  Cliente(name, cpf),
   Funcionario(name),
   Procedimento(name, price)
 `;
@@ -106,6 +112,7 @@ export const sessionService = {
         if (data.observacoes !== undefined) updateData.observacoes = data.observacoes;
         if (data.valor_cobrado !== undefined) updateData.valor_cobrado = data.valor_cobrado;
         if (data.status !== undefined) updateData.status = data.status;
+        if(data.status_pagamento !== undefined) updateData.status_pagamento = data.status_pagamento;
         
         const { error } = await supabase.from("Consulta").update(updateData).eq("id_consulta", id_consulta);
 
