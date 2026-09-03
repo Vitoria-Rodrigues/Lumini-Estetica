@@ -6,6 +6,7 @@ import { ConfirmModal } from "@/components/ui/Modal/ConfirmModal/ConfirmModal";
 import { ViewLayout, Search } from "@/components/layout";
 import type { Column } from "@/components/ui/Table/Table";
 import { RescheduleModal } from "@/components/ui/Modal/RescheduleModal/RescheduleModal";
+import { PaymentModal } from "@/components/ui/Modal/PaymentModal/PaymentModal";
 
 // Services
 import { type SessionDbRow, sessionService } from "@/services/sessionService";
@@ -14,6 +15,7 @@ import { employeeService, type EmployeeDbRow } from "@/services/employeeService"
 import { type ProcedureDbRow, procedureService } from "@/services/procedureService";
 import type { SessionData as FormSessionData } from "@/form-config/types";
 import type{ SessionData, SessionStatus } from "@/services/sessionService";
+import type { PaymentStatus } from "@/services/sessionService";
 
 //Context
 import { useToaster } from "@/contexts/ToasterContext/useToaster";
@@ -26,6 +28,7 @@ import { formatHour, formatCPF } from "@/utils/formatters";
 import { RiAddFill } from "react-icons/ri";
 import { FaCheck } from "react-icons/fa6";
 import { HiX } from "react-icons/hi";
+import { FaCreditCard } from "react-icons/fa";
 
 
 const Session = () => {
@@ -42,17 +45,27 @@ const Session = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sessionToComplete, setSessionToComplete] = useState<SessionDbRow | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [paymentSessionId, setPaymentSessionId] = useState<string | null>(null);
+  const [isPaymentOpen, setIsPaymentOpen] = useState<boolean>(false);
 
   const { addToast } = useToaster();
   const { user } = useAuth();
 
   const canManage = user?.role === "admin" || user?.role === "recepcionista";
   const isOperational = ["esteticista", "massagista", "depiladora"];
+  
   const statusConfig: Record<SessionStatus, { label: string; color: string; bgColor: string }> = {   
    Pendente:  { label: 'Pendente',  color: '#d29a00', bgColor: '#F5EBCE' },
    Realizada: { label: 'Realizada', color: '#199400', bgColor: '#E3F3DB' },
    Cancelada: { label: 'Cancelada', color: '#d00404', bgColor: '#ffe7e7' },
  };
+
+ const paymentStatusConfig: Record<PaymentStatus, { label: string; color: string; bgColor: string}> = {
+  Pendente: { label: 'Pendente', color: '#d29a00', bgColor: '#F5EBCE' },
+  Processando: { label: 'Processando', color: '#0077b6', bgColor: '#e0f2fe' },
+  Pago: { label: 'Pago', color: '#199400', bgColor: '#E3F3DB' },
+  Recusado: { label: 'Recusado', color: '#d00404', bgColor: '#ffe7e7' },
+};
 
   const filteredSessions = sessions.filter((session) => {
     if(!searchQuery.trim()) return true;
@@ -110,17 +123,26 @@ const Session = () => {
   const executeConfirmSession = async () => {
     if(!sessionToComplete || !sessionToComplete.id_consulta) return;
 
+    const confirmedId = sessionToComplete.id_consulta;
+
     try{
-      await sessionService.updateSession(sessionToComplete.id_consulta, {
+      await sessionService.updateSession(confirmedId, {
         ...sessionToComplete,
         status: "Realizada",
       } as unknown as Partial<SessionData>);
+
       addToast("Consulta confirmada com sucesso!", "success");
       loadInitialData();
+
+      setIsConfirmOpen(false);
+      setSessionToComplete(null);
+
+      setPaymentSessionId(confirmedId);
+      setIsPaymentOpen(true);
+
     } catch (error) {
       console.error("Erro ao confirmar consulta: ", error);
       addToast("Erro ao confirmar consulta", "error");
-    } finally {
       setIsConfirmOpen(false);
       setSessionToComplete(null);
     }
@@ -254,7 +276,7 @@ const Session = () => {
       key: "horario", render: (session) => formatHour(session.horario)
     },
     {
-      label: "Status",
+      label: "Status Consulta",
       key: "status", 
       render: (item) => {
       const config = statusConfig[item.status] || statusConfig.Pendente;
@@ -275,6 +297,23 @@ const Session = () => {
       }
     },
     {
+      label: "Status Pagamento",
+      key: "status_pagamento" as keyof SessionDbRow,
+      render: (item: SessionDbRow) => {
+      const config = paymentStatusConfig[item.status_pagamento] || paymentStatusConfig.Pendente;
+      return (
+      <span style={{ padding: '0.25rem 0.75rem', 
+      borderRadius: '9999px', 
+      fontSize: '0.8rem', 
+      fontWeight: 600, 
+      color: config.color, 
+      backgroundColor: config.bgColor }}>
+        {config.label}
+      </span>
+    );
+  }
+},
+    {
       label: "Valor Total",
       key: "id_procedimento",
       render: (item) => {
@@ -290,55 +329,74 @@ const Session = () => {
             label: "Ações",
             key: "actions" as keyof SessionDbRow,
             render: (item: SessionDbRow) => {
-              const isActionAllowed = item.status === "Pendente" || 
-              item.status === "Cancelada";
+              const isPaymentApproved = item.status_pagamento === "Pago";
+              const isActionAllowed = item.status === "Pendente" || item.status === "Cancelada";
 
-              if (!isActionAllowed) {
-                return null;
-              }
-              
-              return(
-              <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
-                {isOperational && (
-                  <button
-                  onClick={() => handleConfirmSession(item)}
-                  style={{
-                    background: "#06a120",
-                    border: "none",
-                    cursor: "pointer",
-                    color: "#fff",
-                    fontWeight: 700,
-                    display: "flex",
-                    alignItems: "center",
-                    padding: ".5rem 1.2rem",
-                    borderRadius: "1rem",
-                  }}
-                  title="Confirmar Consulta"
-                >
-                  <FaCheck size={16} />
-                </button>
-                )}
+              return (
+                <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
+                  {isOperational && isActionAllowed && (
+                    <button
+                      onClick={() => handleConfirmSession(item)}
+                      style={{
+                        background: "#06a120",
+                        border: "none",
+                        cursor: "pointer",
+                        color: "#fff",
+                        fontWeight: 700,
+                        display: "flex",
+                        alignItems: "center",
+                        padding: ".5rem 1.2rem",
+                        borderRadius: "1rem",
+                      }}
+                      title="Confirmar Consulta"
+                    >
+                      <FaCheck size={16} />
+                    </button>
+                  )}
 
-                {canManage && (
-                <button
-                  onClick={() => handleOpenCancelModal(item)}
-                  style={{
-                    background: "#9D1806",
-                    border: "none",
-                    cursor: "pointer",
-                    color: "#fff",
-                    display: "flex",
-                    alignItems: "center",
-                    padding: ".5rem 1.2rem",
-                    borderRadius: "1rem",
-                  }}
-                  title="Cancelar / Reagendar Consulta"
-                >
-                  <HiX size={17} />
-                </button>
-                )}
-              </div>
-              )
+                  {!isPaymentApproved && (
+                    <button
+                      onClick={() => {
+                        setPaymentSessionId(item.id_consulta);
+                        setIsPaymentOpen(true);
+                      }}
+                      style={{
+                        background: item.status_pagamento === "Recusado" ? "#d00404" : "#9c4427",
+                        border: "none",
+                        cursor: "pointer",
+                        color: "#fff",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: ".5rem 1.2rem",
+                        borderRadius: "1rem",
+                        fontWeight: 600,
+                      }}
+                      title={item.status_pagamento === "Recusado" ? "Tentar Pagamento Novamente" : "Realizar Pagamento"}
+                    >
+                      <FaCreditCard size={16} />
+                    </button>
+                  )}
+
+                  {canManage && isActionAllowed && (
+                    <button
+                      onClick={() => handleOpenCancelModal(item)}
+                      style={{
+                        background: "#9D1806",
+                        border: "none",
+                        cursor: "pointer",
+                        color: "#fff",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: ".5rem 1.2rem",
+                        borderRadius: "1rem",
+                      }}
+                      title="Cancelar / Reagendar Consulta"
+                    >
+                      <HiX size={17} />
+                    </button>
+                  )}
+                </div>
+              );
             },
           },
         ]
@@ -387,6 +445,15 @@ const Session = () => {
      description="Deseja confirmar que esta consulta foi realizada?"
      onConfirm={executeConfirmSession}
      onClose={() => setIsConfirmOpen(false)}
+    />
+
+    <PaymentModal
+      isOpen={isPaymentOpen}
+      idConsulta={paymentSessionId}
+      onClose={() => {
+        setIsPaymentOpen(false);
+        setPaymentSessionId(null);
+      }}
     />
 
       <RescheduleModal
