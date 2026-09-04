@@ -7,13 +7,21 @@ export interface Column<T>{
 }
 
 export interface TableProps<T>  {
+    title?: string | React.ReactNode;
     columns?: Column<T>[];
     data?: T[];
 }
 
-const Table = <T,>({ columns = [], data = []}: TableProps<T>) => {
+const Table = <T,>({ title, columns = [], data = []}: TableProps<T>) => {
   return (
     <div className={classes.table_container}>
+        {title && (
+        typeof title === "string" ? (
+          <h2 className={classes.table_title}>{title}</h2>
+        ) : (
+          title
+        )
+      )}
        <table className={classes.table}>
         <thead className={classes.table_head}>
             <tr>
