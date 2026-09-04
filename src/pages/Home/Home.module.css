@@ -27,7 +27,7 @@
     width: 60%;
     display: flex;
     flex-direction: column;
-    gap: 4rem;
+    gap: 7rem;
 }
 
 .stats{
@@ -109,4 +109,50 @@
 .empty_text{
     font-weight: 500;
     font-size: .9rem;
+}
+
+.home_table_wrapper {
+    max-height: 280px;
+    overflow-y: auto;
+    border-radius: 1.2rem;
+}
+
+.home_table_wrapper::-webkit-scrollbar {
+    width: 3px;
+}
+.home_table_wrapper::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 4px;
+}
+
+.pago {
+  color: #199400;
+  background-color: #E3F3DB;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.pendente {
+  color: #d29a00;
+  background-color: #F5EBCE;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.processando {
+  color: #0077b6;
+  background-color: #e0f2fe;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.recusado {
+  color: #d00404;
+  background-color: #ffe7e7;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
 }
