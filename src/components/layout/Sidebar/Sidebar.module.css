@@ -49,7 +49,6 @@
 
 .link_item.active {
     background-color: #f6ece9;
-   transform: translateX(10px); 
  }
 
 .side_icon {

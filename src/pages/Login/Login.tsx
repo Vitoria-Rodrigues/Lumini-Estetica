@@ -76,7 +76,6 @@ const handleSubmit = async () => {
       <div className={classes.password}>
         <div className={classes.password_forgot}>
         <label htmlFor="password">Senha:</label>
-        <a href="#">Esqueceu a sua senha?</a>
         </div>
         <input id="password"
         type="password" placeholder="Digite a sua senha"
