@@ -5,8 +5,8 @@
     overflow-x: auto;
     padding: .8rem;
     border-radius: 1.2rem;
-    box-shadow: 5px 8px 20px 1px rgba(0, 0, 0, 0.05), 
-                5px 8px 20px 1px rgba(0, 0, 0, 0.05);
+    -webkit-box-shadow: 5px 8px 15px 1px rgba(22, 14, 14, 0.04); 
+    box-shadow: 5px 8px 15px 1px rgba(0,0,0,0.04);
 }
 
 .table_title{
