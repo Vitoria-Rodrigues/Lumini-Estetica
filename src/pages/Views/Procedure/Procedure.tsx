@@ -17,8 +17,8 @@ import type { Column } from "@/components/ui/Table/Table";
 
 //icon
 import { RiAddFill } from "react-icons/ri";
-import { BsBrush } from "react-icons/bs";
-import { FaRegTrashAlt } from "react-icons/fa";
+import { BsBrushFill } from "react-icons/bs";
+import { FaTrashAlt } from "react-icons/fa";
 
 const Procedure = () => {
   const [procedure, setProcedure] = useState<ProcedureDbRow[]>([]);
@@ -154,40 +154,40 @@ const Procedure = () => {
       ...baseColumns,
       {
         label: "Ações",
-        key: "actions" as keyof ProcedureDbRow | "actions", // Garante o tipo exato da chave
+        key: "actions" as keyof ProcedureDbRow | "actions", 
         render: (proc: ProcedureDbRow) => (
           <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
             <button
               onClick={() => handleEditClick(proc)}
               style={{
-                background: "#B25E21",
-                border: "none",
+                background: "#fff",
+                border: "1px solid #000000",
                 cursor: "pointer",
-                color: "#fff",
+                color: "#1e1e1e",
                 display: "flex",
                 alignItems: "center",
-                padding: ".5rem 1.2rem",
+                padding: ".5rem .9rem",
                 borderRadius: "1rem",
               }}
               title="Editar procedimento"
             >
-              <BsBrush size={16} />
+              <BsBrushFill size={16} />
             </button>
             <button
               onClick={() => handleDeleteClick(proc.id_prodecimento)}
               style={{
-                background: "#9D1806",
-                border: "none",
-                cursor: "pointer",
-                color: "#fff",
-                display: "flex",
-                alignItems: "center",
-                padding: ".5rem 1.2rem",
-                borderRadius: "1rem",
+                background: "#fff",
+                  border: "1px solid #9D1806",
+                  cursor: "pointer",
+                  color: "#9D1806",
+                  display: "flex",
+                  alignItems: "center",
+                  padding: ".5rem .9rem",
+                  borderRadius: "1rem",
               }}
               title="Excluir procedimento"
             >
-              <FaRegTrashAlt size={16} />
+              <FaTrashAlt size={16} />
             </button>
           </div>
         ),
