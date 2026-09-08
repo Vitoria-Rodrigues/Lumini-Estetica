@@ -20,8 +20,8 @@ import type { Column } from "@/components/ui/Table/Table";
 
 // Icons
 import { RiAddFill } from "react-icons/ri";
-import { FaRegTrashAlt } from "react-icons/fa";
-import { BsBrush } from "react-icons/bs";
+import { FaTrashAlt } from "react-icons/fa";
+import { BsBrushFill } from "react-icons/bs";
 
 const Professional = () => {
   const [employees, setEmployees] = useState<EmployeeData[]>([]);
@@ -150,34 +150,34 @@ const Professional = () => {
           <button
             onClick={() => handleEditClick(employee)}
             style={{
-              background: "#B25E21",
-              border: "none",
-              cursor: "pointer",
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              padding: ".5rem 1.2rem",
-              borderRadius: "1rem",
+              background: "#fff",
+                border: "1px solid #000000",
+                cursor: "pointer",
+                color: "#1e1e1e",
+                display: "flex",
+                alignItems: "center",
+                padding: ".5rem .9rem",
+                borderRadius: "1rem",
             }}
             title="Editar profissional"
           >
-            <BsBrush size={16} />
+            <BsBrushFill size={16} />
           </button>
           <button
             onClick={() => handleDeleteClick(employee.user_id)}
             style={{
-              background: "#9D1806",
-              border: "none",
+              background: "#fff",
+              border: "1px solid #9D1806",
               cursor: "pointer",
-              color: "#fff",
+              color: "#9D1806",
               display: "flex",
               alignItems: "center",
-              padding: ".5rem 1.2rem",
+              padding: ".5rem .9rem",
               borderRadius: "1rem",
             }}
             title="Excluir profissional"
           >
-            <FaRegTrashAlt size={16} />
+            <FaTrashAlt size={16} />
           </button>
         </div>
       ),
