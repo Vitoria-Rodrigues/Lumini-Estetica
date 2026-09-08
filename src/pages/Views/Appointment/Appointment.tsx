@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { ViewLayout, Search } from "@/components/layout";
 import { Table, TableSkeleton, DescriptionPopover, Register } from "@/components/ui";
 import type { Column } from "@/components/ui/Table/Table";
+import { RescheduleModal } from "@/components/ui/Modal/RescheduleModal/RescheduleModal";
 
 // Services
 import { sessionService, type SessionDbRow, type SessionStatus } from "@/services/sessionService";
@@ -21,6 +22,7 @@ import { formatHour, formatCPF } from "@/utils/formatters";
 
 //Icons
 import { BsBrush } from "react-icons/bs";
+import { HiX } from "react-icons/hi";
 
 const getLocalDateString = () => {
   const now = new Date();
@@ -36,9 +38,11 @@ const Appointment = () => {
   
   const [customers, setCustomers] = useState<CustomerDbRow[]>([]);
   const [procedures, setProcedures] = useState<ProcedureDbRow[]>([]);
-
   const [sessions, setSessions] = useState<SessionDbRow[]>([]);
   const [employees, setEmployees] = useState<EmployeeDbRow[]>([]);
+  const [rescheduleSession, setRescheduleSession] = useState<SessionDbRow | null>(null);
+  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
+
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingSession, setEditingSession] = useState<SessionDbRow | null>(null);
@@ -97,16 +101,18 @@ const Appointment = () => {
         const term = searchQuery.trim().toLowerCase();
         const termCleanDigits = searchQuery.replace(/\D/g, "");
 
+        const customerName = session.Cliente?.name?.toLowerCase() || "";
         const employeeName = session.Funcionario?.name?.toLowerCase() || "";
         const rawCpf = session.Cliente?.cpf || "";
         const cleanCpf = rawCpf.replace(/\D/g, "");
         const formattedCpf = formatCPF(rawCpf);
 
-        const matchesName = employeeName.includes(term);
+        const matchesCustomerName = customerName.includes(term);
+        const matchesEmployeeName = employeeName.includes(term);
         const matchesCleanCpf = termCleanDigits.length > 0 && cleanCpf.includes(termCleanDigits);
         const matchesFormattedCpf = formattedCpf.includes(term);
 
-        if(!matchesName && !matchesCleanCpf && !matchesFormattedCpf){
+        if (!matchesCustomerName && !matchesEmployeeName && !matchesCleanCpf && !matchesFormattedCpf) {
           return false;
         }
       }
@@ -125,6 +131,41 @@ const Appointment = () => {
     setEditingSession(null);
   }
 
+  const handleOpenCancelModal = (session: SessionDbRow) => {
+     setRescheduleSession(session);
+     setIsRescheduleOpen(true);
+   };
+
+   const handleRescheduleSubmit = async (sessionId: string, newDate: string, newTime: string) => {
+  try {
+    await sessionService.updateSession(sessionId, {
+      data: newDate,
+      horario: newTime,
+      status: "Pendente",
+    });
+    addToast("Consulta reagendada com sucesso!", "success");
+    setIsRescheduleOpen(false);
+    setRescheduleSession(null);
+    await loadData();
+  } catch (err) {
+    console.error("Erro ao reagendar consulta:", err);
+    addToast("Erro ao reagendar consulta.", "error");
+  }
+};
+
+const handleDefinitiveCancelSubmit = async (sessionId: string) => {
+  try {
+    await sessionService.deleteSession(sessionId);
+    addToast("Consulta cancelada com sucesso!", "success");
+    setIsRescheduleOpen(false);
+    setRescheduleSession(null);
+    await loadData();
+  } catch (err) {
+    console.error("Erro ao cancelar consulta:", err);
+    addToast("Erro ao cancelar consulta.", "error");
+  }
+};
+
   const handleRegisterSubmit = async (data: FormSessionData) => {
     if(!editingSession || !editingSession.id_consulta) return;
 
@@ -133,7 +174,7 @@ const Appointment = () => {
 
       const selectedProcedureId = data.procedureIds[0] || editingSession.id_procedimento;
       const proc = procedures.find((p) => p.id_prodecimento === selectedProcedureId);
-      const price = proc ? proc.price : undefined;
+      const price = proc ? proc.price : editingSession.valor_cobrado;
 
       await sessionService.updateSession(editingSession.id_consulta, {
         id_cliente: data.customerId,
@@ -262,20 +303,38 @@ const initialValues = editingSession
             <button
               onClick={() => handleEditClick(item)}
               style={{
-                background: "#B25E21",
-                border: "none",
-                cursor: "pointer",
-                color: "#fff",
-                fontWeight: 700,
-                display: "flex",
-                alignItems: "center",
-                padding: ".5rem 1.2rem",
-                borderRadius: "1rem",
+                background: "#fff",
+                  border: "1px solid #000",
+                  cursor: "pointer",
+                  color: "#000000",
+                  display: "flex",
+                  alignItems: "center",
+                  padding: ".5rem .9rem",
+                  borderRadius: "1rem",
               }}
               title="Editar Consulta"
             >
               <BsBrush size={16} />
             </button>
+            
+            {canManage && (
+              <button
+                onClick={() => handleOpenCancelModal(item)}
+                style={{
+                  background: "#fff",
+                  border: "1px solid #9D1806",
+                  cursor: "pointer",
+                  color: "#9D1806",
+                  display: "flex",
+                  alignItems: "center",
+                  padding: ".5rem .9rem",
+                  borderRadius: "1rem",
+                }}
+                title="Cancelar / Reagendar Consulta"
+                 >
+                <HiX size={17} />
+              </button>
+            )}
           </div>
           )
         }
@@ -337,6 +396,14 @@ const initialValues = editingSession
       ) : (
         <Table columns={columns} data={filteredSessions} />
       )}
+
+      <RescheduleModal
+        isOpen={isRescheduleOpen}
+        session={rescheduleSession}
+        onClose={() => setIsRescheduleOpen(false)}
+        onReschedule={handleRescheduleSubmit}
+        onCancelDefinitive={handleDefinitiveCancelSubmit}
+      />
 
       <Register
         type="session"
