@@ -5,7 +5,6 @@ import { Button, Table, TableSkeleton, Register, DescriptionPopover } from "@/co
 import { ConfirmModal } from "@/components/ui/Modal/ConfirmModal/ConfirmModal";
 import { ViewLayout, Search } from "@/components/layout";
 import type { Column } from "@/components/ui/Table/Table";
-import { RescheduleModal } from "@/components/ui/Modal/RescheduleModal/RescheduleModal";
 import { PaymentModal } from "@/components/ui/Modal/PaymentModal/PaymentModal";
 
 // Services
@@ -27,7 +26,6 @@ import { formatHour, formatCPF } from "@/utils/formatters";
 //Icons
 import { RiAddFill } from "react-icons/ri";
 import { FaCheck } from "react-icons/fa6";
-import { HiX } from "react-icons/hi";
 import { FaCreditCard } from "react-icons/fa";
 
 
@@ -40,8 +38,7 @@ const Session = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [rescheduleSession, setRescheduleSession] = useState<SessionDbRow | null>(null);
-  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
+  
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sessionToComplete, setSessionToComplete] = useState<SessionDbRow | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -147,35 +144,6 @@ const Session = () => {
       setSessionToComplete(null);
     }
   };
-
-  const handleOpenCancelModal = (session: SessionDbRow) => {
-     setRescheduleSession(session);
-     setIsRescheduleOpen(true);
-   };
-
-   const handleRescheduleSubmit = async (sessionId: string, newDate: string, newTime: string) => {
-     try {
-       await sessionService.updateSession(sessionId, {
-         data: newDate,
-         horario: newTime,
-         status: "Pendente",
-       });
-       addToast("Consulta reagendada com sucesso!", "success");
-       loadInitialData();
-     } catch (err) {
-       addToast("Erro ao reagendar consulta.", "error");
-     }
-   };
-
-   const handleDefinitiveCancelSubmit = async (sessionId: string) => {
-     try {
-       await sessionService.deleteSession(sessionId);
-       addToast("Consulta cancelada com sucesso!", "success");
-       loadInitialData();
-     } catch (err) {
-       addToast("Erro ao cancelar consulta.", "error");
-     }
-   };
 
   const handleRegisterSubmit = async (data: FormSessionData) => {
   try {
@@ -338,14 +306,14 @@ const Session = () => {
                     <button
                       onClick={() => handleConfirmSession(item)}
                       style={{
-                        background: "#06a120",
-                        border: "none",
+                        background: "#fff",
+                        border: "1px solid #13950f",
                         cursor: "pointer",
-                        color: "#fff",
+                        color: "#12960d",
                         fontWeight: 700,
                         display: "flex",
                         alignItems: "center",
-                        padding: ".5rem 1.2rem",
+                        padding: ".5rem .9rem",
                         borderRadius: "1rem",
                       }}
                       title="Confirmar Consulta"
@@ -361,38 +329,19 @@ const Session = () => {
                         setIsPaymentOpen(true);
                       }}
                       style={{
-                        background: item.status_pagamento === "Recusado" ? "#d00404" : "#9c4427",
-                        border: "none",
+                        background: "#fff",
+                        border: item.status_pagamento === "Recusado" ? "1px solid #d00404" : "1px solid #9c4427",
                         cursor: "pointer",
-                        color: "#fff",
+                        color: item.status_pagamento === "Recusado" ? "#d00404" : "#9c4427",
                         display: "flex",
                         alignItems: "center",
-                        padding: ".5rem 1.2rem",
+                        padding: ".5rem .9rem",
                         borderRadius: "1rem",
                         fontWeight: 600,
                       }}
                       title={item.status_pagamento === "Recusado" ? "Tentar Pagamento Novamente" : "Realizar Pagamento"}
                     >
                       <FaCreditCard size={16} />
-                    </button>
-                  )}
-
-                  {canManage && isActionAllowed && (
-                    <button
-                      onClick={() => handleOpenCancelModal(item)}
-                      style={{
-                        background: "#9D1806",
-                        border: "none",
-                        cursor: "pointer",
-                        color: "#fff",
-                        display: "flex",
-                        alignItems: "center",
-                        padding: ".5rem 1.2rem",
-                        borderRadius: "1rem",
-                      }}
-                      title="Cancelar / Reagendar Consulta"
-                    >
-                      <HiX size={17} />
                     </button>
                   )}
                 </div>
@@ -455,14 +404,6 @@ const Session = () => {
         setPaymentSessionId(null);
       }}
     />
-
-      <RescheduleModal
-        isOpen={isRescheduleOpen}
-        session={rescheduleSession}
-        onClose={() => setIsRescheduleOpen(false)}
-        onReschedule={handleRescheduleSubmit}
-        onCancelDefinitive={handleDefinitiveCancelSubmit}
-      />
 
     </ViewLayout>
   );
