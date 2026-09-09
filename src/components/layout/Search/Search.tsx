@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { Button } from "@/components/ui";
+import { RiSearchLine } from "react-icons/ri";
 import classes from "./Search.module.css"; 
 
 type SearchProps = {
     placeholder?: string;
     value?: string;
     onChange?: (value: string) => void;
-    onSearch?: (value: string) => void;
 };
 
 
@@ -14,7 +13,6 @@ const Search = ({
   placeholder = "Buscar...",
   value,
   onChange,
-  onSearch 
 }: SearchProps) => {
   
   const [internalQuery, setInternalQuery] = useState("");
@@ -30,14 +28,10 @@ const Search = ({
     }
   }
 
-    const handleSearchClick = () => {
-      if(onSearch){
-        onSearch(query);
-      }
-  };
-
   return (
     <div className={classes.search_container}>
+      <div className={classes.input_wrapper}>
+      <RiSearchLine className={classes.search_icon} size={20} />
       <input 
         type="text" 
         placeholder={placeholder}
@@ -45,12 +39,7 @@ const Search = ({
         onChange={handleChange}
         className={classes.search_input}
       />
-      <Button 
-        title="Buscar" 
-        onClick={handleSearchClick}
-        padding=".6rem" 
-        width="15%"
-      />
+      </div>
     </div>
   )
 }
