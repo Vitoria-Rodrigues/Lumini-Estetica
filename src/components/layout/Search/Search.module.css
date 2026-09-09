@@ -1,13 +1,25 @@
 .search_container{
-    width: 100%;
+    width: 80%;
     display: flex;
-    justify-content: space-between;
     align-items: center;
 }
 
-.search_container input{
-    width: 80%;
-    padding: .7rem;
+.input_wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.search_icon {
+    position: absolute;
+    left: 0.8rem;
+    color: #888;
+}
+
+.search_input{
+    width: 100%;
+    padding: .7rem .7rem .7rem 2.6rem;
     font-weight: 500;
     outline: none;
     border-radius: .3rem;
