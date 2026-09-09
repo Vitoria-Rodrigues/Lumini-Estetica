@@ -15,13 +15,20 @@ import { formatHour } from "@/utils/formatters";
 //Icons
 import { RiAddFill } from "react-icons/ri";
 
+interface StatsCardData{
+  id: string;
+  title: string;
+  valueCard: number;
+  message: string;
+}
 
 const Home = () => {
   const [todaySessions, setTodaySessions] = useState<SessionDbRow[]>([]);
   const [recentSessions, setRecentSessions] = useState<SessionDbRow[]>([]);
+  const [stats, setStats] = useState<StatsCardData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const columns: Column<SessionDbRow>[] = [
+  const recentColumns: Column<SessionDbRow>[] = [
     {
       label: "Cliente",
       key: "id_cliente",
@@ -46,6 +53,77 @@ const Home = () => {
       },
     },
   ];
+
+  const todayColumns: Column<SessionDbRow>[] = [
+  {
+    label: "Cliente",
+    key: "id_cliente",
+    render: (session) => (
+      <DescriptionPopover text={session.Cliente?.name || "Cliente não informado"} maxLength={15}/>
+    ),
+  },
+  {
+    label: "Horario",
+    key: "horario",
+    render: (session) => formatHour(session.horario),
+  },
+];
+
+useEffect(() => {
+    async function fetchData() {
+    try{
+      const [today, recent] = await Promise.all([
+        sessionService.getTodaySession(),
+        sessionService.listSessions(),
+      ]);
+
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+
+      const realizadosMes = recent.filter((session) => {
+        if(!session.data || session.status !== "Realizada") return false;
+        const d = new Date(session.data);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear
+      }).length;
+
+      const vendasMesCount = recent.filter((session) => {
+        if(!session.data || session.status_pagamento !== "Pago") return false;
+        const v = new Date(session.data);
+        return v.getMonth() === currentMonth && v.getFullYear() === currentYear
+      }).length;
+
+      setStats([
+        {
+          id: "realizados",
+          title: "Procedimentos realizados",
+          valueCard: realizadosMes,
+          message: "Sessões concluidas",
+        }, 
+        {
+          id: "vendas",
+          title: "Total de Vendas",
+          valueCard: vendasMesCount,
+          message: "Pagamentos confirmados",
+        },
+        {
+          id: "hoje",
+          title: "Atendimentos",
+          valueCard: today.length,
+          message: "Agendados para hoje"
+        }
+      ]);
+
+      setTodaySessions(today);
+      setRecentSessions(recent);
+    } catch (error) {
+      console.error("Erro ao buscar dados: ", error);
+    } finally{
+      setIsLoading(false);
+    }
+  }
+    fetchData();
+  }, []);
   
   useEffect(() => {
   async function fetchData() {
@@ -77,52 +155,44 @@ const Home = () => {
   fetchData();
 }, []);
 
-  return (
-      <>
-        <span className={classes.title}>Dashboard</span>
-          <h3 className={classes.schedule_title}>Proximos atendimentos</h3>
-            <div className={classes.tables_container}>
-              <div className={classes.tables}>
-                <div className={classes.stats}>
-                  <Card title="Procedimentos realizados" valueCard={140} message="+12% em relação ao mês anterior"/>
-                  <Card title="Total de Vendas" valueCard={85} message="+15% em relação ao mês anterior" />
-                </div>
-              <div className={classes.table}>
-              <div className={classes.home_table_wrapper}>
-              <Table title={"Consultas recentes"} columns={columns} data={recentSessions} />
-              </div>
+   return (
+    <>
+      <span className={classes.title}>Dashboard</span>
+      <div className={classes.tables_container}>
+        <div className={classes.tables}>
+          <div className={classes.stats}>
+            {stats.map((stat) => (
+              <Card
+              key={stat.id}
+              title={stat.title}
+              valueCard={stat.valueCard}
+              message={stat.message} />
+            ))}
+          </div>
+          <div className={classes.table}>
+            <div className={classes.home_table_wrapper}>
+              <Table title="Consultas recentes" columns={recentColumns} data={recentSessions} />
             </div>
-            </div>
-            <div className={classes.next_client}>
-              <div className={classes.clients}>
-                <div className={classes.clients_time}>
-                  <p>Clientes</p>
-                  <p>Horario</p>
-                </div>
+          </div>
+        </div>
 
-                {isLoading ? (
-                  <p className={classes.loading_text}>Carregando horários...</p>
-                ) : todaySessions.length === 0 ? (
-                  <p className={classes.empty_text}>Nenhuma consulta para hoje</p>
-                ) : (
-                  todaySessions.map((session) => (
-                    <div key={session.id_consulta} className={classes.schedule_table}>
-                      <p className={classes.client_name}>
-                        <DescriptionPopover 
-                          text={session.Cliente?.name || "Cliente não informado"} 
-                          maxLength={25} 
-                        />
-                      </p>
-                      <p className={classes.client_horario}>{formatHour(session.horario)}</p>
-                    </div>
-                  ))
-                )}
-                </div>
-                <Button title="Consulta" icon={RiAddFill} padding=".6rem" width="100%"/>
-              </div>
+        <div className={classes.next_client}>
+          {isLoading ? (
+            <p className={classes.loading_text}>Carregando horários...</p>
+          ) : (
+            <div className={classes.next_sessions}>
+              <Table 
+                title="Próximos atendimentos" 
+                columns={todayColumns} 
+                data={todaySessions} 
+              />
             </div>
-      </>
-  )
-}
+          )}
+          <Button title="Consulta" icon={RiAddFill} padding=".6rem" width="100%"/>
+        </div>
+      </div>
+    </>
+  );
+};
 
 export default Home

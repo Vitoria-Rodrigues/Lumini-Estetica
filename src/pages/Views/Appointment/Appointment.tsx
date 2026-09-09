@@ -21,7 +21,7 @@ import { useToaster } from "@/contexts/ToasterContext/useToaster";
 import { formatHour, formatCPF } from "@/utils/formatters";
 
 //Icons
-import { BsBrush } from "react-icons/bs";
+import { BsBrushFill } from "react-icons/bs";
 import { HiX } from "react-icons/hi";
 
 const getLocalDateString = () => {
@@ -314,7 +314,7 @@ const initialValues = editingSession
               }}
               title="Editar Consulta"
             >
-              <BsBrush size={16} />
+              <BsBrushFill size={16} />
             </button>
             
             {canManage && (
