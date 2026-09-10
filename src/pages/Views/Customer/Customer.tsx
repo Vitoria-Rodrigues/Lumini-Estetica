@@ -202,19 +202,25 @@ const Customer = () => {
       title="Cliente"
       actionButton={
         canModify ? (
-      <Button title={"Cliente"} 
-      icon={RiAddFill} 
-      padding=".6rem" width="15%"
-      onClick={() => { setEditingCustomer(null); 
-        setIsModalOpen(true);
-      }}
-      />
-    ) : undefined
-    }
-      searchComponent={<Search placeholder="Buscar por nome ou CPF do cliente"
-        value={searchQuery}
-        onChange={(val) => setSearchQuery(val)}
-      />}
+          <Button 
+            title={"Cliente"} 
+            icon={RiAddFill} 
+            padding=".6rem" 
+            width="15%"
+            onClick={() => { 
+              setEditingCustomer(null); 
+              setIsModalOpen(true);
+            }}
+          />
+        ) : undefined
+      }
+      searchComponent={
+        <Search 
+          placeholder="Buscar por nome ou CPF do cliente"
+          value={searchQuery}
+          onChange={(val) => setSearchQuery(val)}
+        />
+      }
     >
 
     {isLoading ? (
