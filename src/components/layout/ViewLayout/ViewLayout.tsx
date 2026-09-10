@@ -6,6 +6,7 @@ interface ViewLayoutProps {
   actionButton?: React.ReactNode;
   searchComponent?: React.ReactNode;
   children?: React.ReactNode;
+  actionButtonPosition?: "title" | "search";
 }
 
 const ViewLayout: React.FC<ViewLayoutProps> = ({
@@ -13,16 +14,18 @@ const ViewLayout: React.FC<ViewLayoutProps> = ({
   actionButton,
   searchComponent,
   children,
+  actionButtonPosition = "search",
 }) => {
   return (
     <>
         <span className={classes.title_container}>
           <h3>{title}</h3>
-          {actionButton}
+          {actionButtonPosition === "title" && actionButton}
         </span>
         {searchComponent && (
           <div className={classes.search_container}>
             {searchComponent}
+            {actionButtonPosition === "search" && actionButton}
           </div>
         )}
         {children}
