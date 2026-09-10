@@ -346,6 +346,7 @@ const initialValues = editingSession
   return (
     <ViewLayout
     title="Agenda do Dia"
+    actionButtonPosition="title"
     actionButton={
       <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
 
