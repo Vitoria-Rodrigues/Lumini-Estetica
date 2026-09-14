@@ -15,7 +15,11 @@ interface RegisterProps<T extends RegisterType>{
     type: T;
     onSubmit: (data: RegisterDataMap[T]) => void;
     isSubmitting?: boolean;
-    dynamicOptions?: Partial<Record<keyof RegisterDataMap[T], string[] | { label: string; value: string; [key: string]: unknown }[]>>;
+    dynamicOptions?: Partial<Record<keyof RegisterDataMap[T], 
+        string[] | 
+        { label: string; value: string; [key: string]: unknown }[] |
+        ((selectedId: string) => { label: string; value: string; [key: string]: unknown }[])
+    >>;
     initialValues?: Partial<RegisterDataMap[T]> | null;
 }
 function isSessionData(
@@ -41,6 +45,8 @@ const Register = <T extends RegisterType> ({isOpen,
     initialValues}: RegisterProps<T>) => {
 
 const [formData, setFormaData] = useState<Partial<RegisterDataMap[T]>>({});
+
+const selectedSpecialtyId = (formData as Partial<RegisterDataMap["session"]>)?.specialtyId;
 
 useEffect(() => {
     if(isOpen) {
@@ -89,13 +95,30 @@ useEffect(() => {
     }
 }, [formData, dynamicOptions, type]);
 
+useEffect(() => {
+         if (type === "session" && selectedSpecialtyId !== undefined) {
+             setFormaData(prev => {
+                 const sessionPrev = prev as Partial<RegisterDataMap["session"]>;
+                 if (sessionPrev.procedureIds?.length || sessionPrev.employeeId || sessionPrev.price) {
+                     return {
+                         ...prev,
+                         procedureIds: [],
+                         employeeId: "",
+                         price: 0
+                     } as unknown as Partial<RegisterDataMap[T]>;
+                 }
+                 return prev;
+             });
+         }
+     }, [selectedSpecialtyId, type]);
 
     if (!isOpen) return null;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         if(isSubmitting) return;
 
-        let { name, value, type: inputType } = e.target;
+        const { name, type: inputType } = e.target;
+        let value = e.target.value;
  
         if (name === "cpf") {
         value = formatCPF(value);
@@ -147,11 +170,16 @@ useEffect(() => {
                     const value = String(rawValue ?? "");
 
                     const dynamicOpts = dynamicOptions?.[field.name as keyof RegisterDataMap[T]];
-                    const rawOptions = dynamicOpts !== undefined
-                        ? dynamicOpts
+                    const currentSpecialtyId = String((formData as Partial<RegisterDataMap["session"]>)?.specialtyId || "");
+                    const resolvedOpts = typeof dynamicOpts === "function"
+                        ? dynamicOpts(currentSpecialtyId)
+                        : dynamicOpts;
+
+                    const rawOptions = resolvedOpts !== undefined
+                        ? resolvedOpts
                         : (field.option && field.option.length > 0 ? field.option : []);
 
-                    const selectOptions = rawOptions.map(opt =>
+                    const selectOptions = (rawOptions as (string | { label: string; value: string })[]).map(opt =>
                         typeof opt === "string" ? { label: opt, value: opt } : { label: opt.label, value: opt.value }
                     );
 
