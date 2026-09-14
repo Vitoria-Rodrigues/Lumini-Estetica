@@ -12,6 +12,7 @@ import { type SessionDbRow, sessionService } from "@/services/sessionService";
 import { type CustomerDbRow, customerService } from "@/services/customerService";
 import { employeeService, type EmployeeDbRow } from "@/services/employeeService";
 import { type ProcedureDbRow, procedureService } from "@/services/procedureService";
+import { type SpecialtyDbRow, specialtyService } from "@/services/specialtyService";
 import type { SessionData as FormSessionData } from "@/form-config/types";
 import type{ SessionData, SessionStatus } from "@/services/sessionService";
 import type { PaymentStatus } from "@/services/sessionService";
@@ -34,6 +35,7 @@ const Session = () => {
   const [customers, setCustomers] = useState<CustomerDbRow[]>([]);
   const [employees, setEmployees] = useState<EmployeeDbRow[]>([]);
   const [procedures, setProcedures] = useState<ProcedureDbRow[]>([]);
+  const [specialties, setSpecialties] = useState<SpecialtyDbRow[]>([]);
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -87,18 +89,20 @@ const Session = () => {
   const loadInitialData = async () => {
     try {
       setIsLoading(true);
-      const [sessionsData, customersData, employeesData, proceduresData] =
+      const [sessionsData, customersData, employeesData, proceduresData, specialtiesData] =
         await Promise.all([
           sessionService.listSessions(),
           customerService.listCustomers(),
           employeeService.listEmployees(),
           procedureService.listProcedures(),
+          specialtyService.listSpecialties(),
         ]);
 
       setSessions(sessionsData);
       setCustomers(customersData);
       setEmployees(employeesData);
       setProcedures(proceduresData);
+      setSpecialties(specialtiesData);
     } catch (err) {
       console.error(err);
       addToast("Erro ao carregar dados da agenda.", "error");
@@ -181,26 +185,30 @@ const Session = () => {
     setIsModalOpen(false);
   };
 
+  const specialtyOptions = specialties.map((s) => ({
+    label: s.nome,
+    value: String(s.id_especialidade),
+  }));
+
   const customerOptions = customers.map((c) => ({
     label: c.name,
     value: c.id_cliente,
   }));
 
-  const employeeOptions = employees.map((e) => ({
-    label: e.name,
-    value: String(e.id_funcionario),
-  }));
-
-  const procedureOptions = procedures.map((p) => ({
-    label: p.name,
-    value: p.id_prodecimento,
-    price: p.price,
-  }));
-
   const sessionDynamicOptions = {
+    specialtyId: specialtyOptions,
     customerId: customerOptions,
-    employeeId: employeeOptions,
-    procedureIds: procedureOptions,
+
+    procedureIds: (selectedSpecialtyId: string) => procedures
+    .filter((p) => !selectedSpecialtyId ||
+     String(p.id_especialidade) === selectedSpecialtyId)
+     .map((p) => ({ label: p.name, value: p.id_prodecimento, price: p.price })),
+
+     employeeId: (selectedSpecialtyId: string) => employees
+     .filter((e) =>
+        !selectedSpecialtyId ||
+        e.especialidades?.some((esp) => String(esp.id_especialidade) === selectedSpecialtyId)
+      ).map((e) => ({ label: e.name, value: String(e.id_funcionario) })),
   };
 
   const initialValues = null;

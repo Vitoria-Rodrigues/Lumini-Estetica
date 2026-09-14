@@ -3,6 +3,7 @@ import type { ProcedureData } from "@/form-config/types";
 
 export interface ProcedureDbRow extends ProcedureData {
     id_prodecimento: string;
+    id_especialidade?: number | null;
     created_at?: string;
     edited_at?: string | null;
     deleted_at?: string | null;
@@ -35,7 +36,7 @@ export const procedureService = {
 
     async listProcedures(): Promise<ProcedureDbRow[]> {
         const { data, error } = await supabase.from("Procedimento")
-            .select("id_prodecimento, name, description, price, duration, category: id_categoria")
+            .select("id_prodecimento, name, description, price, duration, category: id_categoria,id_especialidade")
             .is("deleted_at", null)
             .order("name", { ascending: true });
         

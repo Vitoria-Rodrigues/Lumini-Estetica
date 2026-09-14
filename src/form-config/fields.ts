@@ -27,6 +27,7 @@ export const REGISTER_FIELDS: { [K in RegisterType]: FieldConfig<K>[] } = {
     ],
 
     session: [
+        { name: "specialtyId", label: "Especialidade:", type: "select", required: true },
         { name: "customerId", label: "Cliente:", type: "select", required: true },
         { name: "employeeId", label: "Funcionário:", type: "select", required: true },
         { name: "procedureIds", label: "Procedimentos:", type: "select", required: true },
@@ -43,4 +44,3 @@ export const TITLE_MAP: Record<RegisterType, string> = {
     procedure: "Procedimento",
     session: "Consulta"
 };
-
