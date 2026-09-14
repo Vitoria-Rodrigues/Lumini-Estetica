@@ -27,6 +27,7 @@ export interface ProcedureData{
 }
 
 export interface SessionData {
+    specialtyId: string;
     customerId: string;
     employeeId: string;
     procedureIds: string[];
@@ -55,6 +56,5 @@ export interface FieldConfig<T extends RegisterType> {
     disabled?: boolean; 
     option?: string[] | { label: string; value: string; [key: string]: unknown }[];
 }
-
 
 
