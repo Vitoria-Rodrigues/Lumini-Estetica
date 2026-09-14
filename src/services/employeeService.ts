@@ -10,6 +10,7 @@ export interface EmployeeDbRow {
   name: string;
   edited_at?: string | null;  
   deleted_at?: string | null;
+  especialidades?: { id_especialidade: number }[];
 }
 
 export const employeeService = {
@@ -43,7 +44,7 @@ export const employeeService = {
 
     async listEmployees(): Promise<EmployeeDbRow[]>{
         const { data, error } = await supabase.from("Funcionario")
-        .select("*").is("deleted_at", null)
+        .select("*, funcionario_especialidade(id_especialidade)").is("deleted_at", null)
         .order("name", { ascending: true });
 
         if(error) throw error;
