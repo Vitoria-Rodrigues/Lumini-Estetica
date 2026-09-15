@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import type { ProcedureData } from "@/form-config/types";
 import { procedureService, type ProcedureDbRow } from "@/services/procedureService";
 import { categoryService, type categoryDbRow } from "@/services/categoryService";
+import { specialtyService, type SpecialtyDbRow } from "@/services/specialtyService";
+import { employeeService, type EmployeeDbRow } from "@/services/employeeService";
 
 //Context
 import { useToaster } from "@/contexts/ToasterContext/useToaster";
@@ -26,6 +28,8 @@ const Procedure = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [categories, setCategories] = useState<categoryDbRow[]>([]);
+  const [specialties, setSpecialties] = useState<SpecialtyDbRow[]>([]);
+  const [employees, setEmployees] = useState<EmployeeDbRow[]>([]);
   const [editingProcedure, setEditingProcedure] = useState<ProcedureDbRow | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -49,7 +53,21 @@ const Procedure = () => {
   });
 
   useEffect(() => {
-    categoryService.listCategories().then(setCategories);
+    const loadAuxData = async () => {
+      try {
+        const [cats, specs, emps] = await Promise.all([
+          categoryService.listCategories(),
+          specialtyService.listSpecialties(),
+          employeeService.listEmployees(),
+        ]);
+        setCategories(cats || []);
+        setSpecialties(specs || []);
+        setEmployees(emps || []);
+      } catch (error) {
+        console.error("Erro ao carregar dados auxiliares:", error);
+      }
+    };
+    loadAuxData();
   }, []);
 
   const loadProcedure = async () => {
@@ -131,6 +149,28 @@ const Procedure = () => {
     setEditingProcedure(null);
   };
 
+  const procedureDynamicOptions = {
+    category: categories.map((c) => ({
+      label: c.descricao,
+      value: String(c.id_category),
+    })),
+    specialtyId: specialties.map((s) => ({
+      label: s.nome,
+      value: String(s.id_especialidade),
+    })),
+    employeeId: (selectedSpecialtyId: string) =>
+      employees
+        .filter(
+          (emp) =>
+            !selectedSpecialtyId ||
+            emp.especialidades?.some((esp) => String(esp.id_especialidade) === selectedSpecialtyId)
+        )
+        .map((emp) => ({
+          label: emp.name,
+          value: String(emp.id_funcionario),
+        })),
+  };
+
   const baseColumns: Column<ProcedureDbRow>[] = [
     { label: "Nome", key: "name" },
     { label: "Descrição", key: "description", render: (item) => <DescriptionPopover text={item.description} /> },
@@ -144,8 +184,16 @@ const Procedure = () => {
       label: "Categoria", 
       key: "category", 
       render: (proc) => {
-        const cat = categories.find(c => c.id_category === proc.category);
+        const cat = categories.find(c => String(c.id_category) === String(proc.category));
         return cat ? cat.descricao : (proc.category || "");
+      }
+    },
+    {
+      label: "Especialidade",
+      key: "id_especialidade" as keyof ProcedureDbRow,
+      render: (proc) => {
+        const spec = specialties.find(s => s.id_especialidade === proc.id_especialidade);
+        return spec ? spec.nome : "Não informado";
       }
     },
 ];
@@ -239,8 +287,16 @@ const Procedure = () => {
         onClose={handleCloseModal}
         onSubmit={handleRegisterSubmit}
         isSubmitting={isSubmitting} 
-        dynamicOptions={{category: categories.map(c => ({ label: c.descricao, value: c.id_category }))}}
-        initialValues={editingProcedure}
+        dynamicOptions={procedureDynamicOptions}
+        initialValues={
+          editingProcedure
+            ? {
+                ...editingProcedure,
+                specialtyId: editingProcedure.id_especialidade ? String(editingProcedure.id_especialidade) : "",
+                category: String(editingProcedure.category ?? ""),
+              }
+            : null
+        }
       />
     </ViewLayout>
   );
