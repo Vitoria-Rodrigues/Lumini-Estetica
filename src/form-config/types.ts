@@ -24,9 +24,13 @@ export interface ProcedureData{
     price: number;
     duration: string;
     category: string;
+    specialtyId: string;
+    employeeId?: string; 
 }
 
 export interface SessionData {
+    customerCpf?: string;
+    customerName?: string;
     specialtyId: string;
     customerId: string;
     employeeId: string;
@@ -49,7 +53,7 @@ export type RegisterType = keyof RegisterDataMap;
 export interface FieldConfig<T extends RegisterType> {
     name: keyof RegisterDataMap[T];
     label: string;
-    type: "text" | "number" | "email" | "tel" | "select" | "date" | "password";
+    type: "text" | "number" | "email" | "tel" | "select" | "date" | "password" | "time";
     placeholder?: string;
     maxLength?: number;
     required?: boolean;
