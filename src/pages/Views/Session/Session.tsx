@@ -191,24 +191,33 @@ const Session = () => {
   }));
 
   const customerOptions = customers.map((c) => ({
-    label: c.name,
+    label: `${c.name} - ${formatCPF(c.cpf)}`,
     value: c.id_cliente,
+    name: c.name,
+    cpf: c.cpf,
   }));
 
   const sessionDynamicOptions = {
-    specialtyId: specialtyOptions,
+    customerCpf: customerOptions,
     customerId: customerOptions,
+    specialtyId: specialtyOptions,
 
     procedureIds: (selectedSpecialtyId: string) => procedures
     .filter((p) => !selectedSpecialtyId ||
      String(p.id_especialidade) === selectedSpecialtyId)
-     .map((p) => ({ label: p.name, value: p.id_prodecimento, price: p.price })),
+     .map((p) => ({ 
+      label: p.name, 
+      value: p.id_prodecimento, 
+      price: p.price })),
 
      employeeId: (selectedSpecialtyId: string) => employees
      .filter((e) =>
         !selectedSpecialtyId ||
         e.especialidades?.some((esp) => String(esp.id_especialidade) === selectedSpecialtyId)
-      ).map((e) => ({ label: e.name, value: String(e.id_funcionario) })),
+      ).map((e) => ({
+         label: e.name, 
+         value: String(e.id_funcionario) 
+      })),
   };
 
   const initialValues = null;
@@ -222,7 +231,13 @@ const Session = () => {
     {
       label: "Funcionário",
       key: "id_funcionario",
-      render: (item) => item.Funcionario?.name || "Não informado",
+      render: (item) => {
+        const nomeFuncionario = item.Funcionario?.name || "Não informado";
+        if (nomeFuncionario === "Não informado") {
+        return nomeFuncionario;
+      }
+      return <DescriptionPopover text={nomeFuncionario} maxLength={10} />;
+      },
     },
     {
       label: "Procedimento",
@@ -232,25 +247,32 @@ const Session = () => {
     if (nomeProcedimento === "Não informado") {
       return nomeProcedimento;
     }
-    return <DescriptionPopover text={nomeProcedimento} maxLength={30} />;
+    return <DescriptionPopover text={nomeProcedimento} maxLength={10} />;
   },
-    },
+  },
     {
-      label: "Data",
-      key: "data",
+    label: "Data e Horário",
+    key: "data",
       render: (item) => {
-        if (!item.data) return "";
+      let formattedDate = "";
+      if (item.data) {
         const parts = item.data.split("-");
-        if (parts.length === 3) {
-          return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-        return item.data;
-      },
+        formattedDate = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : item.data;
+      }
+      const formattedTime = item.horario ? formatHour(item.horario) : "";
+
+      if (!formattedDate && !formattedTime) return "Não informado";
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+          <span style={{ fontWeight: 500 }}>{formattedDate || "—"}</span>
+          <span style={{ fontSize: "0.8rem", color: "#666" }}>
+            {formattedTime ? `${formattedTime}h` : "—"}
+          </span>
+        </div>
+      );
     },
-    {
-      label: "Horário",
-      key: "horario", render: (session) => formatHour(session.horario)
-    },
+  },
     {
       label: "Status Consulta",
       key: "status", 
@@ -273,6 +295,16 @@ const Session = () => {
       }
     },
     {
+      label: "Valor Total",
+      key: "id_procedimento",
+      render: (item) => {
+        const price = item.Procedimento?.price;
+        return typeof price === "number"
+          ? `R$ ${price.toFixed(2).replace(".", ",")}`
+          : "R$ 0,00";
+      },
+    },
+    {
       label: "Status Pagamento",
       key: "status_pagamento" as keyof SessionDbRow,
       render: (item: SessionDbRow) => {
@@ -289,16 +321,6 @@ const Session = () => {
     );
   }
 },
-    {
-      label: "Valor Total",
-      key: "id_procedimento",
-      render: (item) => {
-        const price = item.Procedimento?.price;
-        return typeof price === "number"
-          ? `R$ ${price.toFixed(2).replace(".", ",")}`
-          : "R$ 0,00";
-      },
-    },
     ...(canManage || isOperational
       ? [
           {
