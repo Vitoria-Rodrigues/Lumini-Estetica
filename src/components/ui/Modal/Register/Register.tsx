@@ -22,6 +22,7 @@ interface RegisterProps<T extends RegisterType>{
     >>;
     initialValues?: Partial<RegisterDataMap[T]> | null;
 }
+
 function isSessionData(
     type: RegisterType,
     data: unknown
@@ -29,14 +30,7 @@ function isSessionData(
     return type === "session" && data !== null;
 }
 
-function isSessionOptions(
-    type: RegisterType,
-    options: unknown
-): options is Partial<Record<keyof RegisterDataMap["session"], { value: string; price: number }[]>> {
-    return type === "session" && options !== undefined;
-}
-
-const Register = <T extends RegisterType> ({isOpen, 
+const Register = <T extends RegisterType>({isOpen, 
     onClose, 
     type, 
     onSubmit, 
@@ -44,209 +38,234 @@ const Register = <T extends RegisterType> ({isOpen,
     dynamicOptions,
     initialValues}: RegisterProps<T>) => {
 
-const [formData, setFormaData] = useState<Partial<RegisterDataMap[T]>>({});
+    const [formData, setFormData] = useState<Partial<RegisterDataMap[T]>>({});
 
-const selectedSpecialtyId = (formData as Partial<RegisterDataMap["session"]>)?.specialtyId;
-
-useEffect(() => {
-    if(isOpen) {
-        if(initialValues){
-            setFormaData(initialValues);
-        }
-        else{
-            const initialData = {} as Partial<RegisterDataMap[T]>;
-    
-            REGISTER_FIELDS[type].forEach((field) => {
-                initialData[field.name] = "" as unknown as RegisterDataMap[T][keyof RegisterDataMap[T]];
-            });
-    
-            setFormaData(initialData);
-        }
-    }
-}, [isOpen, type, initialValues]);
-
-useEffect(() => {
-    const rawData: unknown = formData;
-    const rawOpts: unknown = dynamicOptions;
-    if (isSessionData(type, rawData) && isSessionOptions(type, rawOpts)) {
-        const selectedProcedures = rawData.procedureIds;
-        const availableProcedures = rawOpts.procedureIds;
-
-        if (selectedProcedures && Array.isArray(selectedProcedures) && availableProcedures) {
-            const total = selectedProcedures.reduce((sum, id) => {
-                const proc = availableProcedures.find(p => p.value === id);
-                return sum + (proc?.price || 0);
-            }, 0);
-
-            if (rawData.price !== total) {
-                setFormaData(prev => ({
-                    ...prev,
-                    price: total
-                } as unknown as Partial<RegisterDataMap[T]>));
-            }
-        } else {
-            if (rawData.price !== 0) {
-                setFormaData(prev => ({
-                    ...prev,
-                    price: 0
-                } as unknown as Partial<RegisterDataMap[T]>));
+    useEffect(() => {
+        if (isOpen) {
+            if (initialValues) {
+                setFormData(initialValues);
+            } else {
+                const initialData = {} as Partial<RegisterDataMap[T]>;
+                REGISTER_FIELDS[type].forEach((field) => {
+                    initialData[field.name] = "" as unknown as RegisterDataMap[T][keyof RegisterDataMap[T]];
+                });
+                setFormData(initialData);
             }
         }
-    }
-}, [formData, dynamicOptions, type]);
+    }, [isOpen, type, initialValues]);
 
-useEffect(() => {
-         if (type === "session" && selectedSpecialtyId !== undefined) {
-             setFormaData(prev => {
-                 const sessionPrev = prev as Partial<RegisterDataMap["session"]>;
-                 if (sessionPrev.procedureIds?.length || sessionPrev.employeeId || sessionPrev.price) {
-                     return {
-                         ...prev,
-                         procedureIds: [],
-                         employeeId: "",
-                         price: 0
-                     } as unknown as Partial<RegisterDataMap[T]>;
-                 }
-                 return prev;
-             });
-         }
-     }, [selectedSpecialtyId, type]);
+    const selectedSpecialtyId = isSessionData(type, formData)
+        ? String((formData as Partial<RegisterDataMap["session"]>).specialtyId || "")
+        : "";
+
+    useEffect(() => {
+        const rawData: unknown = formData;
+        if (isSessionData(type, rawData)) {
+            const selectedProcedures = rawData.procedureIds;
+            const rawOpts = dynamicOptions as Record<string, unknown> | undefined;
+            const rawProcOpts = rawOpts?.procedureIds;
+            const currentSpecialtyId = rawData.specialtyId ? String(rawData.specialtyId) : "";
+            const resolvedProcOpts = typeof rawProcOpts === "function"
+                ? (rawProcOpts as (id: string) => unknown)(currentSpecialtyId)
+                : rawProcOpts;
+
+            if (selectedProcedures && Array.isArray(selectedProcedures) && Array.isArray(resolvedProcOpts)) {
+                const total = selectedProcedures.reduce((sum, id) => {
+                    const proc = (resolvedProcOpts as { value: string; price?: number }[]).find(p => p.value === id);
+                    return sum + (proc?.price || 0);
+                }, 0);
+
+                if (rawData.price !== total) {
+                    setFormData(prev => ({
+                        ...prev,
+                        price: total
+                    } as unknown as Partial<RegisterDataMap[T]>));
+                }
+            } else {
+                if (rawData.price !== 0) {
+                    setFormData(prev => ({
+                        ...prev,
+                        price: 0
+                    } as unknown as Partial<RegisterDataMap[T]>));
+                }
+            }
+        }
+    }, [selectedSpecialtyId, type]);
 
     if (!isOpen) return null;
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        if(isSubmitting) return;
+        if (isSubmitting) return;
 
-        const { name, type: inputType } = e.target;
+        const { name } = e.target;
         let value = e.target.value;
- 
+
         if (name === "cpf") {
-        value = formatCPF(value);
-
-        } else if (name === "phone"){
+            value = formatCPF(value);
+        } else if (name === "phone") {
             value = formatPhone(value);
-        } 
+        }
 
-        if(name === "price") {
+        if (name === "price") {
             value = value.replace(",", ".");
-            value = value.replace(/[^0-9.]/g,"");
+            value = value.replace(/[^0-9.]/g, "");
             const parts = value.split(".");
-            if(parts.length > 2){
+            if (parts.length > 2) {
                 value = `${parts[0]}.${parts.slice(1).join("")}`;
             }
         }
 
         if (name === "name") {
-        value = value.replace(/[^a-zA-ZÀ-ÿ\s]/g, "");
+            value = value.replace(/[^a-zA-ZÀ-ÿ\s]/g, "");
         }
 
-        setFormaData((prev) => ({
+        if (name === "specialtyId") {
+            setFormData(prev => ({
+                ...prev,
+                specialtyId: value,
+                procedureIds: [],
+                employeeId: "",
+            } as unknown as Partial<RegisterDataMap[T]>));
+            return;
+        }
+
+        if (name === "customerCpf") {
+            const formattedCpf = formatCPF(value);
+            const rawCustomerOpts = (dynamicOptions as Record<string, unknown>)?.customerCpf;
+            const resolvedCustomerOpts = typeof rawCustomerOpts === "function"
+                ? (rawCustomerOpts as (id: string) => unknown)("")
+                : rawCustomerOpts;
+            const cleanInputCpf = formattedCpf.replace(/\D/g, "");
+
+            let foundCustomer: { value: string; label: string; name?: string; cpf?: string } | undefined;
+            if (Array.isArray(resolvedCustomerOpts) && cleanInputCpf.length > 0) {
+                foundCustomer = (resolvedCustomerOpts as { value: string; label: string; name?: string; cpf?: string }[]).find((opt) => {
+                    const rawOptCpf = (opt.cpf || opt.label || "").replace(/\D/g, "");
+                    return rawOptCpf === cleanInputCpf || rawOptCpf.includes(cleanInputCpf);
+                });
+            }
+
+            setFormData(prev => ({
+                ...prev,
+                customerCpf: formattedCpf,
+                customerId: foundCustomer ? foundCustomer.value : "",
+                customerName: foundCustomer
+                    ? (foundCustomer.name || foundCustomer.label.split("-")[0].trim())
+                    : (cleanInputCpf.length === 11 ? "Cliente não encontrado" : ""),
+            } as unknown as Partial<RegisterDataMap[T]>));
+            return;
+        }
+
+        setFormData(prev => ({
             ...prev,
-            [name as keyof RegisterDataMap[T]]: inputType === "number" 
-            ? (value === "" ? "" : Number(value)) : value,
-        } as unknown as Partial<RegisterDataMap[T]>));
+            [name]: value,
+        }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-
-        if(isSubmitting) return;
-
+        if (isSubmitting) return;
         onSubmit(formData as RegisterDataMap[T]);
     };
 
-
     return (
-    <div className={classes.overlay} onClick={isSubmitting ? undefined: onClose}>
-      <div className={classes.modal_content} onClick={(e) => e.stopPropagation()}>
-        <header className={classes.modal_header}>
-            <h2>{initialValues ? "Editar" : "Cadastrar"} {TITLE_MAP[type]}</h2>
-        </header>
-        <form onSubmit={handleSubmit} className={classes.form}>
-            <div className={classes.fields_container}>
-                {REGISTER_FIELDS[type].map((field) => {
-                    const fieldName = String(field.name);
-                    const rawValue = formData[field.name];
-                    const value = String(rawValue ?? "");
+        <div className={classes.overlay} onClick={isSubmitting ? undefined : onClose}>
+            <div className={classes.modal_content} onClick={(e) => e.stopPropagation()}>
+                <header className={classes.modal_header}>
+                    <h2>{initialValues ? "Editar" : "Cadastrar"} {TITLE_MAP[type]}</h2>
+                </header>
+                <form onSubmit={handleSubmit} className={classes.form}>
+                    <div className={classes.fields_container}>
+                        {REGISTER_FIELDS[type].map((field) => {
+                            const fieldName = String(field.name);
+                            const rawValue = formData[field.name];
+                            const value = String(rawValue ?? "");
 
-                    const dynamicOpts = dynamicOptions?.[field.name as keyof RegisterDataMap[T]];
-                    const currentSpecialtyId = String((formData as Partial<RegisterDataMap["session"]>)?.specialtyId || "");
-                    const resolvedOpts = typeof dynamicOpts === "function"
-                        ? dynamicOpts(currentSpecialtyId)
-                        : dynamicOpts;
+                            const dynamicOpts = dynamicOptions?.[field.name as keyof RegisterDataMap[T]];
+                            const currentSpecialtyId = String((formData as Record<string, unknown>)?.specialtyId || "");
+                            const resolvedOpts = typeof dynamicOpts === "function"
+                                ? dynamicOpts(currentSpecialtyId)
+                                : dynamicOpts;
 
-                    const rawOptions = resolvedOpts !== undefined
-                        ? resolvedOpts
-                        : (field.option && field.option.length > 0 ? field.option : []);
+                            const rawOptions = resolvedOpts !== undefined
+                                ? resolvedOpts
+                                : (field.option && field.option.length > 0 ? field.option : []);
 
-                    const selectOptions = (rawOptions as (string | { label: string; value: string })[]).map(opt =>
-                        typeof opt === "string" ? { label: opt, value: opt } : { label: opt.label, value: opt.value }
-                    );
+                            const selectOptions = (rawOptions as (string | { label: string; value: string })[]).map(opt =>
+                                typeof opt === "string" ? { label: opt, value: opt } : { label: opt.label, value: opt.value }
+                            );
 
-                    return (
-                        <div key={fieldName} className={classes.form_group}>
-                            <label htmlFor={fieldName}>{field.label}</label>
+                            return (
+                                <div key={fieldName} className={classes.form_group}>
+                                    <label htmlFor={fieldName}>{field.label}</label>
 
-                            {field.type === "select" ? (
-                            fieldName === "procedureIds" ? (
-        
-                            <CustomSelect
-                                options={selectOptions}
-                                selectedValues={Array.isArray(formData[field.name]) ? (formData[field.name] as string[]) : []}
-                                onChange={(values) => {
-                                    setFormaData((prev) => ({
-                                        ...prev,
-                                        [field.name]: values
-                                    }));
-                                }}
-                                placeholder="Selecione os procedimentos..."
-                            />
-                        ) : (
-                            <select 
-                                id={fieldName}
-                                name={fieldName} 
-                                value={value}
-                                required={field.required} 
-                                onChange={handleChange}
-                                disabled={isSubmitting}
-                            >
-                                <option value="">Selecione uma opção..</option>
-                                {selectOptions.map((opt) => (
-                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                ))}
-                            </select>
-                        )
-   
-                            ) : (
-                                <input id={fieldName}
-                                name={fieldName}
-                                type={field.type}
-                                value={value}
-                                placeholder={field.placeholder || ""}
-                                required={field.required}
-                                onChange={handleChange}
-                                maxLength={field.maxLength}
-                                disabled={field.disabled || isSubmitting}/>
-                            )}
-                        </div>
-                    );
-                })}
+                                    {field.type === "select" ? (
+                                        fieldName === "procedureIds" ? (
+                                            <CustomSelect
+                                                options={selectOptions}
+                                                selectedValues={Array.isArray(formData[field.name]) ? (formData[field.name] as string[]) : []}
+                                                onChange={(values) => {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        [field.name]: values
+                                                    }));
+                                                }}
+                                                placeholder="Selecione os procedimentos..."
+                                            />
+                                        ) : (
+                                            <select
+                                                id={fieldName}
+                                                name={fieldName}
+                                                value={value}
+                                                required={field.required}
+                                                onChange={handleChange}
+                                                disabled={isSubmitting}
+                                            >
+                                                <option value="">Selecione uma opção..</option>
+                                                {selectOptions.map((opt) => (
+                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                ))}
+                                            </select>
+                                        )
+                                    ) : (
+                                        <input
+                                            id={fieldName}
+                                            name={fieldName}
+                                            type={field.type}
+                                            value={value}
+                                            placeholder={field.placeholder || ""}
+                                            required={field.required}
+                                            onChange={handleChange}
+                                            maxLength={field.maxLength}
+                                            disabled={field.disabled || isSubmitting}
+                                        />
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <footer className={classes.modal_footer}>
+                        <button
+                            type="button"
+                            className={classes.btn_cancel}
+                            onClick={onClose}
+                            disabled={isSubmitting}
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            className={classes.btn_submit}
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? "Salvando" : "Salvar"}
+                        </button>
+                    </footer>
+                </form>
             </div>
-            
-            <footer className={classes.modal_footer}>
-                <button type="button"
-                className={classes.btn_cancel} onClick={onClose} disabled={isSubmitting}>
-                    Cancelar
-                </button>
-                <button type="submit"
-                className={classes.btn_submit} disabled={isSubmitting}>
-                    {isSubmitting ? "Salvando" : "Salvar"}
-                </button>
-            </footer>
-        </form>
-      </div>
-    </div>
-  )
-}
+        </div>
+    );
+};
 
-export default Register
+export default Register;
