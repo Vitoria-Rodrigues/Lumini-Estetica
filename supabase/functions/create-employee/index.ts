@@ -55,7 +55,7 @@ serve(async (req: Request): Promise<Response> => {
 
     // 2. Consulta no banco se este usuário logado possui cargo de admin
     const { data: profile, error: profileCheckError } = await supabaseClient
-      .from('Funcionario')
+      .from('funcionario')
       .select('app_role')
       .eq('user_id', user.id)
       .single()
@@ -111,7 +111,7 @@ serve(async (req: Request): Promise<Response> => {
     // 5. Atualiza ou insere os dados cadastrais na tabela Funcionario
     // Usamos upsert para evitar falhas caso o trigger automático do banco não tenha sido executado ainda ou não exista
     const { error: updateError } = await adminClient
-      .from('Funcionario')
+      .from('funcionario')
       .upsert({
         user_id: authData.user.id,
         name,
