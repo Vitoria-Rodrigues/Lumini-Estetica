@@ -33,9 +33,9 @@ export interface SessionDbRow{
     status: SessionStatus;
     status_pagamento: PaymentStatus;
 
-    Cliente?: { name: string, cpf: string } | null;
-    Funcionario?: { name: string } | null;
-    Procedimento?: { name: string; price: number } | null;
+    cliente?: { name: string, cpf: string } | null;
+    funcionario?: { name: string } | null;
+    procedimento?: { name: string; price: number } | null;
 }
 
 export interface SessionDbUpdate{
@@ -66,14 +66,14 @@ const SESSION_SELECT_FIELDS = `
   deleted_at,
   status,
   status_pagamento,
-  Cliente(name, cpf),
-  Funcionario(name),
-  Procedimento(name, price)
+  cliente(name, cpf),
+  funcionario(name),
+  procedimento(name, price)
 `;
 
 export const sessionService = {
     async createSession(data: SessionData): Promise<SessionDbRow> {
-        const { data: response, error } = await supabase.from("Consulta").insert({
+        const { data: response, error } = await supabase.from("consulta").insert({
             id_cliente: data.id_cliente,
             id_funcionario: data.id_funcionario,
             id_procedimento: data.id_procedimento,
@@ -90,7 +90,7 @@ export const sessionService = {
 
     async listSessions(): Promise<SessionDbRow[]> {
         const { data, error } = await supabase
-            .from("Consulta")
+            .from("consulta")
             .select(SESSION_SELECT_FIELDS)
             .is("deleted_at", null)
             .order("data", { ascending: true })
@@ -114,14 +114,14 @@ export const sessionService = {
         if (data.status !== undefined) updateData.status = data.status;
         if(data.status_pagamento !== undefined) updateData.status_pagamento = data.status_pagamento;
         
-        const { error } = await supabase.from("Consulta").update(updateData).eq("id_consulta", id_consulta);
+        const { error } = await supabase.from("consulta").update(updateData).eq("id_consulta", id_consulta);
 
         if(error) throw error;
     },
 
     async deleteSession(id_consulta: string): Promise<void> {
         const { error } = await supabase
-            .from("Consulta")
+            .from("consulta")
             .update({deleted_at: new Date().toISOString()})
             .eq("id_consulta", id_consulta);
 
@@ -132,7 +132,7 @@ export const sessionService = {
         const todayStr = new Date().toISOString().split("T")[0];
 
         const { data, error } = await supabase
-        .from("Consulta")
+        .from("consulta")
         .select(SESSION_SELECT_FIELDS)
         .eq("data", todayStr)
         .is("deleted_at", null)
