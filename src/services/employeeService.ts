@@ -8,6 +8,7 @@ export interface EmployeeDbRow {
   id_funcionario: number;
   user_id: string;
   name: string;
+  app_role: AppRole;
   edited_at?: string | null;  
   deleted_at?: string | null;
   especialidades?: { id_especialidade: number }[];
@@ -50,6 +51,17 @@ export const employeeService = {
         if(error) throw error;
 
         return (data || []) as EmployeeDbRow[];
+    },
+
+    async syncEmployeeSpecialties(idFuncionario: number, specialtyId: string | number){
+        if(!idFuncionario || !specialtyId) return;
+
+        await supabase.from("funcionario_especialidade").delete().eq("id_funcionario", idFuncionario);
+
+        await supabase.from("funcionario_especialidade").insert({
+            id_funcionario: idFuncionario,
+            id_especialidade: Number(specialtyId)
+        });
     },
 
     async updateEmployee(userId: string, data: Partial<EmployeeData>){
