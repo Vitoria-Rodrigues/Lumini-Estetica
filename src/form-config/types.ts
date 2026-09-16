@@ -11,6 +11,7 @@ export interface EmployeeData{
     cpf: string;
     phone?: string;
     role: string;
+    specialtyId?: string;
     specialty: string;
     salary?: number;
     email: string;
