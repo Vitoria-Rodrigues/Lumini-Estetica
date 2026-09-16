@@ -17,7 +17,7 @@ export const paymentService = {
     },
 
     async getPaymentSession(id_consulta: string) {
-        const { data, error } = await supabase.from("Pagamento")
+        const { data, error } = await supabase.from("pagamento")
         .select("*")
         .eq("id_consulta", id_consulta)
         .is("deleted_at", null)

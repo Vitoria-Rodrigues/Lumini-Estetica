@@ -10,11 +10,22 @@ export interface SpecialtyDbRow{
 export const specialtyService = {
     async listSpecialties(): Promise<SpecialtyDbRow[]> {
         const { data, error } = await supabase
-        .from("Especialidade")
+        .from("especialidade")
         .select("*")
         .order("nome", { ascending: true });
 
         if(error) throw error;
         return (data || []) as SpecialtyDbRow[];
     },
+
+    async createSpecialty(nome: string): Promise<SpecialtyDbRow> {
+        const { data, error } = await supabase
+        .from("especialidade")
+        .insert({ nome })
+        .select()
+        .single();
+
+        if (error) throw error;
+        return data as SpecialtyDbRow;
+    }
 };

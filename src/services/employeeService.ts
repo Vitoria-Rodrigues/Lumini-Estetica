@@ -40,11 +40,23 @@ export const employeeService = {
             throw new Error(response.error);
         }
 
+        // Sincroniza a especialidade na tabela relacional usando o userId criado
+        if (response && response.userId && data.specialtyId) {
+            const { data: funcData } = await supabase.from("funcionario")
+                .select("id_funcionario")
+                .eq("user_id", response.userId)
+                .single();
+            
+            if (funcData) {
+                await this.syncEmployeeSpecialties(funcData.id_funcionario, data.specialtyId);
+            }
+        }
+
         return response;
     },
 
     async listEmployees(): Promise<EmployeeDbRow[]>{
-        const { data, error } = await supabase.from("Funcionario")
+        const { data, error } = await supabase.from("funcionario")
         .select("*, funcionario_especialidade(id_especialidade)").is("deleted_at", null)
         .order("name", { ascending: true });
 
@@ -54,18 +66,20 @@ export const employeeService = {
     },
 
     async syncEmployeeSpecialties(idFuncionario: number, specialtyId: string | number){
-        if(!idFuncionario || !specialtyId) return;
+        if(!idFuncionario) return;
 
         await supabase.from("funcionario_especialidade").delete().eq("id_funcionario", idFuncionario);
 
-        await supabase.from("funcionario_especialidade").insert({
-            id_funcionario: idFuncionario,
-            id_especialidade: Number(specialtyId)
-        });
+        if (specialtyId) {
+            await supabase.from("funcionario_especialidade").insert({
+                id_funcionario: idFuncionario,
+                id_especialidade: Number(specialtyId)
+            });
+        }
     },
 
     async updateEmployee(userId: string, data: Partial<EmployeeData>){
-        const { error } = await supabase.from("Funcionario")
+        const { data: funcData, error } = await supabase.from("funcionario")
         .update({
             name:data.name,
             cpf: data.cpf,
@@ -74,21 +88,29 @@ export const employeeService = {
             specialty: data.specialty,
             app_role: data.role,
             edited_at: new Date().toISOString()
-        }).eq("user_id", userId);
+        })
+        .eq("user_id", userId)
+        .select("id_funcionario")
+        .single();
 
         if(error) throw error;
+
+        // Sincroniza a especialidade após atualizar
+        if (funcData) {
+            await this.syncEmployeeSpecialties(funcData.id_funcionario, data.specialtyId || "");
+        }
     },
 
     async deletEmployee(userId: string) {
-        const { error } = await supabase.from("Funcionario")
-        .update({deleted_at: new Date().toISOString})
+        const { error } = await supabase.from("funcionario")
+        .update({deleted_at: new Date().toISOString()})
         .eq("user_id", userId);
 
         if(error) throw error;
     },
 
     async getMyProfile(){
-        const { data, error } = await supabase.from("Funcionario")
+        const { data, error } = await supabase.from("funcionario")
         .select("*").single();
 
         if(error) throw error;
