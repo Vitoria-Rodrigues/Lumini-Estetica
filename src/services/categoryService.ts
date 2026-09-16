@@ -8,7 +8,7 @@ export interface categoryDbRow{
 export const categoryService = {
     async listCategories(): Promise<categoryDbRow[]> {
         const { data, error } = await supabase
-        .from("Categoria").
+        .from("categoria").
         select("id_category: id_categoria, descricao")
         .order("descricao",  {ascending: true});
 
