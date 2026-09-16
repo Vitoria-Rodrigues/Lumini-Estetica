@@ -35,35 +35,35 @@ const Professional = () => {
 
   const { addToast } = useToaster();
 
-  const filteredEmployees = employees.filter((employees) => {
-      if(!searchQuery.trim()) return true;
-  
-      const term = searchQuery.trim().toLowerCase();
-      const termCleanDigits = searchQuery.replace(/\D/g, "");
-  
-      const customerName = employees.name?.toLowerCase();
-      const rawCpf = employees.cpf || "";
-      const cleanCpf = rawCpf.replace(/\D/g, "");
-      const formattedCpf = formatCPF(rawCpf);
-  
-      const matchesName = customerName.includes(term);
-      const matchesCleanCpf = termCleanDigits.length > 0 && cleanCpf.includes(termCleanDigits);
-  
-      const matchesFormattedCpf = formattedCpf.includes(term);
-  
-      return matchesName || matchesCleanCpf || matchesFormattedCpf;
-    });
-  
+  const filteredEmployees = employees.filter((employee) => {
+    if(!searchQuery.trim()) return true;
+
+    const term = searchQuery.trim().toLowerCase();
+    const termCleanDigits = searchQuery.replace(/\D/g, "");
+
+    const employeeName = employee.name?.toLowerCase() || "";
+    const rawCpf = employee.cpf || "";
+    const cleanCpf = rawCpf.replace(/\D/g, "");
+    const formattedCpf = formatCPF(rawCpf);
+
+    const matchesName = employeeName.includes(term);
+    const matchesCleanCpf = termCleanDigits.length > 0 && cleanCpf.includes(termCleanDigits);
+
+    const matchesFormattedCpf = formattedCpf.includes(term);
+
+    return matchesName || matchesCleanCpf || matchesFormattedCpf;
+  });
+
   const fetchEmployees = async () => {
     try {
       setIsLoading(true);
       const data = await employeeService.listEmployees();
       if (data) {
-        setEmployees(data as unknown as EmployeeData[]);
+        setEmployees(data.filter((emp) => emp.app_role !== "admin") as unknown as EmployeeData[]);
       }
     } catch (error) {
-      console.error("Erro ao carregar funcionarios: ", error);
-      addToast("Erro ao carregar os clientes", "error");
+      console.error("Erro ao carregar funcionários: ", error);
+      addToast("Erro ao carregar os profissionais", "error");
     } finally {
       setIsLoading(false);
     }
