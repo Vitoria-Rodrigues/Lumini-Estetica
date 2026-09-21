@@ -61,7 +61,7 @@ export const RescheduleModal = ({
         <div className={classes.overlay}>
             <div className={classes.modal}>
                 <h3 className={classes.title}>Cancelar / Reagendar Consulta</h3>
-                <p className={classes.clientText}>Cliente: <span>{session.Cliente?.name}</span></p>
+                <p className={classes.clientText}>Cliente: <span>{session.cliente?.name}</span></p>
 
                 <div className={classes.formGroup}>
                     <label className={classes.label}>
