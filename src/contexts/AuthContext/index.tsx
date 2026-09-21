@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             });
 
             const { data: employee, error } = await supabase
-                .from("Funcionario")
+                .from("funcionario")
                 .select("id_funcionario, name, app_role")
                 .eq("user_id", supabaseUser.id)
                 .maybeSingle();
