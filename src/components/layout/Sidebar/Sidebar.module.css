@@ -15,6 +15,11 @@
     align-self: center;
 }
 
+.nav_link {
+    flex: 1;
+    overflow-y: auto;
+}
+
 .nav_link ul{
     display: flex;
     flex-direction: column;
@@ -63,7 +68,8 @@
 }
 
 .log_out {
-    margin-top: 2.5rem;
+    margin-top: auto;
+    padding-top: 1rem;
     display: flex;
     align-items: center;
     gap: 1rem;
