@@ -5,8 +5,6 @@
     overflow-x: auto;
     padding: .8rem;
     border-radius: 1.2rem;
-    -webkit-box-shadow: 5px 8px 15px 1px rgba(22, 14, 14, 0.04); 
-    box-shadow: 5px 8px 15px 1px rgba(0,0,0,0.04);
 }
 
 .table_title{
@@ -39,7 +37,7 @@
 }
 
 .table_line td {
-  padding: 1.25rem 0.5rem;
+  padding: 1.25rem 0.2rem;
   font-size: 0.85rem;
   font-weight: 500;
   border-bottom: 1px solid #ccc; 
