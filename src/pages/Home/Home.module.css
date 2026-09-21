@@ -58,6 +58,10 @@
     height: 490px;
     border-radius: 1.2rem;
     overflow-y: auto;
+    background-color: #fff;
+    border-radius: 1.2rem;
+    -webkit-box-shadow: 5px 8px 15px 1px rgba(22, 14, 14, 0.04); 
+    box-shadow: 5px 8px 15px 1px rgba(0,0,0,0.04);
 }
 
 .next_sessions::-webkit-scrollbar {
