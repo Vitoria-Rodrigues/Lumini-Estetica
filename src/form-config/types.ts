@@ -2,7 +2,8 @@ export interface CustomerData{
     name: string;
     cpf: string;
     phone: string;
-    birthDate: string;
+    birthdate?: string;
+    birthDate?: string;
 }
 
 export interface EmployeeData{
@@ -12,11 +13,18 @@ export interface EmployeeData{
     phone?: string;
     role: string;
     specialtyId?: string;
-    specialty: string;
+    specialty?: string;
     salary?: number;
     email: string;
     password: string;
-    app_role: string;
+    app_role?: string;
+    funcionario_especialidade?: {
+        id_especialidade: number;
+        especialidade?: {
+            id_especialidade: number;
+            nome: string;
+        } | null;
+    }[];
 }
 
 export interface ProcedureData{

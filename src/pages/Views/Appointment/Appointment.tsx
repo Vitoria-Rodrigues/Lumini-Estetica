@@ -91,19 +91,21 @@ const Appointment = () => {
       const matchesDate = session.data === selectedDate;
       if(!matchesDate) return false;
 
-      if(isOperational){
-        if(String(session.id_funcionario) !== String(user?.employeeId)) return false;
-      } else if(selectedEmployeeId) {
-        if(String(session.id_funcionario) !== selectedEmployeeId) return false;
+      if (isOperational) {
+        if (!user?.employeeId || String(session.id_funcionario) !== String(user.employeeId)) {
+          return false;
+        }
+      } else if (selectedEmployeeId) {
+        if (String(session.id_funcionario) !== selectedEmployeeId) return false;
       }
 
       if(searchQuery.trim()){
         const term = searchQuery.trim().toLowerCase();
         const termCleanDigits = searchQuery.replace(/\D/g, "");
 
-        const customerName = session.Cliente?.name?.toLowerCase() || "";
-        const employeeName = session.Funcionario?.name?.toLowerCase() || "";
-        const rawCpf = session.Cliente?.cpf || "";
+        const customerName = session.cliente?.name?.toLowerCase() || "";
+        const employeeName = session.funcionario?.name?.toLowerCase() || "";
+        const rawCpf = session.cliente?.cpf || "";
         const cleanCpf = rawCpf.replace(/\D/g, "");
         const formattedCpf = formatCPF(rawCpf);
 
@@ -173,7 +175,7 @@ const handleDefinitiveCancelSubmit = async (sessionId: string) => {
       setIsSubmitting(true);
 
       const selectedProcedureId = data.procedureIds[0] || editingSession.id_procedimento;
-      const proc = procedures.find((p) => p.id_prodecimento === selectedProcedureId);
+      const proc = procedures.find((p) => p.id_procedimento === selectedProcedureId);
       const price = proc ? proc.price : editingSession.valor_cobrado;
 
       await sessionService.updateSession(editingSession.id_consulta, {
@@ -210,7 +212,7 @@ const handleDefinitiveCancelSubmit = async (sessionId: string) => {
 
   const procedureOptions = procedures.map((p) => ({
     label: p.name,
-    value: p.id_prodecimento,
+    value: p.id_procedimento,
     price: p.price,
   }));
 
@@ -235,19 +237,19 @@ const initialValues = editingSession
     {
       label: "Cliente",
       key: "id_cliente",
-      render: (item) => item.Cliente?.name || "Não informado",
+      render: (item) => item.cliente?.name || "Não informado",
     },
     {
       label: "Procedimento",
       key: "id_procedimento",
-      render: (item) => item.Procedimento?.name || "Não informado",
+      render: (item) => item.procedimento?.name || "Não informado",
     },
     ...(canManage
       ? [
           {
             label: "Atendente",
             key: "id_funcionario" as keyof SessionDbRow,
-            render: (item: SessionDbRow) => item.Funcionario?.name || "Não informado",
+            render: (item: SessionDbRow) => item.funcionario?.name || "Não informado",
           },
         ]
       : []),

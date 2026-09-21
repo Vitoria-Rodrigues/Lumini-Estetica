@@ -123,11 +123,11 @@ const Procedure = () => {
     try {
       setIsSubmitting(true);
       if (editingProcedure) {
-        if (!editingProcedure.id_prodecimento) {
+        if (!editingProcedure.id_procedimento) {
           addToast("ID do procedimento não encontrado", "error");
           return;
         }
-        await procedureService.updateProcedure(editingProcedure.id_prodecimento, data);
+        await procedureService.updateProcedure(editingProcedure.id_procedimento, data);
         addToast("Procedimento atualizado com sucesso!", "success");
       } else {
         await procedureService.createProcedure(data);
@@ -173,7 +173,7 @@ const Procedure = () => {
 
   const baseColumns: Column<ProcedureDbRow>[] = [
     { label: "Nome", key: "name" },
-    { label: "Descrição", key: "description", render: (item) => <DescriptionPopover text={item.description} /> },
+    { label: "Descrição", key: "description", render: (item) => <DescriptionPopover text={item.description} maxLength={15}/> },
     { 
       label: "Preço", 
       key: "price", 
@@ -222,7 +222,7 @@ const Procedure = () => {
               <BsBrushFill size={16} />
             </button>
             <button
-              onClick={() => handleDeleteClick(proc.id_prodecimento)}
+              onClick={() => handleDeleteClick(proc.id_procedimento)}
               style={{
                 background: "#fff",
                   border: "1px solid #9D1806",

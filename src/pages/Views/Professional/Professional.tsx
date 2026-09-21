@@ -141,7 +141,7 @@ const Professional = () => {
     { label: "CPF", key: "cpf", render: (employee) => formatCPF(employee.cpf)},
     { label: "Telefone", key: "phone", render: (employee) => formatPhone(employee.phone)},
     { label: "Função", key: "app_role" },
-    { label: "Especialidade", key: "specialty" },
+    { label: "Especialidade", key: "specialty", render: (employee) => employee.specialty || "-" },
     {
       label: "Ações",
       key: "actions",

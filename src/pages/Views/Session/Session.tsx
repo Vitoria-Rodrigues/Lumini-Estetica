@@ -72,8 +72,8 @@ const Session = () => {
     const term = searchQuery.trim().toLowerCase();
     const termCleanDigits = searchQuery.replace(/\D/g, "");
     
-    const customerName = session.Cliente?.name?.toLowerCase() || "";
-    const rawCpf = session.Cliente?.cpf || "";
+    const customerName = session.cliente?.name?.toLowerCase() || "";
+    const rawCpf = session.cliente?.cpf || "";
     const cleanCpf = rawCpf.replace(/\D/g, ""); 
     const formattedCpf = formatCPF(rawCpf);
   
@@ -154,7 +154,7 @@ const Session = () => {
     setIsSubmitting(true);
 
     const promises = data.procedureIds.map((procedureId) => {
-      const proc = procedures.find((p) => p.id_prodecimento === procedureId);
+      const proc = procedures.find((p) => p.id_procedimento === procedureId);
       const price = proc ? proc.price : 0;
 
       return sessionService.createSession({
@@ -207,7 +207,7 @@ const Session = () => {
      String(p.id_especialidade) === selectedSpecialtyId)
      .map((p) => ({ 
       label: p.name, 
-      value: p.id_prodecimento, 
+      value: p.id_procedimento, 
       price: p.price })),
 
      employeeId: (selectedSpecialtyId: string) => employees
@@ -226,13 +226,13 @@ const Session = () => {
     {
       label: "Cliente",
       key: "id_cliente",
-      render: (item) => item.Cliente?.name || "Não informado",
+      render: (item) => item.cliente?.name || "Não informado",
     },
     {
       label: "Funcionário",
       key: "id_funcionario",
       render: (item) => {
-        const nomeFuncionario = item.Funcionario?.name || "Não informado";
+        const nomeFuncionario = item.funcionario?.name || "Não informado";
         if (nomeFuncionario === "Não informado") {
         return nomeFuncionario;
       }
@@ -243,7 +243,7 @@ const Session = () => {
       label: "Procedimento",
       key: "id_procedimento",
       render: (item) => {
-    const nomeProcedimento = item.Procedimento?.name || "Não informado";
+    const nomeProcedimento = item.procedimento?.name || "Não informado";
     if (nomeProcedimento === "Não informado") {
       return nomeProcedimento;
     }
@@ -298,7 +298,7 @@ const Session = () => {
       label: "Valor Total",
       key: "id_procedimento",
       render: (item) => {
-        const price = item.Procedimento?.price;
+        const price = item.procedimento?.price;
         return typeof price === "number"
           ? `R$ ${price.toFixed(2).replace(".", ",")}`
           : "R$ 0,00";

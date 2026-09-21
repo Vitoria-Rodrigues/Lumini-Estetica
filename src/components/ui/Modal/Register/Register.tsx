@@ -58,6 +58,10 @@ const Register = <T extends RegisterType>({isOpen,
         ? String((formData as Partial<RegisterDataMap["session"]>).specialtyId || "")
         : "";
 
+    const selectedProcedureIds = isSessionData(type, formData)
+        ? (formData as Partial<RegisterDataMap["session"]>).procedureIds
+        : undefined;
+
     useEffect(() => {
         const rawData: unknown = formData;
         if (isSessionData(type, rawData)) {
@@ -71,8 +75,8 @@ const Register = <T extends RegisterType>({isOpen,
 
             if (selectedProcedures && Array.isArray(selectedProcedures) && Array.isArray(resolvedProcOpts)) {
                 const total = selectedProcedures.reduce((sum, id) => {
-                    const proc = (resolvedProcOpts as { value: string; price?: number }[]).find(p => p.value === id);
-                    return sum + (proc?.price || 0);
+                    const proc = (resolvedProcOpts as { value: string; price?: number | string }[]).find(p => p.value === id);
+                    return sum + Number(proc?.price || 0);
                 }, 0);
 
                 if (rawData.price !== total) {
@@ -90,7 +94,7 @@ const Register = <T extends RegisterType>({isOpen,
                 }
             }
         }
-    }, [selectedSpecialtyId, type]);
+    }, [selectedSpecialtyId, selectedProcedureIds, dynamicOptions, type]);
 
     if (!isOpen) return null;
 

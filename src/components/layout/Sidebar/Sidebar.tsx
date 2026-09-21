@@ -25,7 +25,7 @@ const Sidebar = () => {
   return (
     <div className={classes.sidebar_container}>
       <img src={LogoM} alt="logoM" />
-        <div className={classes.nav_link}>
+        <nav className={classes.nav_link}>
           <ul>
             <li>
               <NavLink to="/" className={getLink}>
@@ -66,12 +66,12 @@ const Sidebar = () => {
                }
             </li>
           </ul>
+        </nav>
         <div className={classes.log_out}>
           <button onClick={handleLogout} className={classes.link_item}>
             <span className={classes.side_icon}><FiLogOut /></span>
             <span className={classes.side_text_log}>Logout</span>
           </button>
-        </div>
         </div>
     </div>
   )
