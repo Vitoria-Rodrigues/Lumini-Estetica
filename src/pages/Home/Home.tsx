@@ -32,12 +32,16 @@ const Home = () => {
     {
       label: "Cliente",
       key: "id_cliente",
-      render: (session) => session.Cliente?.name || "Cliente não informado",
+      render: (session) => session.cliente?.name || "Cliente não informado",
     },
     {
       label: "Data da Consulta",
       key: "data",
-      render: (session) => session.data ? new Date(session.data).toLocaleDateString("pt-BR") : "-",
+      render: (session) => {
+        if (!session.data) return "-";
+        const parts = session.data.split("-");
+        return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : session.data;
+      },
     },
     {
       label: "Status de Pagamento",
@@ -59,7 +63,7 @@ const Home = () => {
     label: "Cliente",
     key: "id_cliente",
     render: (session) => (
-      <DescriptionPopover text={session.Cliente?.name || "Cliente não informado"} maxLength={15}/>
+      <DescriptionPopover text={session.cliente?.name || "Cliente não informado"} maxLength={15}/>
     ),
   },
   {
@@ -69,9 +73,18 @@ const Home = () => {
   },
 ];
 
+const getLocalDateString = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 useEffect(() => {
-    async function fetchData() {
-    try{
+  async function fetchData() {
+    try {
+      setIsLoading(true);
       const [today, recent] = await Promise.all([
         sessionService.getTodaySession(),
         sessionService.listSessions(),
@@ -82,15 +95,15 @@ useEffect(() => {
       const currentYear = now.getFullYear();
 
       const realizadosMes = recent.filter((session) => {
-        if(!session.data || session.status !== "Realizada") return false;
-        const d = new Date(session.data);
-        return d.getMonth() === currentMonth && d.getFullYear() === currentYear
+        if (!session.data || session.status !== "Realizada") return false;
+        const [yearStr, monthStr] = session.data.split("-");
+        return Number(monthStr) - 1 === currentMonth && Number(yearStr) === currentYear;
       }).length;
 
       const vendasMesCount = recent.filter((session) => {
-        if(!session.data || session.status_pagamento !== "Pago") return false;
-        const v = new Date(session.data);
-        return v.getMonth() === currentMonth && v.getFullYear() === currentYear
+        if (!session.data || session.status_pagamento !== "Pago") return false;
+        const [yearStr, monthStr] = session.data.split("-");
+        return Number(monthStr) - 1 === currentMonth && Number(yearStr) === currentYear;
       }).length;
 
       setStats([
@@ -98,8 +111,8 @@ useEffect(() => {
           id: "realizados",
           title: "Procedimentos realizados",
           valueCard: realizadosMes,
-          message: "Sessões concluidas",
-        }, 
+          message: "Sessões concluídas",
+        },
         {
           id: "vendas",
           title: "Total de Vendas",
@@ -110,30 +123,11 @@ useEffect(() => {
           id: "hoje",
           title: "Atendimentos",
           valueCard: today.length,
-          message: "Agendados para hoje"
-        }
+          message: "Agendados para hoje",
+        },
       ]);
 
-      setTodaySessions(today);
-      setRecentSessions(recent);
-    } catch (error) {
-      console.error("Erro ao buscar dados: ", error);
-    } finally{
-      setIsLoading(false);
-    }
-  }
-    fetchData();
-  }, []);
-  
-  useEffect(() => {
-  async function fetchData() {
-    try {
-      const [today, recent] = await Promise.all([
-        sessionService.getTodaySession(),
-        sessionService.listSessions(),
-      ]);
-
-      const todayStr = new Date().toISOString().split("T")[0];
+      const todayStr = getLocalDateString();
       const sortedRecent = [...recent].sort((a, b) => {
         const isAToday = a.data === todayStr;
         const isBToday = b.data === todayStr;
@@ -141,17 +135,18 @@ useEffect(() => {
         if (isAToday && !isBToday) return -1;
         if (!isAToday && isBToday) return 1;
 
-        return new Date(b.data).getTime() - new Date(a.data).getTime();
+        return (b.data || "").localeCompare(a.data || "") || (b.horario || "").localeCompare(a.horario || "");
       });
 
       setTodaySessions(today);
       setRecentSessions(sortedRecent);
     } catch (error) {
-      console.error("Erro ao buscar consultas: ", error);
+      console.error("Erro ao buscar dados da dashboard:", error);
     } finally {
       setIsLoading(false);
     }
   }
+
   fetchData();
 }, []);
 
