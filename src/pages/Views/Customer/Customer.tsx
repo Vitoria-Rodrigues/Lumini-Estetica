@@ -140,14 +140,14 @@ const Customer = () => {
     { label: "Telefone", key: "phone", render: (customer) => formatPhone(customer.phone) },
     { 
       label: "Data de Nascimento", 
-      key: "birthDate", 
+      key: "birthdate", 
       render: (customer) => {
-        if (!customer.birthDate) return "";
-        const parts = customer.birthDate.split("-");
+        if (!customer.birthdate) return "";
+        const parts = customer.birthdate.split("-");
         if (parts.length === 3) {
           return `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
-        return customer.birthDate;
+        return customer.birthdate;
       }
     },
   ];
