@@ -128,6 +128,40 @@ export const sessionService = {
         if (error) throw error;
     },
 
+    async createMultiple(data: SessionData[]): Promise<SessionDbRow[]> {
+        if(!data || data.length === 0){
+            return[];
+        }
+
+        const payload = data.map((item) => ({
+            id_cliente: item.id_cliente,
+            id_funcionario: item.id_funcionario,
+            id_procedimento: item.id_procedimento,
+            data: item.data,
+            horario: item.horario,
+            observacoes: item.observacoes || null,
+            valor_cobrado: item.valor_cobrado,
+            status: item.status || "Pendente",
+            status_pagamento: item.status_pagamento || "Pendente", 
+        }));
+
+        const { data: response, error } = await 
+        supabase.from("consulta")
+        .insert(payload)
+        .select(SESSION_SELECT_FIELDS);
+
+        if(error){
+            console.error("[sessionService.createMultiple] Erro ao inserir consultas:", error);
+            throw error;
+        }
+
+        if(!response) {
+            throw new Error("Nenhum dado retornado ao agendar as consultas.");
+        }
+
+        return response as unknown as SessionDbRow[];
+    },
+
     async getTodaySession(): Promise<SessionDbRow[]> {
         const todayStr = new Date().toISOString().split("T")[0];
 
@@ -140,6 +174,59 @@ export const sessionService = {
 
         if(error) throw error;
         return (data || []) as unknown as SessionDbRow[];
-    }
+    },
+
+    async getMonthlyStats(year: number, monthZeroIndexed: number) {
+        const startDate = new Date(year, monthZeroIndexed, 1).toISOString().split("T")[0];
+        const endDate = new Date(year, monthZeroIndexed + 1, 0).toISOString().split("T")[0];
+
+        const [realizadosRes, vendaRes] = await Promise.all([
+            supabase.from("consulta")
+            .select("*", { count: "exact", head: true})
+            .gte("data", startDate)
+            .lte("data", endDate)
+            .eq("status", "Realizada")
+            .is("deleted_at", null),
+
+            supabase.from("consulta")
+            .select("*", { count: "exact", head: true})
+            .gte("data", startDate)
+            .lte("data", endDate)
+            .eq("status_pagamento", "Pago")
+            .is("deleted_at", null),
+        ]);
+
+        return{
+            realizadosMes: realizadosRes.count || 0,
+            vendasMes: vendaRes.count || 0,
+        }
+    },
+
+    async getRecentSessions(limit = 10): Promise<SessionDbRow[]> {
+        const { data, error } = await supabase.from("consulta")
+        .select(SESSION_SELECT_FIELDS)
+        .is("deleted_at", null)
+        .order("data", { ascending: false })
+        .order("horario", { ascending: false})
+        .limit(limit);
+        
+        if(error) throw error;
+        return (data || []) as unknown as SessionDbRow[];
+    },
+
+    async hasScheduleConflict(employeeId: string, date: string, time: string): Promise<boolean> {
+        const { data, error } = await supabase.from("consulta")
+        .select("id_consulta")
+        .eq("id_funcionario", employeeId)
+        .eq("data", date)
+        .eq("horario", time)
+        .neq("status", "Cancelada")
+        .is("deleted_at", null)
+        .limit(1);
+
+        if(error) throw error;
+        return Boolean(data && data.length > 0);
+    },
+
 }
 
