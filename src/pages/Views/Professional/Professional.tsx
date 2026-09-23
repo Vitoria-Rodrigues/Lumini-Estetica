@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 // Components
 import { ViewLayout, Search } from "@/components/layout";
@@ -7,6 +7,7 @@ import { ConfirmModal } from "@/components/ui";
 
 // Services
 import { employeeService } from "@/services/employeeService";
+import type { EmployeeDbRow } from "@/services/employeeService";
 
 //Context
 import { useToaster } from "@/contexts/ToasterContext/useToaster";
@@ -24,43 +25,42 @@ import { FaTrashAlt } from "react-icons/fa";
 import { BsBrushFill } from "react-icons/bs";
 
 const Professional = () => {
-  const [employees, setEmployees] = useState<EmployeeData[]>([]);
+  const [employees, setEmployees] = useState<EmployeeDbRow[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingEmployee, setEditingEmployee] = useState<EmployeeData | null>(null);
+  const [editingEmployee, setEditingEmployee] = useState<EmployeeDbRow | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string | null>(null);
 
   const { addToast } = useToaster();
 
-  const filteredEmployees = employees.filter((employee) => {
-    if(!searchQuery.trim()) return true;
+  const filteredEmployees = useMemo(() => {
+    if(!searchQuery.trim()) return employees;
 
     const term = searchQuery.trim().toLowerCase();
     const termCleanDigits = searchQuery.replace(/\D/g, "");
 
-    const employeeName = employee.name?.toLowerCase() || "";
-    const rawCpf = employee.cpf || "";
-    const cleanCpf = rawCpf.replace(/\D/g, "");
-    const formattedCpf = formatCPF(rawCpf);
+    return employees.filter((employee) => {
+      const employeeName = employee.name?.toLowerCase() || "";
+      const rawCpf = employee.cpf || "";
+      const cleanCpf = rawCpf.replace(/\D/g, "");
+      const formattedCpf = formatCPF(rawCpf);
 
-    const matchesName = employeeName.includes(term);
-    const matchesCleanCpf = termCleanDigits.length > 0 && cleanCpf.includes(termCleanDigits);
+      const matchesName = employeeName.includes(term);
+      const matchesCleanCpf = termCleanDigits.length > 0 && cleanCpf.includes(termCleanDigits);
+      const matchesFormattedCpf = formattedCpf.includes(term);
 
-    const matchesFormattedCpf = formattedCpf.includes(term);
-
-    return matchesName || matchesCleanCpf || matchesFormattedCpf;
-  });
+      return matchesName || matchesCleanCpf || matchesFormattedCpf;
+    });
+  }, [employees, searchQuery]);
 
   const fetchEmployees = async () => {
     try {
       setIsLoading(true);
-      const data = await employeeService.listEmployees();
-      if (data) {
-        setEmployees(data.filter((emp) => emp.app_role !== "admin") as unknown as EmployeeData[]);
-      }
+      const data = await employeeService.listOperationalEmployees();
+      setEmployees(data);
     } catch (error) {
       console.error("Erro ao carregar funcionários: ", error);
       addToast("Erro ao carregar os profissionais", "error");
@@ -73,7 +73,7 @@ const Professional = () => {
     fetchEmployees();
   }, []);
 
-  const handleEditClick = (employee: EmployeeData) => {
+  const handleEditClick = (employee: EmployeeDbRow) => {
     setEditingEmployee(employee);
     setIsModalOpen(true);
   };
@@ -90,7 +90,7 @@ const Professional = () => {
   const handleConfirmDelete = async () =>{
     if(!employeeToDelete) return;
     try {
-      await employeeService.deletEmployee(employeeToDelete);
+      await employeeService.deleteEmployee(employeeToDelete);
       addToast("Profissional excluido com sucesso!", "success");
       fetchEmployees();
     } catch (error) {
@@ -106,7 +106,6 @@ const Professional = () => {
     try {
       setIsSubmitting(true);
       if (editingEmployee) {
-        // Editing
         if (!editingEmployee.user_id) {
           addToast("ID do profissional não encontrado", "error");
           return;
@@ -114,7 +113,6 @@ const Professional = () => {
         await employeeService.updateEmployee(editingEmployee.user_id, data);
         addToast("Profissional atualizado com sucesso!", "success");
       } else {
-        // Creating
         await employeeService.createEmployee(data);
         addToast("Profissional cadastrado com sucesso!", "success");
       }
@@ -136,7 +134,18 @@ const Professional = () => {
     setEditingEmployee(null);
   };
 
-  const columns: Column<EmployeeData>[] = [
+  const formInitialValues: Partial<EmployeeData> | 
+  null = editingEmployee ? {
+    user_id: editingEmployee.user_id,
+    name: editingEmployee.name,
+    cpf: editingEmployee.cpf || "",
+    phone: editingEmployee.phone || "",
+    role: editingEmployee.app_role,
+    specialty: editingEmployee.specialty || "",
+    salary: editingEmployee.salary,
+  } : null;
+
+  const columns: Column<EmployeeDbRow>[] = [
     { label: "Nome", key: "name" },
     { label: "CPF", key: "cpf", render: (employee) => formatCPF(employee.cpf)},
     { label: "Telefone", key: "phone", render: (employee) => formatPhone(employee.phone)},
@@ -224,7 +233,7 @@ const Professional = () => {
         onClose={handleCloseModal}
         onSubmit={handleRegisterSubmit}
         isSubmitting={isSubmitting}
-        initialValues={editingEmployee}
+        initialValues={formInitialValues}
       />
     </ViewLayout>
   );
