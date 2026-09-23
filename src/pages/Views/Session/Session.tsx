@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 //Components
 import { Button, Table, TableSkeleton, Register, DescriptionPopover } from "@/components/ui";
@@ -66,24 +66,26 @@ const Session = () => {
   Recusado: { label: 'Recusado', color: '#d00404', bgColor: '#ffe7e7' },
 };
 
-  const filteredSessions = sessions.filter((session) => {
-    if(!searchQuery.trim()) return true;
+  const filteredSessions = useMemo(() => {
+    if(!searchQuery.trim()) return sessions;
 
     const term = searchQuery.trim().toLowerCase();
     const termCleanDigits = searchQuery.replace(/\D/g, "");
-    
-    const customerName = session.cliente?.name?.toLowerCase() || "";
-    const rawCpf = session.cliente?.cpf || "";
-    const cleanCpf = rawCpf.replace(/\D/g, ""); 
-    const formattedCpf = formatCPF(rawCpf);
-  
-    const matchesName = customerName.includes(term);
-    const matchesCleanCpf = termCleanDigits.length > 0 && cleanCpf.includes(termCleanDigits);
-  
-    const matchesFormattedCpf = formattedCpf.includes(term);
-  
-    return matchesName || matchesCleanCpf || matchesFormattedCpf;
-  });
+
+    return sessions.filter((s) => {
+      const customerName = s.cliente?.name?.toLowerCase() || "";
+      const rawCpf = s.cliente?.cpf || "";
+      const cleanCpf = rawCpf.replace(/\D/g, "");
+      const formattedCpf = formatCPF(rawCpf);
+
+      const matchesName = customerName.includes(term);
+      const matchesCleanCpf = termCleanDigits ? cleanCpf.includes(termCleanDigits) : false;
+      const matchesFormattedCpf = formattedCpf.includes(term);
+
+      return matchesName || matchesCleanCpf || matchesFormattedCpf;
+    });
+
+  }, [sessions, searchQuery]);
 
   
   const loadInitialData = async () => {
@@ -153,29 +155,31 @@ const Session = () => {
   try {
     setIsSubmitting(true);
 
-    const promises = data.procedureIds.map((procedureId) => {
-      const proc = procedures.find((p) => p.id_procedimento === procedureId);
-      const price = proc ? proc.price : 0;
+    const isBusy = await sessionService.hasScheduleConflict(data.employeeId, data.date, data.time);
+    if(isBusy) {
+      addToast("Este profissional já possui uma consulta neste horário!", "error");
+      return;
+    }
 
-      return sessionService.createSession({
+    const sessionPayloads = data.procedureIds.map((procedureId) => {
+      const proc = procedures.find((p) => p.id_procedimento === procedureId);
+      return{
         id_cliente: data.customerId,
         id_funcionario: data.employeeId,
         id_procedimento: procedureId,
         data: data.date,
         horario: data.time,
         observacoes: data.notes || "",
-        valor_cobrado: price,
-      });
+        valor_cobrado: proc ? proc.price : 0,
+      };
     });
 
-    await Promise.all(promises);
-    addToast("Consulta(s) agendada(s) com sucesso!", "success");
-
+    await sessionService.createMultiple(sessionPayloads);
+    addToast("Consulta(s) agendada(s) com sucesso", "success");
     setIsModalOpen(false);
     loadInitialData();
-  } catch (err) {
-    console.error("Erro ao salvar consulta:", err);
-    addToast("Erro ao salvar a consulta.", "error");
+  } catch(err) {
+    addToast("Error ao salvar consulta", "error");
   } finally {
     setIsSubmitting(false);
   }

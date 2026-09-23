@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 
 // Components
 import { ViewLayout, Search } from "@/components/layout";
@@ -17,20 +17,18 @@ import type { SessionData as FormSessionData } from "@/form-config/types";
 import { useAuth } from "@/contexts/AuthContext/useAuth";
 import { useToaster } from "@/contexts/ToasterContext/useToaster";
 
+//hooks
+import { useAppointmentFilter } from "@/hooks/useAppointmentFilter";
+
 // Utils
-import { formatHour, formatCPF } from "@/utils/formatters";
+import { formatHour } from "@/utils/formatters";
+import { getLocalDateString } from "@/utils/formatters";
 
 //Icons
 import { BsBrushFill } from "react-icons/bs";
 import { HiX } from "react-icons/hi";
 
-const getLocalDateString = () => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
+
 
 const Appointment = () => {
   const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString());
@@ -86,42 +84,14 @@ const Appointment = () => {
     loadData();
   }, []);
 
-  const filteredSessions = useMemo(() => {
-    return sessions.filter((session) => {
-      const matchesDate = session.data === selectedDate;
-      if(!matchesDate) return false;
-
-      if (isOperational) {
-        if (!user?.employeeId || String(session.id_funcionario) !== String(user.employeeId)) {
-          return false;
-        }
-      } else if (selectedEmployeeId) {
-        if (String(session.id_funcionario) !== selectedEmployeeId) return false;
-      }
-
-      if(searchQuery.trim()){
-        const term = searchQuery.trim().toLowerCase();
-        const termCleanDigits = searchQuery.replace(/\D/g, "");
-
-        const customerName = session.cliente?.name?.toLowerCase() || "";
-        const employeeName = session.funcionario?.name?.toLowerCase() || "";
-        const rawCpf = session.cliente?.cpf || "";
-        const cleanCpf = rawCpf.replace(/\D/g, "");
-        const formattedCpf = formatCPF(rawCpf);
-
-        const matchesCustomerName = customerName.includes(term);
-        const matchesEmployeeName = employeeName.includes(term);
-        const matchesCleanCpf = termCleanDigits.length > 0 && cleanCpf.includes(termCleanDigits);
-        const matchesFormattedCpf = formattedCpf.includes(term);
-
-        if (!matchesCustomerName && !matchesEmployeeName && !matchesCleanCpf && !matchesFormattedCpf) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [sessions, selectedDate, isOperational, user?.employeeId, selectedEmployeeId, searchQuery]);
+  const filteredSessions = useAppointmentFilter({
+    sessions,
+    selectedDate,
+    isOperational,
+    userEmployeeId: user?.employeeId,
+    selectedEmployeeId,
+    searchQuery,
+  });
 
   const handleEditClick = (session: SessionDbRow) => {
     setEditingSession(session);

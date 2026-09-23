@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 //Service
 import { customerService, type CustomerDbRow } from "@/services/customerService";
@@ -35,24 +35,20 @@ const Customer = () => {
 
   const canModify = user?.role === "admin" || user?.role === "recepcionista";
 
-  const filteredCustomer = customers.filter((customers) => {
-    if(!searchQuery.trim()) return true;
+  const filteredCustomers = useMemo(() => {
+    if(!searchQuery.trim()) return customers;
 
     const term = searchQuery.trim().toLowerCase();
-    const termCleanDigits = searchQuery.replace(/\D/g, "");
+    const termDigits = searchQuery.replace(/\D/g, "");
 
-    const customerName = customers.name?.toLowerCase();
-    const rawCpf = customers.cpf || "";
-    const cleanCpf = rawCpf.replace(/\D/g, "");
-    const formattedCpf = formatCPF(rawCpf);
-
-    const matchesName = customerName.includes(term);
-    const matchesCleanCpf = termCleanDigits.length > 0 && cleanCpf.includes(termCleanDigits);
-
-    const matchesFormattedCpf = formattedCpf.includes(term);
-
-    return matchesName || matchesCleanCpf || matchesFormattedCpf;
-  });
+    return customers.filter((c) => {
+      const nameMatch = c.name?.toLowerCase().includes(term);
+      const rawCpf = c.cpf?.replace(/\D/g, "") || "";
+      const cpfMatch = termDigits ? rawCpf.includes(termDigits) : false;
+      
+      return nameMatch  || cpfMatch;
+    })
+  }, [customers, searchQuery]);
 
   const loadCustomer = async () => {
     try {
@@ -226,7 +222,7 @@ const Customer = () => {
     {isLoading ? (
       <TableSkeleton rows={5} columns={columns.length} />
     ) : (
-      <Table columns={columns} data={filteredCustomer} />
+      <Table columns={columns} data={filteredCustomers} />
     )}
 
     <ConfirmModal

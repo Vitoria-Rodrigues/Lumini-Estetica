@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import classes from "./Home.module.css";
 
 //Components
@@ -23,6 +24,7 @@ interface StatsCardData{
 }
 
 const Home = () => {
+  const navigate = useNavigate();
   const [todaySessions, setTodaySessions] = useState<SessionDbRow[]>([]);
   const [recentSessions, setRecentSessions] = useState<SessionDbRow[]>([]);
   const [stats, setStats] = useState<StatsCardData[]>([]);
@@ -85,61 +87,22 @@ useEffect(() => {
   async function fetchData() {
     try {
       setIsLoading(true);
-      const [today, recent] = await Promise.all([
-        sessionService.getTodaySession(),
-        sessionService.listSessions(),
-      ]);
 
       const now = new Date();
-      const currentMonth = now.getMonth();
-      const currentYear = now.getFullYear();
-
-      const realizadosMes = recent.filter((session) => {
-        if (!session.data || session.status !== "Realizada") return false;
-        const [yearStr, monthStr] = session.data.split("-");
-        return Number(monthStr) - 1 === currentMonth && Number(yearStr) === currentYear;
-      }).length;
-
-      const vendasMesCount = recent.filter((session) => {
-        if (!session.data || session.status_pagamento !== "Pago") return false;
-        const [yearStr, monthStr] = session.data.split("-");
-        return Number(monthStr) - 1 === currentMonth && Number(yearStr) === currentYear;
-      }).length;
+      const [today, recent, monthlyStats] = await Promise.all([
+        sessionService.getTodaySession(),
+        sessionService.getRecentSessions(10),
+        sessionService.getMonthlyStats(now.getFullYear(), now.getMonth()),
+      ]); 
 
       setStats([
-        {
-          id: "realizados",
-          title: "Procedimentos realizados",
-          valueCard: realizadosMes,
-          message: "Sessões concluídas",
-        },
-        {
-          id: "vendas",
-          title: "Total de Vendas",
-          valueCard: vendasMesCount,
-          message: "Pagamentos confirmados",
-        },
-        {
-          id: "hoje",
-          title: "Atendimentos",
-          valueCard: today.length,
-          message: "Agendados para hoje",
-        },
+        { id: "realizados", title: "Procedimentos realizados", valueCard: monthlyStats.realizadosMes, message: "Sessões concluídas" },
+        { id: "vendas", title: "Total de Vendas", valueCard: monthlyStats.vendasMes, message: "Pagamentos confirmados" },
+        { id: "hoje", title: "Atendimentos", valueCard: today.length, message: "Agendados para hoje" },
       ]);
 
-      const todayStr = getLocalDateString();
-      const sortedRecent = [...recent].sort((a, b) => {
-        const isAToday = a.data === todayStr;
-        const isBToday = b.data === todayStr;
-
-        if (isAToday && !isBToday) return -1;
-        if (!isAToday && isBToday) return 1;
-
-        return (b.data || "").localeCompare(a.data || "") || (b.horario || "").localeCompare(a.horario || "");
-      });
-
       setTodaySessions(today);
-      setRecentSessions(sortedRecent);
+      setRecentSessions(recent);
     } catch (error) {
       console.error("Erro ao buscar dados da dashboard:", error);
     } finally {
@@ -183,7 +146,7 @@ useEffect(() => {
               />
             </div>
           )}
-          <Button title="Consulta" icon={RiAddFill} padding=".6rem" width="100%"/>
+          <Button title="Consulta" icon={RiAddFill} padding=".6rem" width="100%" onClick={() => navigate("/session")}/>
         </div>
       </div>
     </>
