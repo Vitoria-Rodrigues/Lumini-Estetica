@@ -94,13 +94,22 @@ export const employeeService = {
     async syncEmployeeSpecialties(idFuncionario: number, specialtyId: string | number){
         if(!idFuncionario) return;
 
-        await supabase.from("funcionario_especialidade").delete().eq("id_funcionario", idFuncionario);
+        const { error: deleteError } = await 
+        supabase.from("funcionario_especialidade")
+        .delete()
+        .eq("id_funcionario", idFuncionario);
+
+        if(deleteError) throw deleteError;
 
         if (specialtyId) {
-            await supabase.from("funcionario_especialidade").insert({
+            const { error: insertError } = await 
+            supabase.from("funcionario_especialidade")
+            .insert({
                 id_funcionario: idFuncionario,
                 id_especialidade: Number(specialtyId)
             });
+
+            if(insertError) throw insertError;
         }
     },
 
@@ -141,7 +150,7 @@ export const employeeService = {
     }
     },
 
-    async deletEmployee(userId: string) {
+    async deleteEmployee(userId: string): Promise<void> {
         const { error } = await supabase.from("funcionario")
         .update({deleted_at: new Date().toISOString()})
         .eq("user_id", userId);
@@ -156,5 +165,26 @@ export const employeeService = {
         if(error) throw error;
 
         return data;
-    }
+    },
+
+    async listOperationalEmployees(): Promise<EmployeeDbRow[]> {
+        const { data, error} = await supabase.from("funcionario")
+        .select("*, funcionario_especialidade(id_especialidade, especialidade(id_especialidade, nome))")
+        .neq("app_role", "admin")
+        .is("deleted_at", null)
+        .order("name", { ascending: true });
+
+        if(error) throw error;
+        
+        const rows = (data || []) as unknown as EmployeeDbRow[];
+
+        return rows.map((emp: EmployeeDbRow): EmployeeDbRow => {
+        const specialtyName = emp.funcionario_especialidade?.[0]?.especialidade?.nome || emp.specialty || "";
+        return {
+            ...emp,
+            specialty: specialtyName,
+            especialidades: emp.funcionario_especialidade || [],
+        };
+        });
+    },
 }
