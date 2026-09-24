@@ -26,9 +26,26 @@ const CustomSelect = ({ options, selectedValues, onChange, placeholder} : Custom
                 setIsOpen(false);
             }
         };
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if(e.key === "Escape" && isOpen){
+                setIsOpen(false);
+            }
+        };
+
         document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+        window.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (!isOpen) {
+            setSearchTerm("");
+        }
+    }, [isOpen]);
 
     const toggleSelect = (value: string) => {
         if(selectedValues.includes(value)) {
@@ -39,59 +56,66 @@ const CustomSelect = ({ options, selectedValues, onChange, placeholder} : Custom
     };
 
     const filteredOptions = options.filter(opt => 
-        opt.label.toLowerCase().includes(searchTerm.
-            toLocaleLowerCase())
-        );
+        opt.label.toLowerCase().includes(searchTerm.toLocaleLowerCase())
+    );
 
     return (
-      <div className={classes.select_container} ref={dropdownRef}>
-      <div className={classes.select_trigger} onClick={() => setIsOpen(!isOpen)}>
-        <div className={classes.chips_container}>
-          {selectedValues.length === 0 && <span className={classes.placeholder}>{placeholder}</span>}
-          {selectedValues.map(val => {
-            const opt = options.find(o => o.value === val);
-            return (
-              <span key={val} className={classes.chip}>
-                {opt?.label}
-                <button type="button" onClick={(e) => { e.stopPropagation(); toggleSelect(val); }}>
-                  <RiCloseFill />
-                </button>
-              </span>
-            );
-          })}
-        </div>
-        <RiArrowDownSLine className={`${classes.arrow} ${isOpen ? classes.arrow_open : ""}`} />
-      </div>
-
-      {isOpen && (
-        <div className={classes.dropdown}>
-          <input
-            type="text"
-            className={classes.search_input}
-            placeholder="Buscar procedimento..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            autoFocus
-          />
-          <ul className={classes.options_list}>
-            {filteredOptions.map(opt => {
-              const isSelected = selectedValues.includes(opt.value);
+      <div
+        className={classes.select_container}
+        ref={dropdownRef}
+        role="combobox"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+      >
+        <div className={classes.select_trigger} onClick={() => setIsOpen(!isOpen)}>
+          <div className={classes.chips_container}>
+            {selectedValues.length === 0 && <span className={classes.placeholder}>{placeholder}</span>}
+            {selectedValues.map(val => {
+              const opt = options.find(o => o.value === val);
               return (
-                <li
-                  key={opt.value}
-                  className={`${classes.option_item} ${isSelected ? classes.selected : ""}`}
-                  onClick={() => toggleSelect(opt.value)}
-                >
-                  <input type="checkbox" className={classes.check} checked={isSelected} readOnly />
-                  <span>{opt.label}</span>
-                  {opt.price && <span className={classes.price}>R$ {opt.price.toFixed(2)}</span>}
-                </li>
+                <span key={val} className={classes.chip}>
+                  {opt?.label}
+                  <button type="button" onClick={(e) => { e.stopPropagation(); toggleSelect(val); }}>
+                    <RiCloseFill />
+                  </button>
+                </span>
               );
             })}
-          </ul>
+          </div>
+          <RiArrowDownSLine className={`${classes.arrow} ${isOpen ? classes.arrow_open : ""}`} />
         </div>
-      )}
-    </div>
+
+        {isOpen && (
+          <div className={classes.dropdown}>
+            <input
+              type="text"
+              className={classes.search_input}
+              placeholder="Buscar procedimento..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              autoFocus
+            />
+            <ul className={classes.options_list} role="listbox">
+              {filteredOptions.map(opt => {
+                const isSelected = selectedValues.includes(opt.value);
+                return (
+                  <li
+                    key={opt.value}
+                    role="option"
+                    aria-selected={isSelected}
+                    className={`${classes.option_item} ${isSelected ? classes.selected : ""}`}
+                    onClick={() => toggleSelect(opt.value)}
+                  >
+                    <input type="checkbox" className={classes.check} checked={isSelected} readOnly />
+                    <span>{opt.label}</span>
+                    {opt.price && <span className={classes.price}>R$ {opt.price.toFixed(2)}</span>}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+      </div>
     ); 
 };
 
