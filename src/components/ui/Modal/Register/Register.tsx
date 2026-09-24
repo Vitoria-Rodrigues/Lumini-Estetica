@@ -9,7 +9,7 @@ import CustomSelect from "../../CustomSelect/CustomSelect";
 
 import classes from "./Register.module.css";
 
-interface RegisterProps<T extends RegisterType>{
+interface RegisterProps<T extends RegisterType> {
     isOpen: boolean;
     onClose: () => void;
     type: T;
@@ -17,31 +17,100 @@ interface RegisterProps<T extends RegisterType>{
     isSubmitting?: boolean;
     dynamicOptions?: Partial<Record<keyof RegisterDataMap[T], 
         string[] | 
-        { label: string; value: string; [key: string]: unknown }[] |
-        ((selectedId: string) => { label: string; value: string; [key: string]: unknown }[])
+        { label: string; value: string | number; price?: number | string; [key: string]: unknown }[] |
+        ((selectedId: string) => { label: string; value: string | number; price?: number | string; [key: string]: unknown }[])
     >>;
     initialValues?: Partial<RegisterDataMap[T]> | null;
 }
 
-function isSessionData(
-    type: RegisterType,
-    data: unknown
-): data is Partial<RegisterDataMap["session"]> {
-    return type === "session" && data !== null;
+function calculateTotalPrice(
+    procedureIds: unknown, 
+    options: unknown
+): number {
+    if (!Array.isArray(procedureIds) || !Array.isArray(options)) {
+        return 0;
+    }
+
+    return procedureIds.reduce((sum: number, id: unknown) => {
+        if (id === undefined || id === null || id === "") return sum;
+        const targetId = String(id);
+
+        const proc = options.find((p) => {
+            if (!p || typeof p !== "object") return false;
+            const optVal = "value" in p ? (p as { value: unknown }).value : undefined;
+            return optVal !== undefined && String(optVal) === targetId;
+        }) as { price?: unknown } | undefined;
+
+        if (!proc || proc.price === undefined || proc.price === null) return sum;
+
+        let rawPrice = proc.price;
+        if (typeof rawPrice === "string") {
+            rawPrice = rawPrice.replace("R$", "").replace(/\s/g, "").replace(",", ".");
+        }
+        const numericPrice = Number(rawPrice);
+        return sum + (isNaN(numericPrice) ? 0 : numericPrice);
+    }, 0);
 }
 
-const Register = <T extends RegisterType>({isOpen, 
+const Register = <T extends RegisterType>({
+    isOpen, 
     onClose, 
     type, 
     onSubmit, 
     isSubmitting = false, 
     dynamicOptions,
-    initialValues}: RegisterProps<T>) => {
+    initialValues
+}: RegisterProps<T>) => {
 
     const [formData, setFormData] = useState<Partial<RegisterDataMap[T]>>({});
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({}); 
+
+    const validateForm = (): boolean => {
+        const errors: Record<string, string> = {};
+        const rawData = formData as Record<string, unknown>;
+
+        if (type === "customer" || type === "employee") {
+            const cpfValue = typeof rawData.cpf === "string" ? rawData.cpf : "";
+            const cleanCpf = cpfValue.replace(/\D/g, "");
+            if (cleanCpf && cleanCpf.length !== 11) {
+                errors.cpf = "CPF deve conter exatamente 11 dígitos.";
+            }
+        }
+
+        if (type === "session") {
+            const session = formData as Partial<RegisterDataMap["session"]>;
+            if (!session.customerId) {
+                errors.customerCpf = "Selecione um cliente válido cadastrado.";
+            }
+            if (!session.procedureIds || session.procedureIds.length === 0) {
+                errors.procedureIds = "Selecione ao menos um procedimento.";
+            }
+            if (!session.employeeId) {
+                errors.employeeId = "Selecione o profissional responsável.";
+            }
+            if (!session.date) {
+                errors.date = "Data da consulta é obrigatória.";
+            }
+            if (!session.time) {
+                errors.time = "Horário da consulta é obrigatório.";
+            }
+        }
+
+        REGISTER_FIELDS[type].forEach((field) => {
+            const value = rawData[field.name as string];
+            const isEmpty = value === undefined || value === null || value === "";
+            if (field.required && isEmpty && !errors[field.name as string]) {
+                errors[field.name as string] = `${field.label.replace(":", "")} é obrigatório.`;
+            }
+        });
+
+        setFieldErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
 
     useEffect(() => {
         if (isOpen) {
+            setFieldErrors({});
             if (initialValues) {
                 setFormData(initialValues);
             } else {
@@ -51,50 +120,11 @@ const Register = <T extends RegisterType>({isOpen,
                 });
                 setFormData(initialData);
             }
+        } else {
+            setFormData({});
+            setFieldErrors({});
         }
     }, [isOpen, type, initialValues]);
-
-    const selectedSpecialtyId = isSessionData(type, formData)
-        ? String((formData as Partial<RegisterDataMap["session"]>).specialtyId || "")
-        : "";
-
-    const selectedProcedureIds = isSessionData(type, formData)
-        ? (formData as Partial<RegisterDataMap["session"]>).procedureIds
-        : undefined;
-
-    useEffect(() => {
-        const rawData: unknown = formData;
-        if (isSessionData(type, rawData)) {
-            const selectedProcedures = rawData.procedureIds;
-            const rawOpts = dynamicOptions as Record<string, unknown> | undefined;
-            const rawProcOpts = rawOpts?.procedureIds;
-            const currentSpecialtyId = rawData.specialtyId ? String(rawData.specialtyId) : "";
-            const resolvedProcOpts = typeof rawProcOpts === "function"
-                ? (rawProcOpts as (id: string) => unknown)(currentSpecialtyId)
-                : rawProcOpts;
-
-            if (selectedProcedures && Array.isArray(selectedProcedures) && Array.isArray(resolvedProcOpts)) {
-                const total = selectedProcedures.reduce((sum, id) => {
-                    const proc = (resolvedProcOpts as { value: string; price?: number | string }[]).find(p => p.value === id);
-                    return sum + Number(proc?.price || 0);
-                }, 0);
-
-                if (rawData.price !== total) {
-                    setFormData(prev => ({
-                        ...prev,
-                        price: total
-                    } as unknown as Partial<RegisterDataMap[T]>));
-                }
-            } else {
-                if (rawData.price !== 0) {
-                    setFormData(prev => ({
-                        ...prev,
-                        price: 0
-                    } as unknown as Partial<RegisterDataMap[T]>));
-                }
-            }
-        }
-    }, [selectedSpecialtyId, selectedProcedureIds, dynamicOptions, type]);
 
     if (!isOpen) return null;
 
@@ -129,6 +159,7 @@ const Register = <T extends RegisterType>({isOpen,
                 specialtyId: value,
                 procedureIds: [],
                 employeeId: "",
+                price: 0,
             } as unknown as Partial<RegisterDataMap[T]>));
             return;
         }
@@ -169,6 +200,7 @@ const Register = <T extends RegisterType>({isOpen,
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (isSubmitting) return;
+        if (!validateForm()) return;
         onSubmit(formData as RegisterDataMap[T]);
     };
 
@@ -195,8 +227,10 @@ const Register = <T extends RegisterType>({isOpen,
                                 ? resolvedOpts
                                 : (field.option && field.option.length > 0 ? field.option : []);
 
-                            const selectOptions = (rawOptions as (string | { label: string; value: string })[]).map(opt =>
-                                typeof opt === "string" ? { label: opt, value: opt } : { label: opt.label, value: opt.value }
+                            const selectOptions = (rawOptions as (string | { label: string; value: string | number; price?: number | string })[]).map(opt =>
+                                typeof opt === "string" 
+                                    ? { label: opt, value: opt } 
+                                    : { label: opt.label, value: String(opt.value), price: opt.price !== undefined ? Number(opt.price) : undefined }
                             );
 
                             return (
@@ -207,12 +241,29 @@ const Register = <T extends RegisterType>({isOpen,
                                         fieldName === "procedureIds" ? (
                                             <CustomSelect
                                                 options={selectOptions}
-                                                selectedValues={Array.isArray(formData[field.name]) ? (formData[field.name] as string[]) : []}
+                                                selectedValues={Array.isArray(formData[field.name]) ? (formData[field.name] as (string | number)[]).map(String) : []}
                                                 onChange={(values) => {
+                                                    const rawOpts = dynamicOptions as Record<string, unknown> | undefined;
+                                                    const rawProcOpts = rawOpts?.procedureIds;
+                                                    const currentSpecialtyId = String((formData as Record<string, unknown>)?.specialtyId || "");
+                                                    const resolvedProcOpts = typeof rawProcOpts === "function" 
+                                                        ? (rawProcOpts as (id: string) => unknown)(currentSpecialtyId)
+                                                        : rawProcOpts;
+
+                                                    const total = calculateTotalPrice(
+                                                        values,
+                                                        (resolvedProcOpts || []) as { value: string | number; price?: number | string }[]
+                                                    );
+
                                                     setFormData(prev => ({
                                                         ...prev,
-                                                        [field.name]: values
+                                                        [field.name]: values,
+                                                        price: total
                                                     }));
+
+                                                    if (fieldErrors[fieldName]) {
+                                                        setFieldErrors(prev => ({ ...prev, [fieldName]: "" }));
+                                                    }
                                                 }}
                                                 placeholder="Selecione os procedimentos..."
                                             />
@@ -243,6 +294,12 @@ const Register = <T extends RegisterType>({isOpen,
                                             maxLength={field.maxLength}
                                             disabled={field.disabled || isSubmitting}
                                         />
+                                    )}
+
+                                    {fieldErrors[fieldName] && (
+                                        <span style={{ color: "#e53e3e", fontSize: "0.8rem", marginTop: "4px", display: "block" }}>
+                                            {fieldErrors[fieldName]}
+                                        </span>
                                     )}
                                 </div>
                             );
