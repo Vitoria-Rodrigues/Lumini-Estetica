@@ -59,15 +59,29 @@ export interface RegisterDataMap{
 
 export type RegisterType = keyof RegisterDataMap;
 
-export interface FieldConfig<T extends RegisterType> {
-    name: keyof RegisterDataMap[T];
+export interface SelectOption {
     label: string;
-    type: "text" | "number" | "email" | "tel" | "select" | "date" | "password" | "time";
-    placeholder?: string;
-    maxLength?: number;
-    required?: boolean;
-    disabled?: boolean; 
-    option?: string[] | { label: string; value: string; [key: string]: unknown }[];
+    value: string;
+    price?: number;
+    cpf?: string;
+    name?: string;
+}
+
+export type DynamicOptionResolver = SelectOption[] | ((dependencyId: string) => SelectOption[]);
+
+export type DynamicOptionsConfig<T extends RegisterType = RegisterType> = Partial<{
+  [K in keyof RegisterDataMap[T]]: DynamicOptionResolver;
+}> & Record<string, DynamicOptionResolver | undefined>;
+
+export interface FieldConfig<T extends RegisterType> {
+  name: keyof RegisterDataMap[T];
+  label: string;
+  type: "text" | "number" | "email" | "tel" | "select" | "date" | "password" | "time";
+  placeholder?: string;
+  maxLength?: number;
+  required?: boolean;
+  disabled?: boolean;
+  option?: string[] | SelectOption[];
 }
 
 

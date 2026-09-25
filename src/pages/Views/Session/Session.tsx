@@ -196,7 +196,7 @@ const Session = () => {
 
   const customerOptions = customers.map((c) => ({
     label: `${c.name} - ${formatCPF(c.cpf)}`,
-    value: c.id_cliente,
+    value: String(c.id_cliente),
     name: c.name,
     cpf: c.cpf,
   }));
@@ -211,7 +211,7 @@ const Session = () => {
      String(p.id_especialidade) === selectedSpecialtyId)
      .map((p) => ({ 
       label: p.name, 
-      value: p.id_procedimento, 
+      value: String(p.id_procedimento), 
       price: p.price })),
 
      employeeId: (selectedSpecialtyId: string) => employees
