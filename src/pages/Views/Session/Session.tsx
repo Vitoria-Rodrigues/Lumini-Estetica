@@ -1,21 +1,30 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 //Components
-import { Button, Table, TableSkeleton, Register, DescriptionPopover } from "@/components/ui";
-import { ConfirmModal } from "@/components/ui/Modal/ConfirmModal/ConfirmModal";
+import { Button, 
+  IconButton,
+  Table, 
+  TableSkeleton, 
+  Register, 
+  DescriptionPopover,
+  ConfirmModal,
+  PaymentModal } from "@/components/ui";
 import { ViewLayout, Search } from "@/components/layout";
 import type { Column } from "@/components/ui/Table/Table";
-import { PaymentModal } from "@/components/ui/Modal/PaymentModal/PaymentModal";
 
 // Services
-import { type SessionDbRow, sessionService } from "@/services/sessionService";
-import { type CustomerDbRow, customerService } from "@/services/customerService";
+import {
+  sessionService,
+  type SessionDbRow,
+  type SessionStatus,
+  type PaymentStatus,
+} from "@/services/sessionService";
+import { customerService, type CustomerDbRow } from "@/services/customerService";
 import { employeeService, type EmployeeDbRow } from "@/services/employeeService";
-import { type ProcedureDbRow, procedureService } from "@/services/procedureService";
-import { type SpecialtyDbRow, specialtyService } from "@/services/specialtyService";
+import { procedureService, type ProcedureDbRow } from "@/services/procedureService";
+import { specialtyService, type SpecialtyDbRow } from "@/services/specialtyService";
 import type { SessionData as FormSessionData } from "@/form-config/types";
-import type{ SessionData, SessionStatus } from "@/services/sessionService";
-import type { PaymentStatus } from "@/services/sessionService";
 
 //Context
 import { useToaster } from "@/contexts/ToasterContext/useToaster";
@@ -29,30 +38,29 @@ import { RiAddFill } from "react-icons/ri";
 import { FaCheck } from "react-icons/fa6";
 import { FaCreditCard } from "react-icons/fa";
 
+const getSessionPriority = (session: SessionDbRow): number => {
+    if(session.status === "Pendente") return 1;
+    if(session.status === "Realizada" && session.status_pagamento !== "Pago") return 2;
+    if(session.status === "Realizada" && session.status_pagamento === "Pago") return 3;
+    return 4;
+  };
 
 const Session = () => {
-  const [sessions, setSessions] = useState<SessionDbRow[]>([]);
-  const [customers, setCustomers] = useState<CustomerDbRow[]>([]);
-  const [employees, setEmployees] = useState<EmployeeDbRow[]>([]);
-  const [procedures, setProcedures] = useState<ProcedureDbRow[]>([]);
-  const [specialties, setSpecialties] = useState<SpecialtyDbRow[]>([]);
-
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [sessionToComplete, setSessionToComplete] = useState<SessionDbRow | null>(null);
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [paymentSessionId, setPaymentSessionId] = useState<string | null>(null);
-  const [isPaymentOpen, setIsPaymentOpen] = useState<boolean>(false);
-
+  const queryClient = useQueryClient();
   const { addToast } = useToaster();
   const { user } = useAuth();
 
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [sessionToComplete, setSessionToComplete] = useState<SessionDbRow | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState<boolean>(false);
+  const [paymentSessionId, setPaymentSessionId] = useState<string | null>(null);
+  const [isPaymentOpen, setIsPaymentOpen] = useState<boolean>(false);
+
   const canManage = user?.role === "admin" || user?.role === "recepcionista";
-  const isOperational = ["esteticista", "massagista", "depiladora"];
-  
+  const isOperational = ["esteticista", "massagista", "depiladora"].includes(user?.role || "");
+  const canConfirm = canManage || isOperational;
+
   const statusConfig: Record<SessionStatus, { label: string; color: string; bgColor: string }> = {   
    Pendente:  { label: 'Pendente',  color: '#d29a00', bgColor: '#F5EBCE' },
    Realizada: { label: 'Realizada', color: '#199400', bgColor: '#E3F3DB' },
@@ -66,13 +74,112 @@ const Session = () => {
   Recusado: { label: 'Recusado', color: '#d00404', bgColor: '#ffe7e7' },
 };
 
-  const filteredSessions = useMemo(() => {
-    if(!searchQuery.trim()) return sessions;
+  const { data: sessions = [], isLoading: isLoadingSessions } = useQuery<SessionDbRow[]>({
+    queryKey: ["sessions"],
+    queryFn: sessionService.listSessions,
+  });
 
+  const { data: customers = [], isLoading: isLoadingCustomers } = useQuery<CustomerDbRow[]>({
+    queryKey: ["customers"],
+    queryFn: customerService.listCustomers,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: employees = [], isLoading: isLoadingEmployees } = useQuery<EmployeeDbRow[]>({
+    queryKey: ["employees"],
+    queryFn: employeeService.listEmployees,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: procedures = [], isLoading: isLoadingProcedures } = useQuery<ProcedureDbRow[]>({
+    queryKey: ["procedures"],
+    queryFn: procedureService.listProcedures,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: specialties = [], isLoading: isLoadingSpecialties } = useQuery<SpecialtyDbRow[]>({
+    queryKey: ["specialties"],
+    queryFn: specialtyService.listSpecialties,
+    staleTime: 1000  * 60 * 10,
+  });
+
+  const isPageLoading = isLoadingSessions || 
+  isLoadingCustomers ||
+  isLoadingEmployees ||
+  isLoadingProcedures ||
+  isLoadingSpecialties;
+
+  const completeSessionMutation = useMutation({
+    mutationFn: async (session: SessionDbRow) => {
+      if (!session.id_consulta) throw new Error("ID da consulta não encontrado.");
+      return sessionService.updateSession(session.id_consulta, {
+        status: "Realizada",
+      });
+    },
+    onSuccess: (_, session) => {
+      addToast("Consulta confirmada com sucesso!", "success");
+      queryClient.invalidateQueries({ queryKey: ["session"] });
+      setIsConfirmOpen(false);
+      setSessionToComplete(null);
+
+      if(session.id_consulta){
+        setPaymentSessionId(session.id_consulta);
+        setIsPaymentOpen(true);
+      }
+    },
+    onError: (error) => {
+      console.error("Erro ao confirmar consulta:", error);
+      addToast("Erro ao confirmar consulta.", "error");
+      setIsConfirmOpen(false);
+      setSessionToComplete(null);
+    },
+  });
+
+  const createSessionMutation = useMutation({
+    mutationFn: async (data: FormSessionData) =>{
+      const isBusy = await sessionService.hasScheduleConflict(
+        data.employeeId,
+        data.date,
+        data.time
+      );
+
+      if(isBusy) throw new Error("CONFLICT");
+
+      const sessionPayloads = data.procedureIds.map((procedureId) => {
+        const proc = procedures.find((p) => p.id_procedimento === procedureId);
+        return{
+          id_cliente: data.customerId,
+          id_funcionario: data.employeeId,
+          id_procedimento: procedureId,
+          data: data.date,
+          horario: data.time,
+          observacoes: data.notes || "",
+          valor_cobrado: proc ? proc.price : 0,
+        };
+      });
+
+      return sessionService.createMultiple(sessionPayloads);
+    },
+    onSuccess: () => {
+      addToast("Consulta(s) agendada(s) com sucesso!", "success");
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      setIsModalOpen(false);
+    },
+    onError: (err: Error) => {
+      if(err.message === "CONFLICT") {
+        addToast("Este profissional já possui uma consulta neste horário!", "error");
+      } else {
+        console.error("Erro ao agendar consulta:", err);
+        addToast("Erro ao salvar consulta.", "error");
+      }
+    },
+  });
+
+  const filteredSessions = useMemo(() => {
     const term = searchQuery.trim().toLowerCase();
     const termCleanDigits = searchQuery.replace(/\D/g, "");
 
-    return sessions.filter((s) => {
+    const filtered = term ? sessions.filter((s) => {
       const customerName = s.cliente?.name?.toLowerCase() || "";
       const rawCpf = s.cliente?.cpf || "";
       const cleanCpf = rawCpf.replace(/\D/g, "");
@@ -83,148 +190,76 @@ const Session = () => {
       const matchesFormattedCpf = formattedCpf.includes(term);
 
       return matchesName || matchesCleanCpf || matchesFormattedCpf;
-    });
+    }) : [...sessions];
 
+    return filtered.sort((a, b) => {
+      const priorityDiff = getSessionPriority(a) - getSessionPriority(b);
+      if(priorityDiff !== 0) return priorityDiff;
+
+      const dateComparison = (a.data || "").localeCompare(b.data || "");
+      if(dateComparison !== 0) return dateComparison;
+
+      return (a.horario || "").localeCompare(b.horario || "");
+    });
   }, [sessions, searchQuery]);
 
-  
-  const loadInitialData = async () => {
-    try {
-      setIsLoading(true);
-      const [sessionsData, customersData, employeesData, proceduresData, specialtiesData] =
-        await Promise.all([
-          sessionService.listSessions(),
-          customerService.listCustomers(),
-          employeeService.listEmployees(),
-          procedureService.listProcedures(),
-          specialtyService.listSpecialties(),
-        ]);
-
-      setSessions(sessionsData);
-      setCustomers(customersData);
-      setEmployees(employeesData);
-      setProcedures(proceduresData);
-      setSpecialties(specialtiesData);
-    } catch (err) {
-      console.error(err);
-      addToast("Erro ao carregar dados da agenda.", "error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadInitialData();
-  }, []);
-
-  const handleConfirmSession = async (session: SessionDbRow) => {
-    if (!session.id_consulta) return;
+  const handleConfirmSessionClick = (session: SessionDbRow) => {
+    if(!session.id_consulta) return;
     setSessionToComplete(session);
     setIsConfirmOpen(true);
   };
 
-  const executeConfirmSession = async () => {
-    if(!sessionToComplete || !sessionToComplete.id_consulta) return;
-
-    const confirmedId = sessionToComplete.id_consulta;
-
-    try{
-      await sessionService.updateSession(confirmedId, {
-        ...sessionToComplete,
-        status: "Realizada",
-      } as unknown as Partial<SessionData>);
-
-      addToast("Consulta confirmada com sucesso!", "success");
-      loadInitialData();
-
-      setIsConfirmOpen(false);
-      setSessionToComplete(null);
-
-      setPaymentSessionId(confirmedId);
-      setIsPaymentOpen(true);
-
-    } catch (error) {
-      console.error("Erro ao confirmar consulta: ", error);
-      addToast("Erro ao confirmar consulta", "error");
-      setIsConfirmOpen(false);
-      setSessionToComplete(null);
+  const handleExecuteConfirm = () => {
+    if(sessionToComplete) {
+      completeSessionMutation.mutate(sessionToComplete);
     }
   };
 
-  const handleRegisterSubmit = async (data: FormSessionData) => {
-  try {
-    setIsSubmitting(true);
-
-    const isBusy = await sessionService.hasScheduleConflict(data.employeeId, data.date, data.time);
-    if(isBusy) {
-      addToast("Este profissional já possui uma consulta neste horário!", "error");
-      return;
-    }
-
-    const sessionPayloads = data.procedureIds.map((procedureId) => {
-      const proc = procedures.find((p) => p.id_procedimento === procedureId);
-      return{
-        id_cliente: data.customerId,
-        id_funcionario: data.employeeId,
-        id_procedimento: procedureId,
-        data: data.date,
-        horario: data.time,
-        observacoes: data.notes || "",
-        valor_cobrado: proc ? proc.price : 0,
-      };
-    });
-
-    await sessionService.createMultiple(sessionPayloads);
-    addToast("Consulta(s) agendada(s) com sucesso", "success");
-    setIsModalOpen(false);
-    loadInitialData();
-  } catch(err) {
-    addToast("Error ao salvar consulta", "error");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const handleRegisterSubmit = (data: FormSessionData) => {
+    createSessionMutation.mutate(data);
   };
 
-  const specialtyOptions = specialties.map((s) => ({
+  const specialtyOptions = useMemo(() => specialties.map((s) => ({
     label: s.nome,
     value: String(s.id_especialidade),
-  }));
+  })),
+  [specialties]
+);
 
-  const customerOptions = customers.map((c) => ({
+  const customerOptions = useMemo(() => 
+    customers.map((c) => ({
     label: `${c.name} - ${formatCPF(c.cpf)}`,
     value: String(c.id_cliente),
     name: c.name,
     cpf: c.cpf,
-  }));
+  })),
+  [customers]
+);
 
-  const sessionDynamicOptions = {
-    customerCpf: customerOptions,
-    customerId: customerOptions,
-    specialtyId: specialtyOptions,
-
-    procedureIds: (selectedSpecialtyId: string) => procedures
-    .filter((p) => !selectedSpecialtyId ||
-     String(p.id_especialidade) === selectedSpecialtyId)
-     .map((p) => ({ 
-      label: p.name, 
-      value: String(p.id_procedimento), 
-      price: p.price })),
-
-     employeeId: (selectedSpecialtyId: string) => employees
-     .filter((e) =>
-        !selectedSpecialtyId ||
-        e.especialidades?.some((esp) => String(esp.id_especialidade) === selectedSpecialtyId)
-      ).map((e) => ({
-         label: e.name, 
-         value: String(e.id_funcionario) 
-      })),
-  };
-
-  const initialValues = null;
+  const sessionDynamicOptions = useMemo(
+    () => ({
+      customerCpf: customerOptions,
+      customerId: customerOptions,
+      specialtyId: specialtyOptions,
+      procedureIds: (selectedSpecialtyId: string) =>
+        procedures
+          .filter((p) => !selectedSpecialtyId || String(p.id_especialidade) === selectedSpecialtyId)
+          .map((p) => ({
+            label: p.name,
+            value: String(p.id_procedimento),
+            price: p.price,
+          })),
+      employeeId: (selectedSpecialtyId: string) =>
+        employees
+          .filter((e) =>!selectedSpecialtyId || e.especialidades?.some((esp) => 
+            String(esp.id_especialidade) === selectedSpecialtyId))
+          .map((e) => ({
+            label: e.name,
+            value: String(e.id_funcionario),
+          })),
+    }),
+    [customerOptions, specialtyOptions, procedures, employees]
+  );
 
   const columns: Column<SessionDbRow>[] = [
     {
@@ -237,52 +272,48 @@ const Session = () => {
       key: "id_funcionario",
       render: (item) => {
         const nomeFuncionario = item.funcionario?.name || "Não informado";
-        if (nomeFuncionario === "Não informado") {
-        return nomeFuncionario;
-      }
-      return <DescriptionPopover text={nomeFuncionario} maxLength={10} />;
+        if (nomeFuncionario === "Não informado") return nomeFuncionario;
+        return <DescriptionPopover text={nomeFuncionario} maxLength={10} />;
       },
     },
     {
       label: "Procedimento",
       key: "id_procedimento",
       render: (item) => {
-    const nomeProcedimento = item.procedimento?.name || "Não informado";
-    if (nomeProcedimento === "Não informado") {
-      return nomeProcedimento;
-    }
-    return <DescriptionPopover text={nomeProcedimento} maxLength={10} />;
-  },
-  },
+      const nomeProcedimento = item.procedimento?.name || "Não informado";
+      if (nomeProcedimento === "Não informado")  return nomeProcedimento;
+      return <DescriptionPopover text={nomeProcedimento} maxLength={10} />;
+      },
+    },
     {
     label: "Data e Horário",
     key: "data",
       render: (item) => {
-      let formattedDate = "";
-      if (item.data) {
-        const parts = item.data.split("-");
-        formattedDate = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : item.data;
-      }
-      const formattedTime = item.horario ? formatHour(item.horario) : "";
+        let formattedDate = "";
+        if (item.data) {
+          const parts = item.data.split("-");
+          formattedDate = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : item.data;
+        }
+        const formattedTime = item.horario ? formatHour(item.horario) : "";
 
-      if (!formattedDate && !formattedTime) return "Não informado";
+        if (!formattedDate && !formattedTime) return "Não informado";
 
-      return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-          <span style={{ fontWeight: 500 }}>{formattedDate || "—"}</span>
-          <span style={{ fontSize: "0.8rem", color: "#666" }}>
-            {formattedTime ? `${formattedTime}h` : "—"}
-          </span>
-        </div>
-      );
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+            <span style={{ fontWeight: 500 }}>{formattedDate || "—"}</span>
+            <span style={{ fontSize: "0.8rem", color: "#666" }}>
+              {formattedTime ? `${formattedTime}h` : "—"}
+            </span>
+          </div>
+        );
+      },
     },
-  },
     {
       label: "Status Consulta",
       key: "status", 
       render: (item) => {
-      const config = statusConfig[item.status] || statusConfig.Pendente;
-      return (
+        const config = statusConfig[item.status] || statusConfig.Pendente;
+        return (
         <span
           style={{
             padding: '0.25rem 0.75rem',
@@ -291,11 +322,10 @@ const Session = () => {
             fontWeight: 600,
             color: config.color,
             backgroundColor: config.bgColor,
-          }}
-        >
-          {config.label}
-        </span>
-      );
+          }}>
+            {config.label}
+          </span>
+        );
       }
     },
     {
@@ -312,19 +342,20 @@ const Session = () => {
       label: "Status Pagamento",
       key: "status_pagamento" as keyof SessionDbRow,
       render: (item: SessionDbRow) => {
-      const config = paymentStatusConfig[item.status_pagamento] || paymentStatusConfig.Pendente;
-      return (
-      <span style={{ padding: '0.25rem 0.75rem', 
-      borderRadius: '9999px', 
-      fontSize: '0.8rem', 
-      fontWeight: 600, 
-      color: config.color, 
-      backgroundColor: config.bgColor }}>
-        {config.label}
-      </span>
-    );
-  }
-},
+        const config = paymentStatusConfig[item.status_pagamento] || paymentStatusConfig.Pendente;
+        return (
+          <span style={{ padding: '0.25rem 0.75rem', 
+            borderRadius: '9999px', 
+            fontSize: '0.8rem', 
+            fontWeight: 600, 
+            color: config.color, 
+            backgroundColor: config.bgColor 
+            }}>
+            {config.label}
+          </span>
+        );
+      }
+    },
     ...(canManage || isOperational
       ? [
           {
@@ -332,51 +363,31 @@ const Session = () => {
             key: "actions" as keyof SessionDbRow,
             render: (item: SessionDbRow) => {
               const isPaymentApproved = item.status_pagamento === "Pago";
+              const isRejected = item.status_pagamento === "Recusado";
               const isActionAllowed = item.status === "Pendente" || item.status === "Cancelada";
+
 
               return (
                 <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
-                  {isOperational && isActionAllowed && (
-                    <button
-                      onClick={() => handleConfirmSession(item)}
-                      style={{
-                        background: "#fff",
-                        border: "1px solid #13950f",
-                        cursor: "pointer",
-                        color: "#12960d",
-                        fontWeight: 700,
-                        display: "flex",
-                        alignItems: "center",
-                        padding: ".5rem .9rem",
-                        borderRadius: "1rem",
-                      }}
+                  {canConfirm && isActionAllowed && (
+                    <IconButton 
+                      variant="success"
                       title="Confirmar Consulta"
-                    >
-                      <FaCheck size={16} />
-                    </button>
+                      icon={<FaCheck size={16} />}
+                      onClick={() => handleConfirmSessionClick(item)}
+                    />
                   )}
 
                   {!isPaymentApproved && (
-                    <button
-                      onClick={() => {
-                        setPaymentSessionId(item.id_consulta);
-                        setIsPaymentOpen(true);
-                      }}
-                      style={{
-                        background: "#fff",
-                        border: item.status_pagamento === "Recusado" ? "1px solid #d00404" : "1px solid #9c4427",
-                        cursor: "pointer",
-                        color: item.status_pagamento === "Recusado" ? "#d00404" : "#9c4427",
-                        display: "flex",
-                        alignItems: "center",
-                        padding: ".5rem .9rem",
-                        borderRadius: "1rem",
-                        fontWeight: 600,
-                      }}
-                      title={item.status_pagamento === "Recusado" ? "Tentar Pagamento Novamente" : "Realizar Pagamento"}
-                    >
-                      <FaCreditCard size={16} />
-                    </button>
+                    <IconButton 
+                    variant={isRejected ? "danger" : "payment"}
+                    title={isRejected ? "Tentar Pagamento Novamente" : "Realizar Pagamento"}
+                    icon={<FaCreditCard size={16} />}
+                    onClick={() => {
+                      setPaymentSessionId(item.id_consulta);
+                      setIsPaymentOpen(true);
+                    }}
+                    />
                   )}
                 </div>
               );
@@ -406,7 +417,7 @@ const Session = () => {
       value={searchQuery}
       onChange={(val) => setSearchQuery(val)} />}
     >
-      {isLoading ? (
+      {isPageLoading ? (
         <TableSkeleton rows={5} columns={columns.length} />
       ) : (
         <Table columns={columns} data={filteredSessions} />
@@ -415,18 +426,18 @@ const Session = () => {
       <Register
         type="session"
         isOpen={isModalOpen}
-        onClose={handleCloseModal}
+        onClose={() => setIsModalOpen(false)}
         onSubmit={handleRegisterSubmit}
-        isSubmitting={isSubmitting}
+        isSubmitting={createSessionMutation.isPending}
         dynamicOptions={sessionDynamicOptions}
-        initialValues={initialValues}
+        initialValues={null}
       />
 
     <ConfirmModal
      isOpen={isConfirmOpen}
      title="Concluir Consulta"
      description="Deseja confirmar que esta consulta foi realizada?"
-     onConfirm={executeConfirmSession}
+     onConfirm={handleExecuteConfirm}
      onClose={() => setIsConfirmOpen(false)}
     />
 
@@ -436,6 +447,7 @@ const Session = () => {
       onClose={() => {
         setIsPaymentOpen(false);
         setPaymentSessionId(null);
+        queryClient.invalidateQueries({ queryKey: ["sessions"] });
       }}
     />
 

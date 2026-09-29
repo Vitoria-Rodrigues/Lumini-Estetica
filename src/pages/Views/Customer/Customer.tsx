@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 //Service
 import { customerService, type CustomerDbRow } from "@/services/customerService";
@@ -7,8 +8,12 @@ import { formatCPF, formatPhone } from "@/utils/formatters";
 
 //Components
 import { ViewLayout, Search } from "@/components/layout";
-import { Button, Table, Register, TableSkeleton } from "@/components/ui";
-import { ConfirmModal } from "@/components/ui";
+import { Button,
+  IconButton,
+  Table, 
+  Register, 
+  TableSkeleton,
+  ConfirmModal } from "@/components/ui";
 import type { Column } from "@/components/ui/Table/Table";
 
 //Context
@@ -21,20 +26,62 @@ import { BsBrushFill } from "react-icons/bs";
 import { FaTrashAlt } from "react-icons/fa";
 
 const Customer = () => {
-  const [customers, setCustomers] = useState<CustomerDbRow[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [editingCustomer, setEditingCustomer] = useState<CustomerDbRow | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
-
+  const queryClient = useQueryClient();
   const { addToast } = useToaster();
   const { user } = useAuth();
 
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [editingCustomer, setEditingCustomer] = useState<CustomerDbRow | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isConfirmOpen, setIsConfirmOpen] = useState<boolean>(false);
+  const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
+
   const canModify = user?.role === "admin" || user?.role === "recepcionista";
 
+  const { data: customers = [], isLoading } = useQuery({
+    queryKey: ["customers"],
+    queryFn: customerService.listCustomers,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => customerService.deleteCustomer(id),
+    onSuccess: () => {
+      addToast("Cliente excluido com sucesso!", "success");
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      setIsConfirmOpen(false);
+      setCustomerToDelete(null);
+    },
+    onError: (error) => {
+      console.error("Erro ao excluir cliente:", error);
+      addToast("Erro ao excluir cliente", "error");
+      setIsConfirmOpen(false);
+      setCustomerToDelete(null);
+    },
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async ({ id, data}: {id?: string, data: CustomerData}) => {
+      if(id) {
+        return customerService.updateCustomer(id, data);
+      }
+      return customerService.createCustomer(data);
+    },
+    onSuccess: (_, variables) => {
+      addToast(
+        variables.id ? "Cliente atualizado com sucesso!" : "Cliente cadastrado com sucesso!",
+        "success"
+      );
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      setIsModalOpen(false);
+      setEditingCustomer(null);
+    },
+    onError: (err) => {
+      console.error("Erro ao salvar cliente:", err);
+      addToast("Erro ao cadastrar ou atualizar o cliente.", "error");
+    },
+  });
+
+  
   const filteredCustomers = useMemo(() => {
     if(!searchQuery.trim()) return customers;
 
@@ -49,25 +96,6 @@ const Customer = () => {
       return nameMatch  || cpfMatch;
     })
   }, [customers, searchQuery]);
-
-  const loadCustomer = async () => {
-    try {
-      setIsLoading(true);
-      const data = await customerService.listCustomers();
-        if (data) {
-          setCustomers(data);
-        }
-    } catch (err) {
-      console.error("Erro ao carregar clientes: ", err);
-      addToast("Erro ao carregar os clientes", "error");
-    } finally{
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadCustomer();
-  }, []);
 
   const handleEditClick = (customer: CustomerDbRow) => {
     setEditingCustomer(customer);
@@ -84,45 +112,16 @@ const Customer = () => {
   };
 
   const handleConfirmDelete = async () => {
-    if(!customerToDelete) return;
-
-    try{
-      await customerService.deleteCustomer(customerToDelete);
-      addToast("Cliente excluido com sucesso", "success");
-      loadCustomer();
-    } catch(error) {
-      console.error("Error ao excluir: ", error);
-      addToast("Erro ao excluir cliente.", "error");
-    } finally{
-      setIsConfirmOpen(false);
-      setCustomerToDelete(null);
+    if(customerToDelete){
+      deleteMutation.mutate(customerToDelete);
     }
-
   };
 
   const handleRegisterSubmit = async (data: CustomerData) => {
-    try {
-      setIsSubmitting(true);
-      if(editingCustomer){
-        if(!editingCustomer.id_cliente){
-          addToast("Erro ao editar dados.", "error");
-          return;
-        }
-        await customerService.updateCustomer(editingCustomer.id_cliente, data);
-        addToast("Cliente atualizado com sucesso!", "success");
-      } else {
-        await customerService.createCustomer(data);
-        addToast("Cliente cadastrado com sucesso!.", "success");
-      }
-      setIsModalOpen(false);
-      setEditingCustomer(null);
-      loadCustomer();
-    } catch (err) {
-      addToast("Erro ao cadastrar o cliente.", "error");
-      console.error("Erro ao cadastrar cliente:", err);
-    } finally{
-      setIsSubmitting(false);
-    }
+    saveMutation.mutate({
+      id: editingCustomer?.id_cliente,
+      data,
+    });
   };
 
   const handleCloseModal = () => {
@@ -155,38 +154,18 @@ const Customer = () => {
           key: "actions",
           render: (customer) => (
             <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
-              <button
-                onClick={() => handleEditClick(customer)}
-                style={{
-                  background: "#fff",
-                  border: "1px solid #000000",
-                  cursor: "pointer",
-                  color: "#464646",
-                  display: "flex",
-                  alignItems: "center",
-                  padding: ".5rem .9rem",
-                  borderRadius: "1rem",
-                }}
-                title="Editar Cliente"
-              >
-                <BsBrushFill size={16} />
-              </button>
-              <button
-                onClick={() => handleDeleteClick(customer.id_cliente)}
-                style={{
-                  background: "#fff",
-                  border: "1px solid #9D1806",
-                  cursor: "pointer",
-                  color: "#9D1806",
-                  display: "flex",
-                  alignItems: "center",
-                  padding: ".5rem .9rem",
-                  borderRadius: "1rem",
-                }}
-                title="Excluir Cliente"
-              >
-                <FaTrashAlt size={16} />
-              </button>
+              <IconButton 
+              variant="edit"
+              title="Editar Cliente"
+              icon={<BsBrushFill size={16} />}
+              onClick={() => handleEditClick(customer)}
+              />
+              <IconButton
+              variant="delete"
+              title="Excluir Cliente"
+              icon={<FaTrashAlt size={16} />}
+              onClick={() => handleDeleteClick(customer.id_cliente)}
+              />
             </div>
           ),
         },
@@ -238,7 +217,7 @@ const Customer = () => {
     isOpen={isModalOpen} 
     onClose={handleCloseModal}
     onSubmit={handleRegisterSubmit}
-    isSubmitting={isSubmitting} 
+    isSubmitting={saveMutation.isPending} 
     initialValues={editingCustomer}/>
     </ViewLayout>
   );
