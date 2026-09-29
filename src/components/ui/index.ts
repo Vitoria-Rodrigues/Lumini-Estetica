@@ -1,4 +1,5 @@
 export { default as Button } from './Button/Button';
+export { default as IconButton } from './IconButton/IconButton';
 export { default as Card } from './Card/Card';
 export { default as Table } from './Table/Table';
 export { default as TableSkeleton } from './Table/TableSkeleton';
@@ -8,3 +9,5 @@ export { default as CustomSelect } from './CustomSelect/CustomSelect';
 export { default as DescriptionPopover } from './DescriptionPopover/DescriptionPopover';
 export { default as RescheduleModal } from './Modal/RescheduleModal/RescheduleModal';
 export { default as ConfirmModal } from './Modal/ConfirmModal/ConfirmModal';
+export { default as LoadingOverlay } from './LoadingOverlay/LoadingOverlay';
+export { default as PaymentModal } from './Modal/PaymentModal/PaymentModal';
