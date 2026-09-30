@@ -42,12 +42,13 @@ serve(async (req: Request): Promise<Response> => {
     const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
 
     const { data: consulta, error: consultaError } = await supabaseClient
-      .from("Consulta")
-      .select("id_consulta, valor_cobrado, Procedimento(price)")
+      .from("consulta")
+      .select("id_consulta, valor_cobrado, procedimento(price)")
       .eq("id_consulta", id_consulta)
       .single();
 
     if (consultaError || !consulta) {
+      console.error("[create-payment-intent] Erro ao buscar consulta:", consultaError);
       return new Response(
         JSON.stringify({ error: "Consulta não encontrada no banco de dados" }),
         {
@@ -83,7 +84,7 @@ serve(async (req: Request): Promise<Response> => {
           enabled: false,
         };
 
-    const paymentIntent = await stripe.paymentIntents.create({
+    const paymentIntentPayload: Stripe.PaymentIntentCreateParams = {
       amount: amountInCents > 0 ? amountInCents : 5000,
       currency: "brl",
       metadata: { 
@@ -91,12 +92,20 @@ serve(async (req: Request): Promise<Response> => {
         parcelamento_habilitado: permiteParcelamento ? "sim" : "nao",
       },
       automatic_payment_methods: { enabled: true },
-      payment_method_options: {
+    };
+
+    if (permiteParcelamento) {
+      paymentIntentPayload.payment_method_options = {
         card: {
-          installments: installmentsConfig,
+          installments: {
+            enabled: true,
+            plan: { maximum_count: MAX_PARCELAS },
+          },
         },
-      },
-    });
+      };
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create(paymentIntentPayload);
 
     return new Response(
       JSON.stringify({
@@ -109,6 +118,7 @@ serve(async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
+    console.error("[create-payment-intent] Erro:", error);
     const errorMessage = error instanceof Error ? error.message : "Erro interno do servidor";
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -13,35 +13,48 @@ export const StripeCheckoutForm: React.FC<StripeProps> = ({ onSuccess }) => {
     const[errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if(!stripe || !elements) return;
+    e.preventDefault();
+    if (!stripe || !elements) return;
 
-        setIsLoading(true);
-        setErrorMessage(null);
+    setIsLoading(true);
+    setErrorMessage(null);
 
-        const { error } = await stripe.confirmPayment({
-            elements,
-            confirmParams: {
-                return_url: window.location.origin + "/agendamentos",
-            },
-            redirect: "if_required",
-        });
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: window.location.origin + "/session",
+      },
+      redirect: "if_required",
+    });
 
-        if(error) {
-            setErrorMessage(error.message || "Erro ao processar o pagamento");
-            setIsLoading(false);
-        } else {
-            onSuccess();
-        }
-    };
+    if (error) {
+      setErrorMessage(error.message || "Erro ao processar o pagamento");
+      setIsLoading(false);
+    } else if (paymentIntent && paymentIntent.status === "succeeded") {
+      setIsLoading(false);
+      onSuccess();
+    } else {
+      setIsLoading(false);
+      onSuccess();
+    }
+  };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <PaymentElement />
-            {errorMessage && <div style={{ color: "red", marginTop: 10 }}>{errorMessage}</div>}
-            <Button title="Confirmar Pagamento" type="submit" disabled={!stripe || isLoading} style={{ marginTop: 20, fontSize: 15, backgroundColor: '#178301'}}>
-                {isLoading ? "Processando..." : "Confirmar e Pagar"}
-            </Button>
-        </form>
-    );
+    <form onSubmit={handleSubmit}>
+      <PaymentElement />
+      {errorMessage && (
+        <div style={{ color: "#d00404", marginTop: 10, fontSize: "0.85rem" }}>
+          {errorMessage}
+        </div>
+      )}
+      <Button
+        title="Confirmar Pagamento"
+        type="submit"
+        disabled={!stripe || isLoading}
+        style={{ marginTop: 20, fontSize: 15, backgroundColor: "#178301", width: "100%" }}
+      >
+        {isLoading ? "Processando..." : "Confirmar e Pagar"}
+      </Button>
+    </form>
+  );
 };
