@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // Components
 import { ViewLayout, Search } from "@/components/layout";
-import { Button, Table, Register, TableSkeleton } from "@/components/ui";
+import { Button, Table, Register, TableSkeleton, IconButton } from "@/components/ui";
 import { ConfirmModal } from "@/components/ui";
 
 // Services
@@ -23,18 +24,67 @@ import type { Column } from "@/components/ui/Table/Table";
 import { RiAddFill } from "react-icons/ri";
 import { FaTrashAlt } from "react-icons/fa";
 import { BsBrushFill } from "react-icons/bs";
+import { QUERY_KEYS } from "@/constants/queryKeys";
 
 const Professional = () => {
-  const [employees, setEmployees] = useState<EmployeeDbRow[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const queryClient = useQueryClient();
+  const { addToast } = useToaster();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<EmployeeDbRow | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string | null>(null);
 
-  const { addToast } = useToaster();
+  const { data: employees = [], isLoading} = useQuery<EmployeeDbRow[]>({
+    queryKey: QUERY_KEYS.EMPLOYEES.OPERATIONAL,
+    queryFn: employeeService.listOperationalEmployees,    
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return employeeService.deleteEmployee(userId);
+    },
+    onSuccess: () => {
+      addToast("Profissional excluido com sucesso!", "success");
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.EMPLOYEES.OPERATIONAL });
+      setIsConfirmOpen(false);
+      setEmployeeToDelete(null);
+    },
+    onError: (error) => {
+      console.error("Erro ao excluir profissional", error);
+      addToast("Erro ao excluir profissional", "error");
+      setIsConfirmOpen(false);
+      setEmployeeToDelete(null);
+    },
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: EmployeeData) => {
+      if (editingEmployee) {
+        if (!editingEmployee.user_id) {
+          throw new Error("ID do profissional não encontrado");
+        }
+        return employeeService.updateEmployee(editingEmployee.user_id, data);
+      }
+      return employeeService.createEmployee(data);
+    },
+    onSuccess: () => {
+      addToast(
+        editingEmployee
+          ? "Profissional atualizado com sucesso!"
+          : "Profissional cadastrado com sucesso!",
+        "success"
+      );
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.EMPLOYEES.OPERATIONAL });
+      setIsModalOpen(false);
+      setEditingEmployee(null);
+    },
+    onError: (error) => {
+      console.error("Erro ao salvar profissional:", error);
+      addToast("Erro ao salvar profissional", "error");
+    },
+  });
 
   const filteredEmployees = useMemo(() => {
     if(!searchQuery.trim()) return employees;
@@ -56,23 +106,6 @@ const Professional = () => {
     });
   }, [employees, searchQuery]);
 
-  const fetchEmployees = async () => {
-    try {
-      setIsLoading(true);
-      const data = await employeeService.listOperationalEmployees();
-      setEmployees(data);
-    } catch (error) {
-      console.error("Erro ao carregar funcionários: ", error);
-      addToast("Erro ao carregar os profissionais", "error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
-
   const handleEditClick = (employee: EmployeeDbRow) => {
     setEditingEmployee(employee);
     setIsModalOpen(true);
@@ -89,44 +122,11 @@ const Professional = () => {
 
   const handleConfirmDelete = async () =>{
     if(!employeeToDelete) return;
-    try {
-      await employeeService.deleteEmployee(employeeToDelete);
-      addToast("Profissional excluido com sucesso!", "success");
-      fetchEmployees();
-    } catch (error) {
-      console.error("Erro ao excluir: ", error);
-      addToast("Erro ao excluir profissional", "error");
-    } finally {
-      setIsConfirmOpen(false);
-      setEmployeeToDelete(null);
-    }
+    deleteMutation.mutate(employeeToDelete);
   };
 
   const handleRegisterSubmit = async (data: EmployeeData) => {
-    try {
-      setIsSubmitting(true);
-      if (editingEmployee) {
-        if (!editingEmployee.user_id) {
-          addToast("ID do profissional não encontrado", "error");
-          return;
-        }
-        await employeeService.updateEmployee(editingEmployee.user_id, data);
-        addToast("Profissional atualizado com sucesso!", "success");
-      } else {
-        await employeeService.createEmployee(data);
-        addToast("Profissional cadastrado com sucesso!", "success");
-      }
-
-      setIsModalOpen(false);
-      setEditingEmployee(null);
-      fetchEmployees();
-
-    } catch (error) {
-      console.error("Erro ao salvar profissional:", error);
-      addToast("Erro ao salvar profissional", "error");
-    } finally {
-      setIsSubmitting(false);
-    }
+    saveMutation.mutate(data);
   };
 
   const handleCloseModal = () => {
@@ -156,38 +156,18 @@ const Professional = () => {
       key: "actions",
       render: (employee) => (
         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
-          <button
+          <IconButton 
+            variant="edit"
+            title="Editar Cliente"
+            icon={<BsBrushFill size={16} />}
             onClick={() => handleEditClick(employee)}
-            style={{
-              background: "#fff",
-                border: "1px solid #000000",
-                cursor: "pointer",
-                color: "#1e1e1e",
-                display: "flex",
-                alignItems: "center",
-                padding: ".5rem .9rem",
-                borderRadius: "1rem",
-            }}
-            title="Editar profissional"
-          >
-            <BsBrushFill size={16} />
-          </button>
-          <button
+          />
+          <IconButton
+            variant="delete"
+            title="Excluir Cliente"
+            icon={<FaTrashAlt size={16} />}
             onClick={() => handleDeleteClick(employee.user_id)}
-            style={{
-              background: "#fff",
-              border: "1px solid #9D1806",
-              cursor: "pointer",
-              color: "#9D1806",
-              display: "flex",
-              alignItems: "center",
-              padding: ".5rem .9rem",
-              borderRadius: "1rem",
-            }}
-            title="Excluir profissional"
-          >
-            <FaTrashAlt size={16} />
-          </button>
+          />
         </div>
       ),
     },
@@ -232,7 +212,8 @@ const Professional = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSubmit={handleRegisterSubmit}
-        isSubmitting={isSubmitting}
+        isSubmitting={saveMutation.isPending
+        }
         initialValues={formInitialValues}
       />
     </ViewLayout>
