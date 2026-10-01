@@ -30,6 +30,9 @@ import type { SessionData as FormSessionData } from "@/form-config/types";
 import { useToaster } from "@/contexts/ToasterContext/useToaster";
 import { useAuth } from "@/contexts/AuthContext/useAuth";
 
+//Constants
+import { QUERY_KEYS } from "@/constants/queryKeys";
+
 //Utils
 import { formatHour, formatCPF } from "@/utils/formatters";
 
@@ -75,7 +78,7 @@ const Session = () => {
 };
 
   const { data: sessions = [], isLoading: isLoadingSessions } = useQuery<SessionDbRow[]>({
-    queryKey: ["sessions"],
+    queryKey: QUERY_KEYS.SESSIONS.ALL,
     queryFn: sessionService.listSessions,
   });
 
@@ -118,7 +121,7 @@ const Session = () => {
     },
     onSuccess: (_, session) => {
       addToast("Consulta confirmada com sucesso!", "success");
-      queryClient.invalidateQueries({ queryKey: ["session"] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS.ALL });
       setIsConfirmOpen(false);
       setSessionToComplete(null);
 

@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // Components
 import { ViewLayout, Search } from "@/components/layout";
@@ -12,6 +13,9 @@ import { employeeService, type EmployeeDbRow } from "@/services/employeeService"
 import { type CustomerDbRow, customerService } from "@/services/customerService";
 import { type ProcedureDbRow, procedureService } from "@/services/procedureService";
 import type { SessionData as FormSessionData } from "@/form-config/types";
+
+//Constants
+import { QUERY_KEYS } from "@/constants/queryKeys";
 
 // Context
 import { useAuth } from "@/contexts/AuthContext/useAuth";
@@ -28,27 +32,19 @@ import { getLocalDateString } from "@/utils/formatters";
 import { BsBrushFill } from "react-icons/bs";
 import { HiX } from "react-icons/hi";
 
-
-
 const Appointment = () => {
-  const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString());
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
-  
-  const [customers, setCustomers] = useState<CustomerDbRow[]>([]);
-  const [procedures, setProcedures] = useState<ProcedureDbRow[]>([]);
-  const [sessions, setSessions] = useState<SessionDbRow[]>([]);
-  const [employees, setEmployees] = useState<EmployeeDbRow[]>([]);
-  const [rescheduleSession, setRescheduleSession] = useState<SessionDbRow | null>(null);
-  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
-
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [editingSession, setEditingSession] = useState<SessionDbRow | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const { addToast } = useToaster();
+
+  const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString());
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
+  const [rescheduleSession, setRescheduleSession] = useState<SessionDbRow | null>(null);
+  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
+  const [editingSession, setEditingSession] = useState<SessionDbRow | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const canManage = user?.role === "admin" || user?.role === "recepcionista";
   const isOperational = ["esteticista", "massagista", "depiladora"].includes(user?.role || "");
@@ -59,30 +55,97 @@ const Appointment = () => {
     Cancelada: { label: "Cancelada", color: "#d00404", bgColor: "#ffe7e7" },
   };
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [sessionsData, employeesData, customersData, proceduresData] = await Promise.all([
-        sessionService.listSessions(),
-        employeeService.listEmployees(),
-        customerService.listCustomers(),
-        procedureService.listProcedures(),
-      ]);
-      setSessions(sessionsData);
-      setEmployees(employeesData);
-      setCustomers(customersData);
-      setProcedures(proceduresData);
-    } catch (error) {
-      console.error(error);
-      addToast("Erro ao carregar agenda", "error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { data: sessions = [], isLoading: isLoadingSessions } = useQuery<SessionDbRow[]>({
+    queryKey: QUERY_KEYS.SESSIONS.ALL,
+    queryFn: sessionService.listSessions,
+  });
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const { data: employees = [], isLoading: isLoadingEmployees } = useQuery<EmployeeDbRow[]>({
+    queryKey: QUERY_KEYS.EMPLOYEES.ALL,
+    queryFn: employeeService.listOperationalEmployees,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: customers = [], isLoading: isLoadingCustomers } = useQuery<CustomerDbRow[]>({
+    queryKey: QUERY_KEYS.CUSTOMERS.ALL,
+    queryFn: customerService.listCustomers,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: procedures = [], isLoading: isLoadingProcedures } = useQuery<ProcedureDbRow[]>({
+    queryKey: QUERY_KEYS.PROCEDURES.ALL,
+    queryFn: procedureService.listProcedures,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const isLoading = isLoadingSessions || isLoadingEmployees 
+  || isLoadingCustomers || isLoadingProcedures;
+
+  const rescheduleMutation = useMutation({
+    mutationFn: async ({ id, date, time }: { id: string; date: string; time: string }) => {
+      return sessionService.updateSession(id, {
+        data: date,
+        horario: time,
+        status: "Pendente",
+      });
+    },
+    onSuccess: () => {
+      addToast("Consulta reagendada com sucesso!", "success");
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS.ALL });
+      setIsRescheduleOpen(false);
+      setRescheduleSession(null);
+    },
+    onError: (err) => {
+      console.error("Erro ao reagendar consulta:", err);
+      addToast("Erro ao reagendar consulta.", "error");
+    },
+  });
+
+  const cancelDefinitiveMutation = useMutation({
+    mutationFn: async (sessionId: string) => {
+      return sessionService.deleteSession(sessionId);
+    },
+    onSuccess: () => {
+      addToast("Consulta cancelada com sucesso!", "success");
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS.ALL });
+      setIsRescheduleOpen(false);
+      setRescheduleSession(null);
+    },
+    onError: (err) => {
+      console.error("Erro ao cancelar consulta:", err);
+      addToast("Erro ao cancelar consulta.", "error");
+    },
+  });
+
+  const updateSessionMutation = useMutation({
+    mutationFn: async (data: FormSessionData) => {
+      if (!editingSession || !editingSession.id_consulta) return;
+
+      const selectedProcedureId = data.procedureIds[0] || editingSession.id_procedimento;
+      const proc = procedures.find((p) => p.id_procedimento === selectedProcedureId);
+      const price = proc ? proc.price : editingSession.valor_cobrado;
+
+      return sessionService.updateSession(editingSession.id_consulta, {
+        id_cliente: data.customerId,
+        id_funcionario: data.employeeId,
+        id_procedimento: selectedProcedureId,
+        data: data.date,
+        horario: data.time,
+        observacoes: data.notes || "",
+        valor_cobrado: price,
+      });
+    },
+    onSuccess: () => {
+      addToast("Consulta atualizada com sucesso!", "success");
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS.ALL });
+      setIsModalOpen(false);
+      setEditingSession(null);
+    },
+    onError: (err) => {
+      console.error("Erro ao atualizar consulta:", err);
+      addToast("Erro ao atualizar consulta.", "error");
+    },
+  });
 
   const filteredSessions = useAppointmentFilter({
     sessions,
@@ -109,65 +172,15 @@ const Appointment = () => {
    };
 
    const handleRescheduleSubmit = async (sessionId: string, newDate: string, newTime: string) => {
-  try {
-    await sessionService.updateSession(sessionId, {
-      data: newDate,
-      horario: newTime,
-      status: "Pendente",
-    });
-    addToast("Consulta reagendada com sucesso!", "success");
-    setIsRescheduleOpen(false);
-    setRescheduleSession(null);
-    await loadData();
-  } catch (err) {
-    console.error("Erro ao reagendar consulta:", err);
-    addToast("Erro ao reagendar consulta.", "error");
-  }
-};
+    rescheduleMutation.mutate({ id: sessionId, date: newDate, time: newTime });
+  };
 
-const handleDefinitiveCancelSubmit = async (sessionId: string) => {
-  try {
-    await sessionService.deleteSession(sessionId);
-    addToast("Consulta cancelada com sucesso!", "success");
-    setIsRescheduleOpen(false);
-    setRescheduleSession(null);
-    await loadData();
-  } catch (err) {
-    console.error("Erro ao cancelar consulta:", err);
-    addToast("Erro ao cancelar consulta.", "error");
-  }
-};
+  const handleDefinitiveCancelSubmit = async (sessionId: string) => {
+    cancelDefinitiveMutation.mutate(sessionId);
+  };
 
   const handleRegisterSubmit = async (data: FormSessionData) => {
-    if(!editingSession || !editingSession.id_consulta) return;
-
-    try {
-      setIsSubmitting(true);
-
-      const selectedProcedureId = data.procedureIds[0] || editingSession.id_procedimento;
-      const proc = procedures.find((p) => p.id_procedimento === selectedProcedureId);
-      const price = proc ? proc.price : editingSession.valor_cobrado;
-
-      await sessionService.updateSession(editingSession.id_consulta, {
-        id_cliente: data.customerId,
-        id_funcionario: data.employeeId,
-        id_procedimento: selectedProcedureId,
-        data: data.date,
-        horario: data.time,
-        observacoes: data.notes || "",
-        valor_cobrado: price,
-      });
-
-      addToast("Consulta atualizada com sucesso!", "success");
-      setIsModalOpen(false);
-      setEditingSession(null);
-      loadData();
-    } catch (err) {
-      console.error("Erro ao atualizar consulta:", err);
-      addToast("Erro ao atualizar consulta.", "error");
-    } finally {
-      setIsSubmitting(false);
-    }
+    updateSessionMutation.mutate(data);
   }
 
   const customerOptions = customers.map((c) => ({
@@ -383,7 +396,7 @@ const initialValues = editingSession
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSubmit={handleRegisterSubmit}
-        isSubmitting={isSubmitting}
+        isSubmitting={updateSessionMutation.isPending}
         dynamicOptions={sessionDynamicOptions}
         initialValues={initialValues}
       />

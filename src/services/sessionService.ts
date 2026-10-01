@@ -1,5 +1,7 @@
 import { supabase } from "./supabase";
 
+import { getLocalDateString } from "@/utils/formatters";
+
 export type SessionStatus = 'Pendente' | 'Realizada' | 'Cancelada';
 
 export type PaymentStatus = 'Pendente' | 'Processando' | 'Pago' | 'Recusado';
@@ -163,7 +165,7 @@ export const sessionService = {
     },
 
     async getTodaySession(): Promise<SessionDbRow[]> {
-        const todayStr = new Date().toISOString().split("T")[0];
+        const todayStr = getLocalDateString();
 
         const { data, error } = await supabase
         .from("consulta")

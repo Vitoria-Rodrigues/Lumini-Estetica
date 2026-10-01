@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 //Service
 import type { ProcedureData } from "@/form-config/types";
 import { procedureService, type ProcedureDbRow } from "@/services/procedureService";
-import { categoryService, type categoryDbRow } from "@/services/categoryService";
-import { specialtyService, type SpecialtyDbRow } from "@/services/specialtyService";
-import { employeeService, type EmployeeDbRow } from "@/services/employeeService";
+import { categoryService } from "@/services/categoryService";
+import { specialtyService } from "@/services/specialtyService";
+import { employeeService } from "@/services/employeeService";
 
 //Context
 import { useToaster } from "@/contexts/ToasterContext/useToaster";
@@ -13,9 +14,12 @@ import { useAuth } from "@/contexts/AuthContext/useAuth";
 
 //Components
 import { ViewLayout, Search } from "@/components/layout";
-import { Button, Table, Register, TableSkeleton, DescriptionPopover } from "@/components/ui";
+import { Button, IconButton, Table, Register, TableSkeleton, DescriptionPopover } from "@/components/ui";
 import { ConfirmModal } from "@/components/ui";
 import type { Column } from "@/components/ui/Table/Table";
+
+// Contants
+import { QUERY_KEYS } from "@/constants/queryKeys";
 
 //icon
 import { RiAddFill } from "react-icons/ri";
@@ -23,125 +27,112 @@ import { BsBrushFill } from "react-icons/bs";
 import { FaTrashAlt } from "react-icons/fa";
 
 const Procedure = () => {
-  const [procedure, setProcedure] = useState<ProcedureDbRow[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const queryClient = useQueryClient();
+  const { addToast } = useToaster();
+  const { user } = useAuth();
+
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [categories, setCategories] = useState<categoryDbRow[]>([]);
-  const [specialties, setSpecialties] = useState<SpecialtyDbRow[]>([]);
-  const [employees, setEmployees] = useState<EmployeeDbRow[]>([]);
   const [editingProcedure, setEditingProcedure] = useState<ProcedureDbRow | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [procedureToDelete, setProcedureToDelete] = useState<string | null>(null);
 
-  const { addToast } = useToaster();
-  const { user } = useAuth();
-
   const canModify = user?.role === "admin";
 
-  const filteredProcedure = procedure.filter((procedure) => {
-    if(!searchQuery.trim()) return true;
-
-    const term = searchQuery.trim().toLowerCase();
-    const procedureName = procedure.name?.toLowerCase();
-
-    const matchesName = procedureName.includes(term);
-
-    return matchesName;
-
+  const { data: procedures = [], isLoading } = useQuery<ProcedureDbRow[]>({
+    queryKey: QUERY_KEYS.PROCEDURES.ALL,
+    queryFn: procedureService.listProcedures,
   });
 
-  useEffect(() => {
-    const loadAuxData = async () => {
-      try {
-        const [cats, specs, emps] = await Promise.all([
-          categoryService.listCategories(),
-          specialtyService.listSpecialties(),
-          employeeService.listEmployees(),
-        ]);
-        setCategories(cats || []);
-        setSpecialties(specs || []);
-        setEmployees(emps || []);
-      } catch (error) {
-        console.error("Erro ao carregar dados auxiliares:", error);
-      }
-    };
-    loadAuxData();
-  }, []);
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: categoryService.listCategories,
+    staleTime: 1000 * 60 * 5,
+  });
 
-  const loadProcedure = async () => {
-    try {
-      setIsLoading(true);
-      const data = await procedureService.listProcedures();
-      if (data) {
-        setProcedure(data);
-      }
-    } catch (error) {
-      console.error("Erro: ", error);
-      addToast("Erro ao carregar os procedimentos", "error");
-    } finally {
-      setIsLoading(false);
+  const { data: specialties = [] } = useQuery({
+    queryKey: QUERY_KEYS.SPECIALTIES.ALL,
+    queryFn: specialtyService.listSpecialties,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: employees = [] } = useQuery({
+    queryKey: QUERY_KEYS.EMPLOYEES.ALL,
+    queryFn: employeeService.listEmployees,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const deleteMutation = useMutation({
+  mutationFn: (id: string) => procedureService.deleteProcedure(id),
+  onSuccess: () => {
+    addToast("Procedimento excluído com sucesso!", "success");
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROCEDURES.ALL });
+    setIsConfirmOpen(false);
+    setProcedureToDelete(null);
+  },
+  onError: (error) => {
+    console.error("Erro ao excluir procedimento:", error);
+    addToast("Erro ao excluir procedimento", "error");
+    setIsConfirmOpen(false);
+    setProcedureToDelete(null);
+  },
+});
+
+const saveMutation = useMutation({
+  mutationFn: async ({ id, data }: { id?: string; data: ProcedureData }) => {
+    if (id) {
+      return procedureService.updateProcedure(id, data);
     }
-  };
+    return procedureService.createProcedure(data);
+  },
+  onSuccess: (_, variables) => {
+    addToast(
+      variables.id
+        ? "Procedimento atualizado com sucesso!"
+        : "Procedimento cadastrado com sucesso!",
+      "success"
+    );
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.PROCEDURES.ALL });
+    setIsModalOpen(false);
+    setEditingProcedure(null);
+  },
+  onError: (error) => {
+    console.error("Erro ao salvar procedimento:", error);
+    addToast("Erro ao salvar o procedimento.", "error");
+  },
+});
 
-  useEffect(() => {
-    loadProcedure();
-  }, []);
+  const filteredProcedure = useMemo(() => {
+    if (!searchQuery.trim()) return procedures;
+    const term = searchQuery.trim().toLowerCase();
+    return procedures.filter((p) => p.name?.toLowerCase().includes(term));
+  }, [procedures, searchQuery]);
 
   const handleEditClick = (proc: ProcedureDbRow) => {
     setEditingProcedure(proc);
     setIsModalOpen(true);
   };
 
-  const handleDeleteClick = async (idProcedure?: string) => {
+  const handleDeleteClick = (idProcedure?: string) => {
     if (!idProcedure) {
-      alert("Erro: ID do procedimento não encontrado");
-      addToast("Erro ao carregar os procedimentos", "error");
+      addToast("Erro: ID do procedimento não encontrado", "error");
       return;
     }
     setProcedureToDelete(idProcedure);
     setIsConfirmOpen(true);
-  };
+  };;
 
-  const handleConfirmDelete = async () => {
-    if(!procedureToDelete) return;
-    try {
-      await procedureService.deleteProcedure(procedureToDelete);
-      addToast("Procedimento excluido com sucesso!", "success");
-      loadProcedure();
-    } catch (error) {
-      console.error("Erro ao excluir: ", error);
-      addToast("Erro ao excluir procedimento", "error");
-    }finally {
-      setIsConfirmOpen(false);
-      setProcedureToDelete(null);
+  const handleConfirmDelete = () => {
+    if (procedureToDelete) {
+      deleteMutation.mutate(procedureToDelete);
     }
   };
 
-  const handleRegisterSubmit = async (data: ProcedureData) => {
-    try {
-      setIsSubmitting(true);
-      if (editingProcedure) {
-        if (!editingProcedure.id_procedimento) {
-          addToast("ID do procedimento não encontrado", "error");
-          return;
-        }
-        await procedureService.updateProcedure(editingProcedure.id_procedimento, data);
-        addToast("Procedimento atualizado com sucesso!", "success");
-      } else {
-        await procedureService.createProcedure(data);
-        addToast("Procedimento cadastrado com sucesso!", "success");
-      }
-      setIsModalOpen(false);
-      setEditingProcedure(null);
-      loadProcedure();
-    } catch (error) {
-      console.error("Erro ao salvar o procedimento:", error);
-      addToast("Erro ao salvar o procedimento.", "error");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleRegisterSubmit = (data: ProcedureData) => {
+    saveMutation.mutate({
+      id: editingProcedure?.id_procedimento,
+      data,
+    });
   };
 
   const handleCloseModal = () => {
@@ -172,14 +163,23 @@ const Procedure = () => {
   };
 
   const baseColumns: Column<ProcedureDbRow>[] = [
-    { label: "Nome", key: "name" },
-    { label: "Descrição", key: "description", render: (item) => <DescriptionPopover text={item.description} maxLength={15}/> },
+    { 
+      label: "Nome", 
+      key: "name" 
+    },
+    { 
+      label: "Descrição", 
+      key: "description", 
+      render: (item) => <DescriptionPopover text={item.description} maxLength={15}/> 
+    },
     { 
       label: "Preço", 
       key: "price", 
       render: (proc) => `R$ ${Number(proc.price).toFixed(2).replace(".", ",")}`
     },
-    { label: "Duração", key: "duration" },
+    { label: "Duração", 
+      key: "duration" 
+    },
     { 
       label: "Categoria", 
       key: "category", 
@@ -205,38 +205,18 @@ const Procedure = () => {
         key: "actions" as keyof ProcedureDbRow | "actions", 
         render: (proc: ProcedureDbRow) => (
           <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
-            <button
+            <IconButton 
+              variant="edit"
+              title="Editar Cliente"
+              icon={<BsBrushFill size={16} />}
               onClick={() => handleEditClick(proc)}
-              style={{
-                background: "#fff",
-                border: "1px solid #000000",
-                cursor: "pointer",
-                color: "#1e1e1e",
-                display: "flex",
-                alignItems: "center",
-                padding: ".5rem .9rem",
-                borderRadius: "1rem",
-              }}
-              title="Editar procedimento"
-            >
-              <BsBrushFill size={16} />
-            </button>
-            <button
+              />
+              <IconButton
+              variant="delete"
+              title="Excluir Cliente"
+              icon={<FaTrashAlt size={16} />}
               onClick={() => handleDeleteClick(proc.id_procedimento)}
-              style={{
-                background: "#fff",
-                  border: "1px solid #9D1806",
-                  cursor: "pointer",
-                  color: "#9D1806",
-                  display: "flex",
-                  alignItems: "center",
-                  padding: ".5rem .9rem",
-                  borderRadius: "1rem",
-              }}
-              title="Excluir procedimento"
-            >
-              <FaTrashAlt size={16} />
-            </button>
+              />
           </div>
         ),
       },
@@ -286,7 +266,7 @@ const Procedure = () => {
         isOpen={isModalOpen} 
         onClose={handleCloseModal}
         onSubmit={handleRegisterSubmit}
-        isSubmitting={isSubmitting} 
+        isSubmitting={saveMutation.isPending} 
         dynamicOptions={procedureDynamicOptions}
         initialValues={
           editingProcedure

@@ -2,8 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
+import { useQueryClient } from "@tanstack/react-query";
 import { paymentService } from "@/services/paymentService";
 import { sessionService } from "@/services/sessionService";
+import { useToaster } from "@/contexts/ToasterContext/useToaster";
+import { QUERY_KEYS } from "@/constants/queryKeys";
 import { StripeCheckoutForm } from "./StripeCheckoutForm";
 import classes from "./PaymentModal.module.css";
 
@@ -21,6 +24,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     onClose,
     idConsulta: propIdConsulta
 }) => {
+    const queryClient = useQueryClient();
+    const { addToast } = useToaster();
     const { id_consulta: routeIdConsulta } = useParams<{ id_consulta: string }>();
     const activeIdConsulta = propIdConsulta || routeIdConsulta;
 
@@ -64,48 +69,53 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     if (!isOpen || !activeIdConsulta) return null;
 
     return (
-        <div className={classes.overlay} onClick={onClose}>    
-            <div className={classes.container} onClick={(e) => e.stopPropagation()}>
-                <h2 className={classes.title}>Conclusão de Consulta - Pagamento</h2>
-                
-                {isLoading ? (
-                    <div className={classes.loading}>Carregando checkout...</div>
-                ) : errorMessage ? (
-                    <div className={classes.errorContainer}>
-                        <p className={classes.errorMessage}>{errorMessage}</p>
-                        <div style={{ display: "flex", gap: "0.8rem", marginTop: "0.5rem" }}>
-                            <button className={classes.retryButton} onClick={fetchPaymentIntent}>
-                                Tentar Novamente
-                            </button>
-                            {onClose && (
-                                <button className={classes.closeButton} onClick={onClose}>
-                                    Fechar
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                ) : (
-                    clientSecret && stripePromise && (
-                        <Elements stripe={stripePromise} options={{ clientSecret, locale: 'pt-BR' }}>
-                            <StripeCheckoutForm onSuccess={async () => {
-                                if (activeIdConsulta) {
-                                    try {
-                                        await sessionService.updateSession(activeIdConsulta, {
-                                            status_pagamento: "Pago"
-                                        });
-                                    } catch (err) {
-                                        console.error("Erro ao atualizar status de pagamento:", err);
-                                    }
-                                }
-                                if (onClose) onClose();
-                                window.location.reload();
-                            }} />
-                        </Elements>
-                    )
-                )}
+    <div className={classes.overlay} onClick={onClose}>
+      <div className={classes.container} onClick={(e) => e.stopPropagation()}>
+        <h2 className={classes.title}>Conclusão de Consulta - Pagamento</h2>
+
+        {isLoading ? (
+          <div className={classes.loading}>Carregando checkout...</div>
+        ) : errorMessage ? (
+          <div className={classes.errorContainer}>
+            <p className={classes.errorMessage}>{errorMessage}</p>
+            <div style={{ display: "flex", gap: "0.8rem", marginTop: "0.5rem" }}>
+              <button className={classes.retryButton} onClick={fetchPaymentIntent}>
+                Tentar Novamente
+              </button>
+              {onClose && (
+                <button className={classes.closeButton} onClick={onClose}>
+                  Fechar
+                </button>
+              )}
             </div>
-        </div>
-    );
+          </div>
+        ) : (
+          clientSecret &&
+          stripePromise && (
+            <Elements stripe={stripePromise} options={{ clientSecret, locale: "pt-BR" }}>
+              <StripeCheckoutForm
+                onSuccess={async () => {
+                  if (activeIdConsulta) {
+                    try {
+                      await sessionService.updateSession(activeIdConsulta, {
+                        status_pagamento: "Pago",
+                      });
+                      addToast("Pagamento registrado com sucesso!", "success");
+                    } catch (err) {
+                      console.error("Erro ao atualizar status de pagamento:", err);
+                      addToast("Erro ao atualizar status do pagamento.", "error");
+                    }
+                  }
+                  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS.ALL });
+                  if (onClose) onClose();
+                }}
+              />
+            </Elements>
+          )
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default PaymentModal;
