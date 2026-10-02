@@ -2,7 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { Home, Login } from "@/pages"
 import { RootLayout } from '@/components/layout';
 import { useAuth } from '@/contexts/AuthContext/useAuth';
-import { Loading } from '@/components/ui/Loading/Loading';
+import { Loading } from '@/components/ui';
 import React from 'react';
 
 //Views Page
@@ -13,19 +13,16 @@ import Session from '@/pages/Views/Session/Session';
 import Professional from "@/pages/Views/Professional/Professional";
 
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode}) => {
-    const  {user, loading } = useAuth();
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
 
-    if(loading){
-      return <Loading fullScreen message='Carregando sessão...'/>;
-    }
+  if (loading) {
+    return <Loading variant="fullscreen" message="Carregando sessão..." />;
+  }
 
-    if(!user){
-      return <Navigate to="/login" replace />;
-    }
-
-    return <>{children}</>
-}; 
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+};
 
 const GuestRoute = ({ children }: { children: React.ReactNode}) => {
   const { user, loading } = useAuth();
