@@ -4,7 +4,6 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { paymentService } from "@/services/paymentService";
-import { sessionService } from "@/services/sessionService";
 import { useToaster } from "@/contexts/ToasterContext/useToaster";
 import Loading from "../../Loading/Loading";
 import { QUERY_KEYS } from "@/constants/queryKeys";
@@ -95,20 +94,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           stripePromise && (
             <Elements stripe={stripePromise} options={{ clientSecret, locale: "pt-BR" }}>
               <StripeCheckoutForm
-                onSuccess={async () => {
-                  if (activeIdConsulta) {
-                    try {
-                      await sessionService.updateSession(activeIdConsulta, {
-                        status_pagamento: "Pago",
-                      });
-                      addToast("Pagamento registrado com sucesso!", "success");
-                    } catch (err) {
-                      console.error("Erro ao atualizar status de pagamento:", err);
-                      addToast("Erro ao atualizar status do pagamento.", "error");
-                    }
-                  }
-                  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS.ALL });
-                  if (onClose) onClose();
+                onSuccess={() => {
+                addToast("Pagamento processado! Aguardando confirmação do banco...", "info");
+                queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS.ALL });
+                if (onClose) onClose();
                 }}
               />
             </Elements>

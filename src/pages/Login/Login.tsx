@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext/useAuth";
 import classes from "./Login.module.css";
 
@@ -12,7 +11,6 @@ import {Button} from "@/components/ui";
 const Login = () => {
 
 const { signIn } = useAuth();
-const navigate = useNavigate();
 
 const [email, setEmail] = useState("");
 const [password, setPassword] = useState("");
@@ -31,19 +29,14 @@ const handleSubmit = async () => {
   setIsSubmitting(true);
 
    try {
-      const { data, error: signInError } = await signIn(email, password);
-
+      const { error: signInError } = await signIn(email, password);
       if (signInError) {
-        if (signInError.status === 400) {
-          setError("Credenciais inválidas. Verifique seu e-mail e senha.");
+        if (signInError.status === 400 || signInError.message.includes("Invalid login credentials")) {
+          setError("Email ou senha incorretos.");
         } else {
-          setError(signInError.message);
+          setError("Não foi possivel conectar ao servidor. Tente novamente mais tarde.");
         }
         return;
-      }
-
-      if(data.user){
-        navigate("/"); 
       }
 
   } catch(err){
@@ -57,7 +50,7 @@ const handleSubmit = async () => {
   return (
     <div className={classes.login_container}>
       <img src={Logo} alt="Logo Lumini" />
-    <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className={classes.login}>
+      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className={classes.login}>
       <h3>Login</h3>
 
     {error && <div className={classes.error_message}>{error}</div>}

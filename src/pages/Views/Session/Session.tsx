@@ -80,33 +80,35 @@ const Session = () => {
   const { data: sessions = [], isLoading: isLoadingSessions } = useQuery<SessionDbRow[]>({
     queryKey: QUERY_KEYS.SESSIONS.ALL,
     queryFn: sessionService.listSessions,
+    enabled: !!user,
+    staleTime: 1000 * 30,
   });
 
   const { data: customers = [], isLoading: isLoadingCustomers } = useQuery<CustomerDbRow[]>({
-    queryKey: ["customers"],
+    queryKey: QUERY_KEYS.CUSTOMERS.ALL,
     queryFn: customerService.listCustomers,
     staleTime: 1000 * 60 * 5,
   });
 
   const { data: employees = [], isLoading: isLoadingEmployees } = useQuery<EmployeeDbRow[]>({
-    queryKey: ["employees"],
-    queryFn: employeeService.listEmployees,
+    queryKey: QUERY_KEYS.EMPLOYEES.OPERATIONAL,
+    queryFn: employeeService.listOperationalEmployees,
     staleTime: 1000 * 60 * 5,
   });
 
   const { data: procedures = [], isLoading: isLoadingProcedures } = useQuery<ProcedureDbRow[]>({
-    queryKey: ["procedures"],
+    queryKey: QUERY_KEYS.PROCEDURES.ALL,
     queryFn: procedureService.listProcedures,
     staleTime: 1000 * 60 * 5,
   });
 
   const { data: specialties = [], isLoading: isLoadingSpecialties } = useQuery<SpecialtyDbRow[]>({
-    queryKey: ["specialties"],
+    queryKey: QUERY_KEYS.SPECIALTIES.ALL,
     queryFn: specialtyService.listSpecialties,
     staleTime: 1000  * 60 * 10,
   });
 
-  const isPageLoading = isLoadingSessions || 
+  const isPageLoading = (!!user && isLoadingSessions) || 
   isLoadingCustomers ||
   isLoadingEmployees ||
   isLoadingProcedures ||
@@ -165,7 +167,7 @@ const Session = () => {
     },
     onSuccess: () => {
       addToast("Consulta(s) agendada(s) com sucesso!", "success");
-      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS.ALL });
       setIsModalOpen(false);
     },
     onError: (err: Error) => {
@@ -381,15 +383,15 @@ const Session = () => {
                     />
                   )}
 
-                  {!isPaymentApproved && (
-                    <IconButton 
-                    variant={isRejected ? "danger" : "payment"}
-                    title={isRejected ? "Tentar Pagamento Novamente" : "Realizar Pagamento"}
-                    icon={<FaCreditCard size={16} />}
-                    onClick={() => {
-                      setPaymentSessionId(item.id_consulta);
-                      setIsPaymentOpen(true);
-                    }}
+                  {!isPaymentApproved && item.status !== "Cancelada" && (
+                    <IconButton
+                      variant={isRejected ? "danger" : "payment"}
+                      title={isRejected ? "Tentar Pagamento Novamente" : "Realizar Pagamento"}
+                      icon={<FaCreditCard size={16} />}
+                      onClick={() => {
+                        setPaymentSessionId(item.id_consulta);
+                        setIsPaymentOpen(true);
+                      }}
                     />
                   )}
                 </div>
@@ -450,7 +452,7 @@ const Session = () => {
       onClose={() => {
         setIsPaymentOpen(false);
         setPaymentSessionId(null);
-        queryClient.invalidateQueries({ queryKey: ["sessions"] });
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS.ALL });
       }}
     />
 
