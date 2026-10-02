@@ -14,11 +14,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         if (!supabaseUser) return null;
         
         try {
-            console.log("[AuthContext] Supabase Auth User details:", {
-                id: supabaseUser.id,
-                email: supabaseUser.email,
-                user_metadata: supabaseUser.user_metadata
-            });
+            if (import.meta.env.DEV) {
+                console.log("[AuthContext] Usuário autenticado:", supabaseUser.id);
+            }
 
             const { data: employee, error } = await supabase
                 .from("funcionario")
@@ -28,8 +26,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
             if (error) {
                 console.error("[AuthContext] Erro ao buscar perfil do funcionário da tabela Funcionario:", error);
-            } else {
-                console.log("[AuthContext] Perfil do funcionário retornado da tabela Funcionario:", employee);
+            } else if (import.meta.env.DEV && employee) {
+                console.log("[AuthContext] Perfil do funcionário carregado:", employee.id_funcionario);
             }
             
             const name = employee?.name || supabaseUser.user_metadata?.name || supabaseUser.user_metadata?.full_name || supabaseUser.email || "Usuário";
