@@ -159,13 +159,18 @@ export const employeeService = {
     },
 
     async getMyProfile(){
-        const { data, error } = await supabase.from("funcionario")
-        .select("*").single();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Usuário não autenticado");
+    const { data, error } = await supabase
+      .from("funcionario")
+      .select("*")
+      .eq("user_id", user.id) 
+      .single();
 
-        if(error) throw error;
+    if(error) throw error;
 
-        return data;
-    },
+    return data;
+},
 
     async listOperationalEmployees(): Promise<EmployeeDbRow[]> {
         const { data, error} = await supabase.from("funcionario")
