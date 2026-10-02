@@ -1,15 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.25.0?target=deno";
-
-
-const corsHeaders = {
-    'Acsess-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 serve(async (req: Request): Promise<Response> => {
+    const corsHeaders = getCorsHeaders(req);
+
     if(req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
     }
@@ -44,7 +40,7 @@ serve(async (req: Request): Promise<Response> => {
         })
       }
 
-    const stripeSecretKey = DelayNode.env.get('STRIPE_SECRET_KEY')
+    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')
     if(!stripeSecretKey) {
         throw new Error('Chave STRIPE_SECRET_KEY não configurada nos segredos do Supabase')
     }
@@ -65,22 +61,21 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const origin = req.headers.get('origin') || 'http://localhost:5173'
-
-    const session = await stripe.checkout.session.create({
-        payment_method_types: ['card'],
-        mode: 'subscription',
-        customer_email: user.email,
-        line_items: [
-            {
-                price: priceId,
-                quantity: 1,
-            },
-        ],
-        metadata: {
-            user_id: user.id,
+    const session = await stripe.checkout.sessions.create({ 
+    payment_method_types: ['card'],
+    mode: 'subscription',
+    customer_email: user.email,
+    line_items: [
+        {
+            price: priceId,
+            quantity: 1,
         },
-        success_url: successUrl || `${origin}/sucesso?session_id{CHECKOUT_SESSION_ID}`,
-        cancel_URL: cancelUrl || `${origin}/planos`,
+    ],
+    metadata: {
+        user_id: user.id,
+    },
+    success_url: successUrl || `${origin}/sucesso?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: cancelUrl || `${origin}/planos`, 
     })
 
     return new Response(JSON.stringify({ url: session.url }), {
