@@ -11,6 +11,7 @@ import type {
 import { REGISTER_FIELDS, TITLE_MAP } from "@/form-config/fields";
 import { schemasMap } from "@/form-config/schemas";
 import { formatCPF, formatPhone } from "@/utils/formatters";
+import { Loading } from '@/components/ui';
 
 import CustomSelect from "../../CustomSelect/CustomSelect";
 import classes from "./Register.module.css";
@@ -216,12 +217,18 @@ const Register = <T extends RegisterType>({
 
   return (
     <div className={classes.overlay} onClick={isSubmitting ? undefined : onClose}>
-      <div className={classes.modal_content} onClick={(e) => e.stopPropagation()}>
-        <header className={classes.modal_header}>
-          <h2>
-            {initialValues ? "Editar" : "Cadastrar"} {TITLE_MAP[type]}
-          </h2>
-        </header>
+    <div className={classes.modal_content} 
+      onClick={(e) => e.stopPropagation()}
+      style={{ position: 'relative', overflow: 'hidden' }}>
+      <Loading 
+        variant="overlay" 
+        isLoading={isSubmitting} 
+        message="Salvando dados..." />
+      <header className={classes.modal_header}>
+        <h2>
+          {initialValues ? "Editar" : "Cadastrar"} {TITLE_MAP[type]}
+        </h2>
+      </header>
         <form onSubmit={handleSubmit} className={classes.form}>
           <div className={classes.fields_container}>
             {fields.map((field) => {

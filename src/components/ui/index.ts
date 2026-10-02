@@ -9,5 +9,5 @@ export { default as CustomSelect } from './CustomSelect/CustomSelect';
 export { default as DescriptionPopover } from './DescriptionPopover/DescriptionPopover';
 export { default as RescheduleModal } from './Modal/RescheduleModal/RescheduleModal';
 export { default as ConfirmModal } from './Modal/ConfirmModal/ConfirmModal';
-export { default as LoadingOverlay } from './LoadingOverlay/LoadingOverlay';
+export { default as Loading } from './Loading/Loading';
 export { default as PaymentModal } from './Modal/PaymentModal/PaymentModal';

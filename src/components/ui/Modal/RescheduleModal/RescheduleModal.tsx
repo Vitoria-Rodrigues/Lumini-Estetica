@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { SessionDbRow } from "@/services/sessionService";
+import Loading from "../../Loading/Loading";
 
 import classes from './RescheduleModal.module.css';
 
@@ -59,11 +60,16 @@ export const RescheduleModal = ({
 
     return (
         <div className={classes.overlay}>
-            <div className={classes.modal}>
-                <h3 className={classes.title}>Cancelar / Reagendar Consulta</h3>
-                <p className={classes.clientText}>Cliente: <span>{session.cliente?.name}</span></p>
-
-                <div className={classes.formGroup}>
+            <div 
+            className={classes.modal}
+            style={{ position: 'relative', overflow: 'hidden' }}>
+              <Loading
+                variant="overlay"
+                isLoading={isSubmitting}
+                message="Processando reagendamento..."/>
+                  <h3 className={classes.title}>Cancelar / Reagendar Consulta</h3>
+                  <p className={classes.clientText}>Cliente: <span>{session.cliente?.name}</span></p>
+                 <div className={classes.formGroup}>
                     <label className={classes.label}>
                         Nova Data (Até 3 dias a partir de hoje):
                     </label>
