@@ -1,5 +1,6 @@
 import { z, ZodType } from "zod";
 import type { RegisterDataMap, RegisterType } from "./types";
+import { isValidCPF } from "@/utils/formatters";
 
 export const customerSchema: ZodType<RegisterDataMap["customer"]> = z.object({
     name: z.string().min(3, "Nome deve ter no minimo 3 caracteres."),
@@ -10,14 +11,17 @@ export const customerSchema: ZodType<RegisterDataMap["customer"]> = z.object({
 
 export const employeeSchema: ZodType<RegisterDataMap["employee"]> = z.object({
     name: z.string().min(2, "Nome é obrigatório."),
-    cpf: z.string().min(11, "CPF deve conter 11 digítos."),
+    cpf: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "CPF deve estar no formato 000.000.000-00.")
+    .refine(isValidCPF, "CPF com dígito verificador inválido."),
     phone: z.string().optional(),
     role: z.string().min(1, "Função é obrigatória"),
     specialtyId: z.string().optional(),
     specialty: z.string().optional(),
     salary: z.coerce.number().optional(),
     email: z.string().email("Email inválido"),
-    password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+    password: z.string().min(8, "Senha deve ter pelo menos 8 caracteres")
+    .regex(/[A-Za-z]/, "Senha deve conter pelo menos uma letra")
+    .regex(/[0-9]/, "Senha deve conter pelo menos um número"),
     app_role: z.string().optional(),
     user_id: z.string().optional(),
     funcionario_especialidade: z.array(z.object({
