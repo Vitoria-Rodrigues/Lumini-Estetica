@@ -3,7 +3,6 @@ export interface CustomerData{
     cpf: string;
     phone: string;
     birthdate?: string;
-    birthDate?: string;
 }
 
 export interface EmployeeData{
