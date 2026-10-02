@@ -12,6 +12,7 @@ import type { EmployeeDbRow } from "@/services/employeeService";
 
 //Context
 import { useToaster } from "@/contexts/ToasterContext/useToaster";
+import { useAuth } from "@/contexts/AuthContext/useAuth";
 
 //Utils
 import { formatCPF, formatPhone } from "@/utils/formatters";
@@ -29,6 +30,9 @@ import { QUERY_KEYS } from "@/constants/queryKeys";
 const Professional = () => {
   const queryClient = useQueryClient();
   const { addToast } = useToaster();
+  const { user } = useAuth();
+
+  const isAdmin = user?.role === "admin";
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<EmployeeDbRow | null>(null);
@@ -145,48 +149,56 @@ const Professional = () => {
     salary: editingEmployee.salary,
   } : null;
 
-  const columns: Column<EmployeeDbRow>[] = [
+  const baseColumns: Column<EmployeeDbRow>[] = [
     { label: "Nome", key: "name" },
     { label: "CPF", key: "cpf", render: (employee) => formatCPF(employee.cpf)},
     { label: "Telefone", key: "phone", render: (employee) => formatPhone(employee.phone)},
     { label: "Função", key: "app_role" },
     { label: "Especialidade", key: "specialty", render: (employee) => employee.specialty || "-" },
-    {
-      label: "Ações",
-      key: "actions",
-      render: (employee) => (
-        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
-          <IconButton 
-            variant="edit"
-            title="Editar Cliente"
-            icon={<BsBrushFill size={16} />}
-            onClick={() => handleEditClick(employee)}
-          />
-          <IconButton
-            variant="delete"
-            title="Excluir Cliente"
-            icon={<FaTrashAlt size={16} />}
-            onClick={() => handleDeleteClick(employee.user_id)}
-          />
-        </div>
-      ),
-    },
   ];
+
+  const columns: Column<EmployeeDbRow>[] = isAdmin
+    ? [
+        ...baseColumns,
+        {
+          label: "Ações",
+          key: "actions",
+          render: (employee) => (
+            <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
+              <IconButton 
+                variant="edit"
+                title="Editar Profissional"
+                icon={<BsBrushFill size={16} />}
+                onClick={() => handleEditClick(employee)}
+              />
+              <IconButton
+                variant="delete"
+                title="Excluir Profissional"
+                icon={<FaTrashAlt size={16} />}
+                onClick={() => handleDeleteClick(employee.user_id)}
+              />
+            </div>
+          ),
+        },
+      ]
+    : baseColumns;
 
   return (
     <ViewLayout
       title="Funcionário"
       actionButton={
-        <Button
-          title={"Funcionário"}
-          icon={RiAddFill}
-          padding=".6rem"
-          width="15%"
-          onClick={() => {
-            setEditingEmployee(null);
-            setIsModalOpen(true);
-          }}
-        />
+        isAdmin ? (
+          <Button
+            title={"Funcionário"}
+            icon={RiAddFill}
+            padding=".6rem"
+            width="15%"
+            onClick={() => {
+              setEditingEmployee(null);
+              setIsModalOpen(true);
+            }}
+          />
+        ) : undefined
       }
       searchComponent={<Search placeholder="Digite o nome ou CPF do profissional" 
       value={searchQuery}
