@@ -29,6 +29,7 @@ const Home = () => {
   const [recentSessions, setRecentSessions] = useState<SessionDbRow[]>([]);
   const [stats, setStats] = useState<StatsCardData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState<boolean>(false);
 
   const recentColumns: Column<SessionDbRow>[] = [
     {
@@ -97,6 +98,7 @@ useEffect(() => {
       setRecentSessions(recent);
     } catch (error) {
       console.error("Erro ao buscar dados da dashboard:", error);
+      setHasError(true);
     } finally {
       setIsLoading(false);
     }
@@ -108,6 +110,23 @@ useEffect(() => {
    return (
     <>
       <span className={classes.title}>Dashboard</span>
+
+      {hasError && (
+        <div
+          style={{
+            padding: "0.85rem 1.25rem",
+            backgroundColor: "#ffe7e7",
+            color: "#d00404",
+            borderRadius: "0.5rem",
+            marginBottom: "1.25rem",
+            fontSize: "0.9rem",
+            border: "1px solid #fecaca",
+          }}
+        >
+          Não foi possível carregar os dados atualizados da dashboard. Verifique sua conexão ou tente recarregar a página.
+        </div>
+      )}
+
       <div className={classes.tables_container}>
         <div className={classes.tables}>
           <div className={classes.stats}>
