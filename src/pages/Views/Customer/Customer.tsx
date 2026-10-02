@@ -24,6 +24,7 @@ import { useAuth } from "@/contexts/AuthContext/useAuth";
 import { RiAddFill } from "react-icons/ri";
 import { BsBrushFill } from "react-icons/bs";
 import { FaTrashAlt } from "react-icons/fa";
+import { QUERY_KEYS } from "@/constants/queryKeys";
 
 const Customer = () => {
   const queryClient = useQueryClient();
@@ -39,7 +40,7 @@ const Customer = () => {
   const canModify = user?.role === "admin" || user?.role === "recepcionista";
 
   const { data: customers = [], isLoading } = useQuery({
-    queryKey: ["customers"],
+    queryKey: QUERY_KEYS.CUSTOMERS.ALL,
     queryFn: customerService.listCustomers,
   });
 
@@ -47,7 +48,7 @@ const Customer = () => {
     mutationFn: (id: string) => customerService.deleteCustomer(id),
     onSuccess: () => {
       addToast("Cliente excluido com sucesso!", "success");
-      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CUSTOMERS.ALL});
       setIsConfirmOpen(false);
       setCustomerToDelete(null);
     },
@@ -71,7 +72,7 @@ const Customer = () => {
         variables.id ? "Cliente atualizado com sucesso!" : "Cliente cadastrado com sucesso!",
         "success"
       );
-      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CUSTOMERS.ALL });
       setIsModalOpen(false);
       setEditingCustomer(null);
     },
