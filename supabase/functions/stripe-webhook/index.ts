@@ -5,10 +5,10 @@ import Stripe from "https://esm.sh/stripe@14.25.0?target=deno"
 serve(async (req: Request): Promise<Response> => {
     try{
         const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')
-        const webhookScret = Deno.env.get('STRIPE_WEBHOOK_SECRET')
+        const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')
 
-        if(!stripeSecretKey || !webhookScret){
-            return new Response('Configuração ausente: STRIPE__SECRET_KEY ou STRIPE_WEBHOOK_SECRET', {
+        if(!stripeSecretKey || !webhookSecret){
+            return new Response('Configuração ausente: STRIPE_SECRET_KEY ou STRIPE_WEBHOOK_SECRET', {
                 status: 500
             })
         }
@@ -30,9 +30,9 @@ serve(async (req: Request): Promise<Response> => {
 
         try{
             event = await stripe.webhooks
-            .constructEventAsync(body, signature, webhookScret)
+            .constructEventAsync(body, signature, webhookSecret)
         } catch(error: any) {
-            console.error(`[Webhook Error] Assinatura inválida: ${err.message}`)
+            console.error(`[Webhook Error] Assinatura inválida: ${error.message}`)
             return new Response(`Erro de Assinatura: ${error.message}`, {
                 status: 400
             })
@@ -44,8 +44,52 @@ serve(async (req: Request): Promise<Response> => {
         )
 
         switch(event.type) {
+            case 'payment_intent.succeeded': {
+                const paymentIntent = event.data.object as Stripe.PaymentIntent
+                const idConsulta = paymentIntent.metadata?.id_consulta
+
+                console.log(`[Webhook] Pagamento confirmado para consulta ID: ${idConsulta}`)
+
+                if (idConsulta) {
+                    const { error } = await supabaseAdmin
+                        .from('consulta')
+                        .update({
+                            status_pagamento: 'Pago',
+                            edited_at: new Date().toISOString(),
+                        })
+                        .eq('id_consulta', idConsulta)
+
+                    if (error) {
+                        console.error('[Webhook] Erro ao atualizar status de pagamento no Supabase:', error)
+                    }
+                }
+                break
+            }
+
+            case 'payment_intent.payment_failed': {
+                const paymentIntent = event.data.object as Stripe.PaymentIntent
+                const idConsulta = paymentIntent.metadata?.id_consulta
+
+                console.log(`[Webhook] Pagamento falhou para consulta ID: ${idConsulta}`)
+
+                if (idConsulta) {
+                    const { error } = await supabaseAdmin
+                        .from('consulta')
+                        .update({
+                            status_pagamento: 'Recusado',
+                            edited_at: new Date().toISOString(),
+                        })
+                        .eq('id_consulta', idConsulta)
+
+                    if (error) {
+                        console.error('[Webhook] Erro ao atualizar falha de pagamento no Supabase:', error)
+                    }
+                }
+                break
+            }
+
             case 'checkout.session.completed': {
-                const session = event.data.object as Stripe.Checkout.session
+                const session = event.data.object as Stripe.Checkout.Session
                 const userId = session.metadata?.user_id
                 const stripeCustomerId = session.customer as string
                 const subscriptionId = session.subscription as string
@@ -71,7 +115,7 @@ serve(async (req: Request): Promise<Response> => {
             }
 
             case 'customer.subscription.deleted': {
-                const subscription = event.data.object as Stripe.subscription
+                const subscription = event.data.object as Stripe.Subscription
                 console.log(`[Webhook] Assinatura cancelada: ${subscription.id}`)
 
                 await supabaseAdmin.from('subscriptions')
