@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { paymentService } from "@/services/paymentService";
 import { sessionService } from "@/services/sessionService";
 import { useToaster } from "@/contexts/ToasterContext/useToaster";
+import Loading from "../../Loading/Loading";
 import { QUERY_KEYS } from "@/constants/queryKeys";
 import { StripeCheckoutForm } from "./StripeCheckoutForm";
 import classes from "./PaymentModal.module.css";
@@ -74,7 +75,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         <h2 className={classes.title}>Conclusão de Consulta - Pagamento</h2>
 
         {isLoading ? (
-          <div className={classes.loading}>Carregando checkout...</div>
+          <Loading variant="inline" message="Carregando checkout..." />
         ) : errorMessage ? (
           <div className={classes.errorContainer}>
             <p className={classes.errorMessage}>{errorMessage}</p>
