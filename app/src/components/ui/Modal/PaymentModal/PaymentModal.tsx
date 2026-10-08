@@ -4,10 +4,11 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { paymentService } from "@/services/paymentService";
+import type { SessionDbRow } from "@/services/sessionService";
 import { useToaster } from "@/contexts/ToasterContext/useToaster";
 import Loading from "../../Loading/Loading";
 import { QUERY_KEYS } from "@/constants/queryKeys";
-import { StripeCheckoutForm } from "./StripeCheckoutForm";
+import { StripeCheckoutForm, type CheckoutResult } from "./StripeCheckoutForm";
 import classes from "./PaymentModal.module.css";
 
 const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
@@ -66,6 +67,25 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         }
     }, [activeIdConsulta, isOpen]);
 
+    const handleCheckoutResult = (result: CheckoutResult) => {
+        queryClient.setQueryData<SessionDbRow[]>(QUERY_KEYS.SESSIONS.ALL, (old) =>
+            old?.map((s) =>
+                s.id_consulta === activeIdConsulta && s.status_pagamento !== "Pago"
+                    ? { ...s, status_pagamento: "Processando" }
+                    : s
+            )
+        );
+
+        addToast(
+            result === "succeeded"
+                ? "Pagamento aprovado! Confirmando com o sistema..."
+                : "Pagamento em processamento. O status será atualizado automaticamente.",
+            "info"
+        );
+
+        if (onClose) onClose();
+    };
+
     if (!isOpen || !activeIdConsulta) return null;
 
     return (
@@ -93,13 +113,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           clientSecret &&
           stripePromise && (
             <Elements stripe={stripePromise} options={{ clientSecret, locale: "pt-BR" }}>
-              <StripeCheckoutForm
-                onSuccess={() => {
-                addToast("Pagamento processado! Aguardando confirmação do banco...", "info");
-                queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS.ALL });
-                if (onClose) onClose();
-                }}
-              />
+              <StripeCheckoutForm onResult={handleCheckoutResult} />
             </Elements>
           )
         )}
