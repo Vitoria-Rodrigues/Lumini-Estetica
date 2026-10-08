@@ -1,0 +1,527 @@
+{
+  "homepage.about.badge": {
+    "message": "The Architect"
+  },
+  "homepage.about.title": {
+    "message": "Tupynambá Lucas"
+  },
+  "homepage.about.description": {
+    "message": "Fullstack Developer with a rare profile that combines over 10 years of programming study with a deep sensitivity for design and UX/UI. I have expertise in the architecture of complete digital solutions, developing performant applications with TypeScript and strategically choosing database technology — PostgreSQL for relational structures or MongoDB for high-flexibility scenarios — to ensure the scalability and efficiency of the final product."
+  },
+  "homepage.about.tech.code": {
+    "message": "Code"
+  },
+  "homepage.about.tech.design": {
+    "message": "Design"
+  },
+  "homepage.about.tech.data": {
+    "message": "Data"
+  },
+  "homepage.conduct.title": {
+    "message": "Code of Conduct"
+  },
+  "conduct.pledge.title": {
+    "message": "Our Pledge"
+  },
+  "conduct.pledge.p1": {
+    "message": "I, as the creator and maintainer of tupynambalucas.dev, pledge to make participation in this project a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, caste, color, religion, or sexual identity and orientation."
+  },
+  "conduct.pledge.p2": {
+    "message": "I pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive, and healthy community."
+  },
+  "conduct.responsibilities.title": {
+    "message": "Enforcement Responsibilities"
+  },
+  "conduct.responsibilities.p1": {
+    "message": "As the maintainer of this project, I am responsible for clarifying and enforcing our standards of acceptable behavior and will take appropriate and fair corrective action in response to any behavior that I deem inappropriate, threatening, offensive, or harmful."
+  },
+  "conduct.responsibilities.p2": {
+    "message": "I have the right and responsibility to remove, edit, or reject comments, commits, code, wiki edits, issues, and other contributions that are not aligned to this Code of Conduct, and will communicate reasons for moderation decisions when appropriate."
+  },
+  "conduct.standards.title": {
+    "message": "Our Standards"
+  },
+  "conduct.standards.positive.intro": {
+    "message": "Examples of behavior that contributes to a positive environment for this project include:"
+  },
+  "conduct.standards.positive.1": {
+    "message": "Demonstrating empathy and kindness toward other people."
+  },
+  "conduct.standards.positive.2": {
+    "message": "Being respectful of differing opinions, viewpoints, and experiences."
+  },
+  "conduct.standards.positive.3": {
+    "message": "Giving and gracefully accepting constructive feedback."
+  },
+  "conduct.standards.positive.4": {
+    "message": "Accepting responsibility and apologizing to those affected by our mistakes, and learning from the experience."
+  },
+  "conduct.standards.positive.5": {
+    "message": "Focusing on what is best for the overall community."
+  },
+  "conduct.standards.unacceptable.intro": {
+    "message": "Examples of unacceptable behavior include:"
+  },
+  "conduct.standards.unacceptable.1": {
+    "message": "The use of sexualized language or imagery, and sexual attention or advances of any kind."
+  },
+  "conduct.standards.unacceptable.2": {
+    "message": "Trolling, insulting or derogatory comments, and personal or political attacks."
+  },
+  "conduct.standards.unacceptable.3": {
+    "message": "Public or private harassment."
+  },
+  "conduct.standards.unacceptable.4": {
+    "message": "Publishing others' private information, such as a physical or email address, without their explicit permission."
+  },
+  "conduct.standards.unacceptable.5": {
+    "message": "Other conduct which could reasonably be considered inappropriate in a professional setting."
+  },
+  "conduct.scope.title": {
+    "message": "Scope"
+  },
+  "conduct.scope.p1": {
+    "message": "This Code of Conduct applies within all community spaces related to tupynambalucas.dev, and also applies when an individual is officially representing the project in public spaces."
+  },
+  "conduct.enforcement.title": {
+    "message": "Enforcement"
+  },
+  "conduct.enforcement.p1": {
+    "message": "Instances of abusive, harassing, or otherwise unacceptable behavior may be reported directly to me at"
+  },
+  "conduct.enforcement.p1.2": {
+    "message": "All complaints will be reviewed and investigated promptly and fairly."
+  },
+  "conduct.enforcement.p2": {
+    "message": "I am obligated to respect the privacy and security of the reporter of any incident."
+  },
+  "conduct.attribution.p1": {
+    "message": "This Code of Conduct is adapted from the"
+  },
+  "conduct.attribution.p1.2": {
+    "message": "version 2.1, available at:"
+  },
+  "homepage.hero.badge": {
+    "message": "{domain} Ecosystem"
+  },
+  "homepage.hero.title": {
+    "message": "Centralized Engineering Documentation"
+  },
+  "homepage.hero.text.primary": {
+    "message": "Welcome to the central documentation hub for the {domain} monorepo. This platform serves as the single source of truth for my personal website, engineering services, dynamic asset engines, and production-grade developer workspaces."
+  },
+  "homepage.button.docs": {
+    "message": "See Documentation"
+  },
+  "homepage.button.workspaces": {
+    "message": "Workspaces"
+  },
+  "homepage.button.github": {
+    "message": "GitHub Monorepo"
+  },
+  "homepage.profile.badge": {
+    "message": "The Architect"
+  },
+  "homepage.profile.bio": {
+    "message": "Full-Stack Engineer with over 10 years of experience and studies in software development, building production systems in TypeScript from end to end. I make architectural decisions driven by requirements, not by trends — selecting the right database, framework, or protocol for each problem. My current expertise runs deep in MongoDB replica sets with ACID transactions, but I reach for PostgreSQL or Redis when the domain calls for it. I design domain-driven monorepos orchestrated by Turborepo with strict catalog-managed dependencies, ship high-performance APIs on Fastify with Redis-backed job queues, and craft interactive frontends with React 19, Three.js, and GSAP. My infrastructure runs on Docker and Kubernetes with Traefik ingress, OpenTelemetry-instrumented observability pipelines exporting to Grafana Cloud, and multi-environment promotion from dev to production. I architect AI-native toolchains — self-hosted MCP gateway federations, containerized agent runtimes, and vector memory layers — turning autonomous workflows into first-class infrastructure. Every repository I own ships with automated CI/CD, Conventional Commits, and security hardened by design."
+  },
+  "homepage.monorepo.title": {
+    "message": "Monorepo Map"
+  },
+  "homepage.monorepo.subtitle": {
+    "message": "Interactive visualization of the {domain} bounded contexts. Select a workspace to explore."
+  },
+  "homepage.monorepo.viewDocs": {
+    "message": "View Workspace Documentation"
+  },
+  "homepage.monorepo.techstack": {
+    "message": "Tech Stack"
+  },
+  "homepage.monorepo.responsibilities": {
+    "message": "Core Responsibilities"
+  },
+  "homepage.dosolo.title": {
+    "message": "Technical Foundation"
+  },
+  "homepage.dosolo.subtitle": {
+    "message": "// Scalable architecture for high-fidelity engineering."
+  },
+  "homepage.dosolo.item1.title": {
+    "message": "Monorepo Excellence"
+  },
+  "homepage.dosolo.item1.description": {
+    "message": "Context-driven root layout using PNPM Workspaces and Turborepo for optimized task orchestration."
+  },
+  "homepage.dosolo.item2.title": {
+    "message": "Type-Safe Domain Core"
+  },
+  "homepage.dosolo.item2.description": {
+    "message": "Strictly-typed business logic and schemas defined as single source of truth for all applications."
+  },
+  "homepage.dosolo.item3.title": {
+    "message": "AI-Native DevOps"
+  },
+  "homepage.dosolo.item3.description": {
+    "message": "Deep integration with Model Context Protocol (MCP) and design-to-code bridges for high-context automation."
+  },
+  "theme.ErrorPageContent.title": {
+    "message": "This page crashed.",
+    "description": "The title of the fallback page when the page crashed"
+  },
+  "theme.BackToTopButton.buttonAriaLabel": {
+    "message": "Scroll back to top",
+    "description": "The ARIA label for the back to top button"
+  },
+  "theme.blog.archive.title": {
+    "message": "Archive",
+    "description": "The page & hero title of the blog archive page"
+  },
+  "theme.blog.archive.description": {
+    "message": "Archive",
+    "description": "The page & hero description of the blog archive page"
+  },
+  "theme.blog.paginator.navAriaLabel": {
+    "message": "Blog list page navigation",
+    "description": "The ARIA label for the blog pagination"
+  },
+  "theme.blog.paginator.newerEntries": {
+    "message": "Newer entries",
+    "description": "The label used to navigate to the newer blog posts page (previous page)"
+  },
+  "theme.blog.paginator.olderEntries": {
+    "message": "Older entries",
+    "description": "The label used to navigate to the older blog posts page (next page)"
+  },
+  "theme.blog.post.paginator.navAriaLabel": {
+    "message": "Blog post page navigation",
+    "description": "The ARIA label for the blog posts pagination"
+  },
+  "theme.blog.post.paginator.newerPost": {
+    "message": "Newer post",
+    "description": "The blog post button label to navigate to the newer/previous post"
+  },
+  "theme.blog.post.paginator.olderPost": {
+    "message": "Older post",
+    "description": "The blog post button label to navigate to the older/next post"
+  },
+  "theme.tags.tagsPageLink": {
+    "message": "View all tags",
+    "description": "The label of the link targeting the tag list page"
+  },
+  "theme.colorToggle.ariaLabel.mode.system": {
+    "message": "system mode",
+    "description": "The name for the system color mode"
+  },
+  "theme.colorToggle.ariaLabel.mode.light": {
+    "message": "light mode",
+    "description": "The name for the light color mode"
+  },
+  "theme.colorToggle.ariaLabel.mode.dark": {
+    "message": "dark mode",
+    "description": "The name for the dark color mode"
+  },
+  "theme.colorToggle.ariaLabel": {
+    "message": "Switch between dark and light mode (currently {mode})",
+    "description": "The ARIA label for the color mode toggle"
+  },
+  "theme.docs.breadcrumbs.navAriaLabel": {
+    "message": "Breadcrumbs",
+    "description": "The ARIA label for the breadcrumbs"
+  },
+  "theme.docs.paginator.navAriaLabel": {
+    "message": "Docs pages",
+    "description": "The ARIA label for the docs pagination"
+  },
+  "theme.docs.paginator.previous": {
+    "message": "Previous",
+    "description": "The label used to navigate to the previous doc"
+  },
+  "theme.docs.paginator.next": {
+    "message": "Next",
+    "description": "The label used to navigate to the next doc"
+  },
+  "theme.docs.tagDocListPageTitle.nDocsTagged": {
+    "message": "One doc tagged|{count} docs tagged",
+    "description": "Pluralized label for \"{count} docs tagged\". Use as much plural forms (separated by \"|\") as your language support (see https://www.unicode.org/cldr/cldr-aux/charts/34/supplemental/language_plural_rules.html)"
+  },
+  "theme.docs.tagDocListPageTitle": {
+    "message": "{nDocsTagged} with \"{tagName}\"",
+    "description": "The title of the page for a docs tag"
+  },
+  "theme.docs.versionBadge.label": {
+    "message": "Version: {versionLabel}"
+  },
+  "theme.docs.versions.unreleasedVersionLabel": {
+    "message": "This is unreleased documentation for {siteTitle} {versionLabel} version.",
+    "description": "The label used to tell the user that he's browsing an unreleased doc version"
+  },
+  "theme.docs.versions.unmaintainedVersionLabel": {
+    "message": "This is documentation for {siteTitle} {versionLabel}, which is no longer actively maintained.",
+    "description": "The label used to tell the user that he's browsing an unmaintained doc version"
+  },
+  "theme.docs.versions.latestVersionSuggestionLabel": {
+    "message": "For up-to-date documentation, see the {latestVersionLink} ({versionLabel}).",
+    "description": "The label used to tell the user to check the latest version"
+  },
+  "theme.docs.versions.latestVersionLinkLabel": {
+    "message": "latest version",
+    "description": "The label used for the latest version suggestion link label"
+  },
+  "theme.common.editThisPage": {
+    "message": "Edit this page",
+    "description": "The link label to edit the current page"
+  },
+  "theme.common.headingLinkTitle": {
+    "message": "Direct link to {heading}",
+    "description": "Title for link to heading"
+  },
+  "theme.lastUpdated.atDate": {
+    "message": " on {date}",
+    "description": "The words used to describe on which date a page has been last updated"
+  },
+  "theme.lastUpdated.byUser": {
+    "message": " by {user}",
+    "description": "The words used to describe by who the page has been last updated"
+  },
+  "theme.lastUpdated.lastUpdatedAtBy": {
+    "message": "Last updated{atDate}{byUser}",
+    "description": "The sentence used to display when a page has been last updated, and by who"
+  },
+  "theme.navbar.mobileVersionsDropdown.label": {
+    "message": "Versions",
+    "description": "The label for the navbar versions dropdown on mobile view"
+  },
+  "theme.NotFound.title": {
+    "message": "Page Not Found",
+    "description": "The title of the 404 page"
+  },
+  "theme.tags.tagsListLabel": {
+    "message": "Tags:",
+    "description": "The label alongside a tag list"
+  },
+  "theme.AnnouncementBar.closeButtonAriaLabel": {
+    "message": "Close",
+    "description": "The ARIA label for close button of announcement bar"
+  },
+  "theme.admonition.caution": {
+    "message": "caution",
+    "description": "The default label used for the Caution admonition (:::caution)"
+  },
+  "theme.admonition.danger": {
+    "message": "danger",
+    "description": "The default label used for the Danger admonition (:::danger)"
+  },
+  "theme.admonition.info": {
+    "message": "info",
+    "description": "The default label used for the Info admonition (:::info)"
+  },
+  "theme.admonition.note": {
+    "message": "note",
+    "description": "The default label used for the Note admonition (:::note)"
+  },
+  "theme.admonition.tip": {
+    "message": "tip",
+    "description": "The default label used for the Tip admonition (:::tip)"
+  },
+  "theme.admonition.warning": {
+    "message": "warning",
+    "description": "The default label used for the Warning admonition (:::warning)"
+  },
+  "theme.blog.sidebar.navAriaLabel": {
+    "message": "Blog recent posts navigation",
+    "description": "The ARIA label for recent posts in the blog sidebar"
+  },
+  "theme.DocSidebarItem.expandCategoryAriaLabel": {
+    "message": "Expand sidebar category '{label}'",
+    "description": "The ARIA label to expand the sidebar category"
+  },
+  "theme.DocSidebarItem.collapseCategoryAriaLabel": {
+    "message": "Collapse sidebar category '{label}'",
+    "description": "The ARIA label to collapse the sidebar category"
+  },
+  "theme.IconExternalLink.ariaLabel": {
+    "message": "(opens in new tab)",
+    "description": "The ARIA label for the external link icon"
+  },
+  "theme.NavBar.navAriaLabel": {
+    "message": "Main",
+    "description": "The ARIA label for the main navigation"
+  },
+  "theme.navbar.mobileLanguageDropdown.label": {
+    "message": "Languages",
+    "description": "The label for the mobile language switcher dropdown"
+  },
+  "theme.NotFound.p1": {
+    "message": "We could not find what you were looking for.",
+    "description": "The first paragraph of the 404 page"
+  },
+  "theme.NotFound.p2": {
+    "message": "Please contact the owner of the site that linked you to the original URL and let them know their link is broken.",
+    "description": "The 2nd paragraph of the 404 page"
+  },
+  "theme.TOCCollapsible.toggleButtonLabel": {
+    "message": "On this page",
+    "description": "The label used by the button on the collapsible TOC component"
+  },
+  "theme.blog.post.readMore": {
+    "message": "Read more",
+    "description": "The label used in blog post item excerpts to link to full blog posts"
+  },
+  "theme.blog.post.readMoreLabel": {
+    "message": "Read more about {title}",
+    "description": "The ARIA label for the link to full blog posts from excerpts"
+  },
+  "theme.blog.post.readingTime.plurals": {
+    "message": "One min read|{readingTime} min read",
+    "description": "Pluralized label for \"{readingTime} min read\". Use as much plural forms (separated by \"|\") as your language support (see https://www.unicode.org/cldr/cldr-aux/charts/34/supplemental/language_plural_rules.html)"
+  },
+  "theme.CodeBlock.copy": {
+    "message": "Copy",
+    "description": "The copy button label on code blocks"
+  },
+  "theme.CodeBlock.copied": {
+    "message": "Copied",
+    "description": "The copied button label on code blocks"
+  },
+  "theme.CodeBlock.copyButtonAriaLabel": {
+    "message": "Copy code to clipboard",
+    "description": "The ARIA label for copy code blocks button"
+  },
+  "theme.CodeBlock.wordWrapToggle": {
+    "message": "Toggle word wrap",
+    "description": "The title attribute for toggle word wrapping button of code block lines"
+  },
+  "theme.docs.breadcrumbs.home": {
+    "message": "Home page",
+    "description": "The ARIA label for the home page in the breadcrumbs"
+  },
+  "theme.docs.sidebar.navAriaLabel": {
+    "message": "Docs sidebar",
+    "description": "The ARIA label for the sidebar navigation"
+  },
+  "theme.docs.sidebar.collapseButtonTitle": {
+    "message": "Collapse sidebar",
+    "description": "The title attribute for collapse button of doc sidebar"
+  },
+  "theme.docs.sidebar.collapseButtonAriaLabel": {
+    "message": "Collapse sidebar",
+    "description": "The title attribute for collapse button of doc sidebar"
+  },
+  "theme.docs.sidebar.closeSidebarButtonAriaLabel": {
+    "message": "Close navigation bar",
+    "description": "The ARIA label for close button of mobile sidebar"
+  },
+  "theme.navbar.mobileSidebarSecondaryMenu.backButtonLabel": {
+    "message": "← Back to main menu",
+    "description": "The label of the back button to return to main menu, inside the mobile navbar sidebar secondary menu (notably used to display the docs sidebar)"
+  },
+  "theme.docs.sidebar.toggleSidebarButtonAriaLabel": {
+    "message": "Toggle navigation bar",
+    "description": "The ARIA label for hamburger menu button of mobile navigation"
+  },
+  "theme.navbar.mobileDropdown.collapseButton.expandAriaLabel": {
+    "message": "Expand the dropdown",
+    "description": "The ARIA label of the button to expand the mobile dropdown navbar item"
+  },
+  "theme.navbar.mobileDropdown.collapseButton.collapseAriaLabel": {
+    "message": "Collapse the dropdown",
+    "description": "The ARIA label of the button to collapse the mobile dropdown navbar item"
+  },
+  "theme.docs.sidebar.expandButtonTitle": {
+    "message": "Expand sidebar",
+    "description": "The ARIA label and title attribute for expand button of doc sidebar"
+  },
+  "theme.docs.sidebar.expandButtonAriaLabel": {
+    "message": "Expand sidebar",
+    "description": "The ARIA label and title attribute for expand button of doc sidebar"
+  },
+  "theme.Playground.liveEditor": {
+    "message": "Live Editor",
+    "description": "The live editor label of the live codeblocks"
+  },
+  "theme.Playground.result": {
+    "message": "Result",
+    "description": "The result label of the live codeblocks"
+  },
+  "theme.Playground.buttons.reset": {
+    "message": "Reset",
+    "description": "The reset button label for live code blocks"
+  },
+  "changelog.backLink": {
+    "message": "← Back to index page"
+  },
+  "theme.changelog.post.paginator.navAriaLabel": {
+    "message": "Changelog item navigation",
+    "description": "The ARIA label for the changelog pagination"
+  },
+  "theme.changelog.post.paginator.newerRelease": {
+    "message": "Newer release",
+    "description": "The changelog button label to navigate to the newer release"
+  },
+  "theme.changelog.post.paginator.olderRelease": {
+    "message": "Older release",
+    "description": "The changelog button label to navigate to the older release"
+  },
+  "changelog.description.rssLink": {
+    "message": "RSS feed"
+  },
+  "changelog.description": {
+    "message": "Subscribe through {rssLink} or follow releases on {githubLink} to stay up-to-date with new updates!"
+  },
+  "theme.blog.post.plurals": {
+    "message": "One post|{count} posts",
+    "description": "Pluralized label for \"{count} posts\". Use as much plural forms (separated by \"|\") as your language support (see https://www.unicode.org/cldr/cldr-aux/charts/34/supplemental/language_plural_rules.html)"
+  },
+  "theme.blog.tagTitle": {
+    "message": "{nPosts} tagged with \"{tagName}\"",
+    "description": "The title of the page for a blog tag"
+  },
+  "theme.blog.author.pageTitle": {
+    "message": "{authorName} - {nPosts}",
+    "description": "The title of the page for a blog author"
+  },
+  "theme.blog.authorsList.pageTitle": {
+    "message": "Authors",
+    "description": "The title of the authors page"
+  },
+  "theme.blog.authorsList.viewAll": {
+    "message": "View all authors",
+    "description": "The label of the link targeting the blog authors page"
+  },
+  "theme.blog.author.noPosts": {
+    "message": "This author has not written any posts yet.",
+    "description": "The text for authors with 0 blog post"
+  },
+  "theme.contentVisibility.unlistedBanner.title": {
+    "message": "Unlisted page",
+    "description": "The unlisted content banner title"
+  },
+  "theme.contentVisibility.unlistedBanner.message": {
+    "message": "This page is unlisted. Search engines will not index it, and only users having a direct link can access it.",
+    "description": "The unlisted content banner message"
+  },
+  "theme.contentVisibility.draftBanner.title": {
+    "message": "Draft page",
+    "description": "The draft content banner title"
+  },
+  "theme.contentVisibility.draftBanner.message": {
+    "message": "This page is a draft. It will only be visible in dev and be excluded from the production build.",
+    "description": "The draft content banner message"
+  },
+  "theme.docs.DocCard.categoryDescription.plurals": {
+    "message": "1 item|{count} items",
+    "description": "The default description for a category card in the generated index about how many items this category includes"
+  },
+  "theme.ErrorPageContent.tryAgain": {
+    "message": "Try again",
+    "description": "The label of the button to try again rendering when the React error boundary captures an error"
+  },
+  "theme.common.skipToMainContent": {
+    "message": "Skip to main content",
+    "description": "The skip to content label used for accessibility, allowing to rapidly navigate to main content with keyboard tab/enter navigation"
+  },
+  "theme.tags.tagsPageTitle": {
+    "message": "Tags",
+    "description": "The title of the tag list page"
+  }
+}

@@ -1,0 +1,225 @@
+---
+title: Memory MCP Adapter
+description: >-
+  Complete reference for the cortex-memory-mcp stateless Fastify adapter — tool
+  schemas, MemoryApiClient design, data model, and integration with the Memory
+  Subsystem.
+sidebar_position: 1
+diataxis_type: reference
+workspace: cortex
+tags:
+  - cortex
+  - memory
+  - rag
+  - mongodb
+---
+
+The **cortex-memory-mcp** service is a stateless Fastify 5 adapter that bridges
+AgentGateway to the `memory-api` Fastify REST backend. It exposes four MCP tools
+covering vector search, episodic chat history, knowledge graph traversal, and
+document ingestion.
+
+---
+
+## Integration Topology
+
+```text
+AgentGateway (port 8080)
+  └── mcp-memory (port 8080, /mcp)
+        └── memory-api (port 3006, /api/memory/*)
+              └── MongoDB 7.0 rs0
+```
+
+Agents never call this service or `memory-api` directly. All requests are
+federated through AgentGateway.
+
+---
+
+## Configuration
+
+| Variable         | Required | Default                  | Description                                   |
+| :--------------- | :------: | :----------------------- | :-------------------------------------------- |
+| `MEMORY_API_URL` |    No    | `http://memory-api:3006` | Base URL of the `memory-api` Fastify service. |
+| `PORT`           |    No    | `8080`                   | HTTP port the Fastify MCP adapter listens on. |
+
+### MemoryApiClient URL Resolution
+
+The `MemoryApiClient` class resolves the effective base URL at startup:
+
+1. Read `MEMORY_API_URL` (defaults to `http://memory-api:3006`).
+2. If the value does not already end with `/api/memory`, append `/api/memory`.
+3. All tool implementations call endpoints relative to this resolved base.
+
+This means both `http://memory-api:3006` and `http://memory-api:3006/api/memory`
+are accepted values for `MEMORY_API_URL`.
+
+---
+
+## Transport
+
+- **Path**: `/mcp`
+- **Protocol**: Streamable HTTP (MCP specification)
+- **Session model**: Stateless — `sessionIdGenerator` is `undefined`. Each POST
+  to `/mcp` creates a new MCP `Server` instance that is destroyed after the
+  response completes.
+
+---
+
+## Health Check
+
+```
+GET /health
+```
+
+Response:
+
+```json
+{ "status": "healthy", "service": "cortex-memory-mcp" }
+```
+
+---
+
+## Tools
+
+### `search_knowledge`
+
+Performs a RAG vector similarity search over all indexed documents in the
+`entities` collection.
+
+| Parameter  | Type     | Required | Default | Description                                                                                     |
+| :--------- | :------- | :------: | :------ | :---------------------------------------------------------------------------------------------- |
+| `query`    | `string` |   Yes    | —       | Natural language semantic search prompt.                                                        |
+| `limit`    | `number` |    No    | `5`     | Maximum number of results to return.                                                            |
+| `minScore` | `number` |    No    | `0.7`   | Minimum cosine similarity score threshold (0-1). Results below this threshold are filtered out. |
+
+Internal API call: `POST /api/memory/search`
+
+---
+
+### `store_episodic`
+
+Persists a single conversation turn into the `chat_history` collection for a
+given session.
+
+| Parameter   | Type     | Required | Default | Description                                            |
+| :---------- | :------- | :------: | :------ | :----------------------------------------------------- |
+| `sessionId` | `string` |   Yes    | —       | Unique identifier for the chat thread or conversation. |
+| `role`      | `string` |   Yes    | —       | Message sender role: `user`, `assistant`, or `system`. |
+| `content`   | `string` |   Yes    | —       | Text content of the message turn.                      |
+
+Internal API call: `POST /api/memory/chat`
+
+---
+
+### `query_graph`
+
+Traverses the knowledge graph starting from a named entity, returning connected
+nodes up to the specified depth.
+
+| Parameter  | Type     | Required | Default | Description                                                      |
+| :--------- | :------- | :------: | :------ | :--------------------------------------------------------------- |
+| `entityId` | `string` |   Yes    | —       | The central entity ID or canonical name to start traversal from. |
+| `maxDepth` | `number` |    No    | `2`     | Maximum number of relationship hops to follow.                   |
+
+Internal API call: `GET /api/memory/graph`
+
+---
+
+### `ingest_document`
+
+Ingests a document into the knowledge base: the text is chunked, embedded, and
+indexed in the MongoDB vector store. Calling this tool also triggers the full
+documentation re-sync pipeline on `memory-api`.
+
+| Parameter | Type     | Required | Default | Description                                                   |
+| :-------- | :------- | :------: | :------ | :------------------------------------------------------------ |
+| `title`   | `string` |   Yes    | —       | Human-readable title for the document.                        |
+| `content` | `string` |   Yes    | —       | Raw text or Markdown content to index.                        |
+| `source`  | `string` |    No    | —       | URL or origin identifier for the document (used in metadata). |
+
+Internal API call: `POST /api/memory/ingest/docs`
+
+---
+
+## Memory Data Model
+
+### `chat_history` Collection (Episodic Memory)
+
+Stores linear conversation turns grouped by session identifier.
+
+| Field       | Type     | Description                                          |
+| :---------- | :------- | :--------------------------------------------------- |
+| `sessionId` | `string` | Unique chat thread ID (aliased as `conversationId`). |
+| `agentId`   | `string` | Identifier of the agent that produced the turn.      |
+| `role`      | `string` | Sender role: `user`, `assistant`, or `system`.       |
+| `content`   | `string` | Text content of the message.                         |
+| `createdAt` | `Date`   | Timestamp of when the turn was stored.               |
+
+### `entities` Collection (Semantic Memory)
+
+Stores discrete facts, workspace concepts, and document chunks with vector
+embeddings for similarity search.
+
+| Field       | Type         | Description                                                              |
+| :---------- | :----------- | :----------------------------------------------------------------------- |
+| `name`      | `string`     | Canonical name or title of the entity.                                   |
+| `type`      | `string`     | Classification: `workspace`, `doc_file`, `doc_chunk`, or `chat_message`. |
+| `content`   | `string`     | Textual summary or full content of the entity.                           |
+| `embedding` | `float[128]` | 128-dimensional vector embedding for `$vectorSearch`.                    |
+| `metadata`  | `object`     | Arbitrary key-value metadata (source, path, timestamps).                 |
+
+### `relations` Collection (Graph Layer)
+
+Stores directed weighted edges between entities.
+
+| Field          | Type       | Description                                             |
+| :------------- | :--------- | :------------------------------------------------------ |
+| `fromId`       | `ObjectId` | Source entity reference.                                |
+| `toId`         | `ObjectId` | Target entity reference.                                |
+| `relationType` | `string`   | Edge type: `BELONGS_TO`, `REFERENCES`, or `DEPENDS_ON`. |
+| `weight`       | `number`   | Numeric edge weight representing relationship strength. |
+
+---
+
+## Startup Auto-Sync
+
+On every `memory-api` startup, the service automatically scans the `/app/docs`
+directory (bundled into the Docker image at build time) and ingests all `.mdx`
+and `.md` files into the knowledge base.
+
+Current scale after initial monorepo documentation sync:
+
+- **534** source files ingested
+- **4,503** text chunks indexed
+- **6,209** graph edges created
+- **300** unique entity nodes, **384** graph connections
+
+The sync pipeline is idempotent: content hashes are computed before embedding to
+skip documents that have not changed since the last sync.
+
+To trigger a manual re-sync without restarting the service:
+
+```
+POST /api/memory/ingest/docs
+```
+
+Or use the **Re-sync Docs** button in the Memory Web Dashboard.
+
+---
+
+## Public Dashboard
+
+The Memory Web Dashboard is publicly accessible at:
+
+```
+https://memory-dev.%PROJECT_DOMAIN%
+```
+
+Traffic path: Cloudflare Tunnel -> Traefik (platform namespace) ->
+`memory-web` Nginx reverse proxy -> `memory-api:3006`.
+
+The dashboard provides three panels:
+
+- **Graph Topology**: Interactive visualization of knowledge graph nodes and edges.
+- **RAG Playground**: Test `search_knowledge` queries and inspect similarity scores.
+- **Episodic Memory Chat**: Browse and replay stored `chat_history` turns by session.

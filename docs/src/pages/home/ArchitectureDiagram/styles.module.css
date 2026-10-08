@@ -1,0 +1,233 @@
+@import '../../../../theme/src/css/tokens.css' layer(theme);
+
+.diagramContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow: visible;
+}
+
+.diagramGrid {
+  position: relative;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 8.125rem 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.rootNode {
+  background: var(--color-identity-primary);
+  border-radius: 0.25rem;
+  padding: 1rem 0.5rem;
+  z-index: 3;
+  border: 0.0625rem solid var(--color-identity-secondary);
+  text-align: center;
+  width: 100%;
+  box-shadow: 0.375rem 0.375rem 0 var(--color-identity-tertiary);
+  position: relative;
+}
+
+.trunkLink {
+  position: absolute;
+  right: -4rem;
+  top: 50%;
+  width: 4rem;
+  height: 0.25rem;
+  background: var(--color-identity-primary);
+  z-index: 1;
+  transform: translateY(-50%);
+}
+
+.rootLabel {
+  font-family: var(--font-mono);
+  color: var(--color-identity-tertiary);
+  font-weight: 900;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  line-height: 1.3;
+  display: block;
+}
+
+.contextGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  z-index: 2;
+  border-left: 0.25rem solid var(--color-identity-primary);
+  padding-left: 2rem;
+  position: relative;
+}
+
+/* Anchor dots for the trunk */
+.contextGrid::before,
+.contextGrid::after {
+  content: '';
+  position: absolute;
+  left: -0.5rem;
+  width: 0.75rem;
+  height: 0.75rem;
+  background: var(--color-identity-primary);
+  border-radius: 50%;
+}
+.contextGrid::before {
+  top: 0;
+}
+.contextGrid::after {
+  bottom: 0;
+}
+
+.contextNode {
+  background: rgba(255, 255, 255, 0.04);
+  border: 0.0625rem solid rgba(76, 77, 154, 0.2);
+  border-radius: 0.375rem;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  position: relative;
+  min-height: 4.5rem;
+}
+
+/* Branch lines from trunk to nodes */
+.contextNode::before {
+  content: '';
+  position: absolute;
+  left: -2rem;
+  top: 50%;
+  width: 2rem;
+  height: 0.125rem;
+  background: var(--color-identity-primary);
+  opacity: 0.6;
+}
+
+.contextNode:hover {
+  transform: translateX(0.75rem);
+  border-color: var(--color-identity-primary);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.3);
+}
+
+.activeNode {
+  background: rgba(76, 77, 154, 0.2) !important;
+  border-color: var(--color-identity-primary) !important;
+  box-shadow: 0 0 1.25rem rgba(76, 77, 154, 0.4);
+  transform: translateX(1.25rem);
+}
+
+.contextLabel {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: var(--color-identity-secondary);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.subItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  pointer-events: none;
+  justify-content: flex-end;
+}
+
+.subItems span {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.1875rem;
+  color: white;
+  opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+  .diagramContainer {
+    padding: 0.5rem;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .diagramGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    box-sizing: border-box;
+  }
+
+  .rootNode {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .trunkLink {
+    display: none;
+  }
+
+  .contextGrid {
+    border-left: none;
+    border-top: 0.25rem solid var(--color-identity-primary);
+    padding-left: 0;
+    padding-top: 1.5rem;
+    gap: 0.875rem;
+    box-sizing: border-box;
+  }
+
+  .contextGrid::before {
+    left: 50%;
+    top: -0.5rem;
+    transform: translateX(-50%);
+  }
+
+  .contextGrid::after {
+    display: none;
+  }
+
+  .contextNode {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    min-height: auto;
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+
+  .contextNode::before {
+    display: none;
+  }
+
+  .contextNode:hover {
+    transform: translateY(-0.25rem);
+  }
+
+  .activeNode {
+    transform: translateY(-0.25rem) !important;
+  }
+
+  .subItems {
+    justify-content: flex-start;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .contextLabel {
+    font-size: 0.8rem;
+  }
+
+  .subItems span {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.35rem;
+  }
+}

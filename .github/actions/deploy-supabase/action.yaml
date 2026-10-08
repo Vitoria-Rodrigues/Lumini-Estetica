@@ -1,0 +1,25 @@
+name: 'Deploy to Supabase'
+description: 'Standardized Supabase deployment composite action'
+
+inputs:
+  project_id:
+    description: 'Supabase Project ID'
+    required: true
+  db_password:
+    description: 'Supabase DB Password'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Supabase CLI
+      uses: supabase/setup-cli@v1
+      with:
+        version: latest
+        
+    - name: Deploy Database and Functions
+      shell: bash
+      run: |
+        supabase link --project-ref ${{ inputs.project_id }} --password ${{ inputs.db_password }}
+        supabase db push
+        supabase functions deploy

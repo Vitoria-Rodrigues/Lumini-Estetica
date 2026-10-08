@@ -1,0 +1,80 @@
+---
+title: Hub Workspace (Developer Website)
+sidebar_label: Overview
+sidebar_position: 1
+slug: /hub
+diataxis_type: overview
+workspace: hub
+tags:
+  - hub
+---
+
+The Hub workspace contains all applications and packages related to the personal developer website. It is the primary storefront for %PROJECT_DOMAIN%, providing a professional portfolio, blog engine, technical skills inventory, and contact form handling systems.
+
+---
+
+## Directory Structure
+
+```text
+hub/
+├── services/
+│   ├── api/          # Fastify 5 REST API
+│   └── web/          # React 19 Single Page Application (SPA)
+├── packages/
+│   └── core/         # Shared Domain Model (SSOT)
+```
+
+---
+
+## Core Components & Architecture
+
+### `@repo/hub/core` (Domain SSOT)
+
+All schema configurations, validators, and core business types are defined in this package. By forcing both the REST API and the Web Client to inherit definitions from this core layer, we enforce strict Bounded Context parity and prevent model duplication.
+
+- **Technology Stack**: TypeScript, Zod.
+- **Key Files**: Shared schema definitions for blog posts, projects, contact submissions, and user accounts.
+
+### `@repo/hub/api` (Fastify 5 Engine)
+
+A high-performance REST API built with Fastify v5, implementing a decoupled, layered software architecture.
+
+- **Layered Design Flow**: `Controller ──> Service ──> Repository ──> Model`
+- **Key Integrations**:
+  - Mongoose connection to the local/cloud MongoDB database.
+  - Redis cache managers for rate-limiting, session storage, and fast queries.
+  - Zod validation hooks for incoming requests (body, query, params) and outgoing responses.
+- **Strict Guidelines**:
+  - All asynchronous operations must be explicitly handled.
+  - Strict boolean checks are enforced throughout the API controllers (`if (value === true)`).
+
+### `@repo/hub/web` (React 19 Portal)
+
+The user portfolio interface, blog frontend, and administrative dashboard built on React 19 and compiled with Vite.
+
+- **Technology Stack**: React 19, TypeScript, Vite, Zustand (state management), Studio Tokens (theme integration).
+- **Design Parity**: Inherits theme variables, colors, and layout constants directly from the `@repo/studio/assets` package.
+- **React 19 Features**: Implements modern React 19 standards, utilizing the `use()` hook for loading resource promises, and ensuring strict boolean comparisons in all JSX templates.
+
+---
+
+## Database Configuration
+
+To support contact submission storage and blog content delivery, the local environment runs a Docker-orchestrated MongoDB replica set:
+
+- **Replica Set Name**: `rs0`
+- **Initiator Service**: `db-init` initializes the replica set configuration (`rs.initiate()`) after MongoDB is ready.
+- **Cache Layer**: Redis container handles high-velocity key-value storage and rate limiting.
+
+---
+
+## Workspace Scripts
+
+Run these commands from the root directory to manage the Hub context:
+
+| Command          | Action                                                                                   |
+| :--------------- | :--------------------------------------------------------------------------------------- |
+| `pnpm hub:up`    | Spins up local database (MongoDB Replica Set) and Redis containers.                      |
+| `pnpm hub:dev`   | Runs the API server (via `tsx watch`) and Web client (via Vite dev server) concurrently. |
+| `pnpm hub:down`  | Stops and removes the Docker containers.                                                 |
+| `pnpm hub:reset` | Wipes database volumes and restarts infrastructure.                                      |

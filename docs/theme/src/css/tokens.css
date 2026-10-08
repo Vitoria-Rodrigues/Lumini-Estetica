@@ -1,0 +1,34 @@
+@theme {
+  /* This file defines the core design tokens for the documentation site */
+}
+
+:root {
+  /* Brand Colors */
+  --color-identity-primary: #ec4899; /* Pink 500 for Lumini Estética */
+  --color-identity-secondary: #f472b6; /* Pink 400 */
+  --color-identity-tertiary: #fbcfe8; /* Pink 200 */
+
+  /* Backgrounds */
+  --color-background-light: #ffffff;
+  --color-background-tint: #fdf2f8; /* Pink 50 */
+  --color-background-shade: #fce7f3; /* Pink 100 */
+
+  /* Typography Colors */
+  --color-body-dark: #334155; /* Slate 700 */
+  --color-title-dark: #0f172a; /* Slate 900 */
+  --color-body-light: #64748b; /* Slate 500 */
+  --color-title-light: #334155; /* Slate 700 */
+
+  /* Fonts */
+  --font-sans:
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /* Borders & Components */
+  --color-border-light: #e2e8f0; /* Slate 200 */
+
+  /* Status Colors */
+  --color-success: #10b981;
+  --color-info: #3b82f6;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+}

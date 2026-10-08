@@ -1,0 +1,77 @@
+---
+slug: /
+title: Workspaces Introduction
+sidebar_label: Introduction
+sidebar_position: 1
+diataxis_type: overview
+workspace: intro.mdx
+tags:
+  - intro.mdx
+---
+
+import DocCardList from '@theme/DocCardList';
+
+# Workspaces Documentation Hub
+
+Welcome to the **%PROJECT_DOMAIN% Workspaces Documentation Hub**. This section provides dedicated deep-dives into the architecture, design, and internal engineering of each Bounded Context within the monorepo.
+
+For high-level project architectural decisions and global principles, please refer to the [Architecture Handbook](/docs/explanation/architecture-overview).
+
+---
+
+## Explore Workspaces
+
+Select a workspace below to read its technical documentation and overview:
+
+<DocCardList
+  items={[
+    {
+      type: 'link',
+      href: '/workspaces/hub',
+      label: 'Hub Workspace',
+      description: 'Personal web portal, blog engine, and services catalog.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/cortex',
+      label: 'Cortex Workspace',
+      description: 'Unified AI processing hub: gateway, memory, MCP, and agents.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/renderer',
+      label: 'Renderer Workspace',
+      description: 'Dynamic asset generator and extensible document compilation engine.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/studio',
+      label: 'Studio Workspace',
+      description: 'Visual identity, design tokens, and self-hosted Penpot design system.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/tools',
+      label: 'Tools Workspace',
+      description: 'Isolated Git version control and GitHub CLI automation environments.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/platform',
+      label: 'Platform Workspace',
+      description: 'OpenTelemetry monitoring collector and Turborepo caching services.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/knowledge-base',
+      label: 'Knowledge Base Workspace',
+      description: 'Developer portal and Docusaurus architectural knowledge base.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/shared',
+      label: 'Shared Workspace',
+      description: 'Global configuration parity and monorepo-wide helpers.',
+    },
+  ]}
+/>

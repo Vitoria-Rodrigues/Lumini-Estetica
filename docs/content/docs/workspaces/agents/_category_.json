@@ -1,0 +1,8 @@
+{
+  "label": "AI Agents Configuration",
+  "position": 7,
+  "link": {
+    "type": "generated-index",
+    "description": "Authoritative domain for agentic AI configurations, skills, plugins, and repository manipulation scripts."
+  }
+}

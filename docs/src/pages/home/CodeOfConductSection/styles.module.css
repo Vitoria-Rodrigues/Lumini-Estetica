@@ -1,0 +1,238 @@
+@import '../../../../theme/src/css/tokens.css' layer(theme);
+
+.section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-top: 5rem;
+  background-color: var(--color-background-dark);
+  box-sizing: border-box;
+  position: relative;
+  width: 100%;
+}
+
+.mainContainer {
+  width: 90%;
+  max-width: 1400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 5rem;
+}
+
+.sectionTitle {
+  color: var(--color-identity-secondary);
+  font-family: var(--font-sans);
+  font-weight: 900;
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  margin-bottom: 3rem;
+  letter-spacing: -0.02em;
+}
+
+.twoColumns {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: center;
+  width: 100%;
+  gap: 4rem;
+}
+
+.leftColumn {
+  width: calc(50% - 2rem);
+  border-radius: 0.75rem;
+  padding: 0;
+  color: var(--color-body-dark);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.07);
+  display: flex;
+  flex-direction: column;
+}
+
+.cardTitle {
+  color: var(--color-title-light);
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 1.5rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cardTitle::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-identity-tertiary);
+}
+
+.leftColumn p {
+  line-height: 1.6;
+  font-size: clamp(1rem, 1.3vw, 1.15rem);
+  color: var(--color-body-light);
+  margin-bottom: 1.25rem;
+}
+
+.rightColumn {
+  width: calc(50% - 2rem);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.cardTransparent {
+  color: rgba(255, 255, 255, 0.85);
+  display: flex;
+  flex-direction: column;
+}
+
+.cardTransparent h3 {
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 1.5rem;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cardTransparent h3::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-identity-tertiary);
+}
+
+.cardTransparent p {
+  line-height: 1.6;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.cardTransparent ul {
+  padding-left: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.cardTransparent li {
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+  position: relative;
+}
+
+.bottomBand {
+  width: 100%;
+  background-color: var(--color-background-light);
+  padding: 4rem 0;
+  display: flex;
+  justify-content: center;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.bandContainer {
+  width: 90%;
+  max-width: 1400px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 4rem;
+}
+
+.bandItem {
+  width: calc(50% - 2rem);
+  color: var(--color-body-dark);
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.75rem;
+  padding: 2.5rem;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+}
+
+.bandItem h3 {
+  color: var(--color-title-dark);
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 1.5rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bandItem h3::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-identity-tertiary);
+}
+
+.bandItem p {
+  line-height: 1.6;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.bandItem p:last-child {
+  margin-bottom: 0;
+}
+
+.bandItem a {
+  color: var(--color-identity-tertiary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.bandItem a:hover {
+  text-decoration: underline;
+  color: var(--color-identity-primary);
+}
+
+.attribution {
+  margin-top: 2rem;
+  font-size: 0.85rem;
+  opacity: 0.8;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding-top: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .mainContainer,
+  .bandContainer {
+    width: 90%;
+  }
+
+  .twoColumns {
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  .leftColumn,
+  .rightColumn,
+  .bandItem {
+    width: 100%;
+  }
+
+  .bandContainer {
+    flex-direction: column;
+    gap: 3rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .leftColumn,
+  .bandItem {
+    padding: 1.5rem;
+  }
+}

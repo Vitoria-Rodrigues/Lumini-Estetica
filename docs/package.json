@@ -1,0 +1,71 @@
+{
+  "name": "@lumini-estetica/docs",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Lumini Estetica documentation site",
+  "scripts": {
+    "start": "docusaurus start --host 0.0.0.0 --port 3002",
+    "build": "tsx scripts/docs-build.ts",
+    "serve": "docusaurus serve",
+    "clear": "docusaurus clear",
+    "generate:changelog": "tsx tooling/generate-changelog.ts",
+    "generate:roadmap": "tsx tooling/generate-roadmap.ts",
+    "typecheck": "tsc -b",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@docusaurus/core": "catalog:docs-stack",
+    "@docusaurus/plugin-content-blog": "catalog:docs-stack",
+    "@docusaurus/plugin-content-docs": "catalog:docs-stack",
+    "@docusaurus/plugin-content-pages": "catalog:docs-stack",
+    "@docusaurus/plugin-css-cascade-layers": "catalog:docs-stack",
+    "@docusaurus/plugin-debug": "catalog:docs-stack",
+    "@docusaurus/plugin-google-gtag": "catalog:docs-stack",
+    "@docusaurus/plugin-google-tag-manager": "catalog:docs-stack",
+    "@docusaurus/plugin-sitemap": "catalog:docs-stack",
+    "@docusaurus/plugin-svgr": "catalog:docs-stack",
+    "@docusaurus/theme-classic": "catalog:docs-stack",
+    "@docusaurus/theme-common": "catalog:docs-stack",
+    "@docusaurus/theme-live-codeblock": "catalog:docs-stack",
+    "@docusaurus/theme-mermaid": "catalog:docs-stack",
+    "@docusaurus/theme-search-algolia": "catalog:docs-stack",
+    "@docusaurus/utils": "catalog:docs-stack",
+    "@gsap/react": "catalog:web-stack",
+    "@mdx-js/react": "catalog:docs-stack",
+    "clsx": "catalog:web-stack",
+    "dotenv": "catalog:",
+    "gsap": "catalog:web-stack",
+    "prism-react-renderer": "catalog:docs-stack",
+    "react": "catalog:web-stack",
+    "react-dom": "catalog:web-stack"
+  },
+  "devDependencies": {
+    "@docusaurus/faster": "catalog:",
+    "@docusaurus/module-type-aliases": "catalog:docs-stack",
+    "@docusaurus/tsconfig": "catalog:docs-stack",
+    "@docusaurus/types": "catalog:docs-stack",
+    "@tailwindcss/postcss": "catalog:docs-stack",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:web-stack",
+    "@types/unist": "catalog:",
+    "tailwindcss": "catalog:docs-stack",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "unified": "catalog:"
+  },
+  "browserslist": {
+    "production": [
+      ">0.5%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 3 chrome version",
+      "last 3 firefox version",
+      "last 5 safari version"
+    ]
+  },
+  "engines": {
+    "node": ">=20.0"
+  }
+}
