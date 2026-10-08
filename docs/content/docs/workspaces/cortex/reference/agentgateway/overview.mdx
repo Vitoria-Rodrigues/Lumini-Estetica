@@ -1,0 +1,47 @@
+---
+title: 'AgentGateway Ingress'
+description: 'Reference for the AgentGateway ingress proxy routing and policy validation.'
+sidebar_position: 1
+---
+
+# AgentGateway Ingress
+
+AgentGateway is the central Model Context Protocol (MCP) Ingress Gateway for the AI Cortex subsystem in the %PROJECT_NAME% monorepo. It acts as the primary API proxy, managing routing, CORS policies, ExtMCP gRPC guardrails, and administrative telemetry.
+
+## Purpose and Architecture
+
+Instead of AI agents connecting directly to individual downstream MCP servers, all tool calls are routed through AgentGateway. This centralized architecture provides:
+
+- **Unified Ingress**: A single API endpoint exposed to agent frontends.
+- **Dynamic Routing**: Automatic resolution and forwarding to downstream target services.
+- **Policy Enforcement**: Integration with ExtMCP gRPC guardrail processors to validate and mutate tool call payloads before they reach the target adapters.
+- **Observability**: Centralized Prometheus metrics and OpenTelemetry distributed tracing.
+
+## Routing Targets
+
+AgentGateway is configured to route tool calls to the following downstream MCP adapters:
+
+- **`github`**: Routed to `http://mcp-github:8080/mcp`
+- **`context7`**: Routed to `https://mcp.context7.com/mcp`
+- **`firecrawl`**: Routed to `http://mcp-firecrawl:8080/mcp`
+- **`grafana`**: Routed to `http://mcp-grafana:8080/mcp`
+- **`playwright`**: Routed to `http://mcp-playwright:8080/mcp`
+- **`memory`**: Routed to `http://mcp-memory:8080/mcp`
+
+## Guardrails Integration
+
+AgentGateway strictly enforces runtime policies by connecting to the ExtMCP Guardrails processor at `mcp-guardrails:9001`.
+
+- **Fail-Open Policy**: The gateway is configured with `failOpen` enabled. If the guardrail service is temporarily unreachable, AgentGateway will allow the tool call to proceed, ensuring high availability and preventing service disruptions.
+
+## Port Allocation
+
+The container exposes the following ports for cluster communication:
+
+- **`443` / `8080`**: Main ingress traffic (Streamable HTTP).
+- **`15000`**: Administrative UI and health checks.
+- **`15001`**: Prometheus statistics endpoint.
+
+## Observability
+
+Distributed tracing telemetry is actively exported to the OpenTelemetry collector at `http://otel-collector:4317` (resolved via the platform cluster DNS `otel-collector.platform.svc.cluster.local`), seamlessly integrating AgentGateway into the broader Grafana observability stack.

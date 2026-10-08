@@ -1,0 +1,53 @@
+---
+title: Guardrails ExtMCP Reference
+description: Technical reference for the cortex-mcp-guardrails gRPC service.
+sidebar_position: 1
+diataxis_type: reference
+workspace: cortex
+tags:
+  - cortex
+  - mcp
+  - security
+---
+
+# ExtMCP Guardrails
+
+The `cortex/mcp/guardrails` workspace provides the standalone gRPC ExtMCP policy processor for AgentGateway in the AI Cortex subsystem.
+
+## Service Details
+
+- **Protocol:** gRPC (`ext_mcp.proto`)
+- **Port:** `9001`
+- **Language:** Node.js 22 (TypeScript)
+- **Role:** Transparent Network Proxy & Request Validator
+
+## Architecture
+
+The Guardrails service implements the AgentGateway ExtMCP protocol to intercept Model Context Protocol (MCP) method calls before they reach downstream containers.
+
+It receives structured MCP-native payloads (JSON-RPC method name, parameters, etc.) rather than raw HTTP. This allows for precise inspection of tool calls (`tools/call`) and responses (`tools/list`).
+
+## Processors
+
+### 1. Request Mutator (`request-mutator.ts`)
+
+Hooks into the `tools/call` phase to act as a **Transparent Network Proxy**.
+
+**Behavior:**
+
+- Recursively deep-scans all arguments in the JSON payload of _any_ tool call.
+- Rewrites any string containing `localhost` or `127.0.0.1` to `host.docker.internal`.
+- Ensures seamless container-to-host connectivity without requiring the AI agent to understand the underlying Docker/Kubernetes networking model.
+
+### 2. Response Enricher (`response-enricher.ts`)
+
+Hooks into the `tools/list` outbound phase.
+
+**Behavior:**
+
+- Acts as a pure pass-through (`{ pass: {} }`).
+- _Note:_ In legacy versions, this processor injected markdown instructions into tool descriptions. This was removed to prevent schema bloat and preserve LLM context window efficiency. Agent instructions are now managed client-side via `.agents/rules`.
+
+## Fail-Safe Contract (Fail-Open)
+
+To maintain high availability across the Cortex data plane, all ExtMCP processors must catch internal exceptions (e.g., parsing errors) and gracefully fall back to a `{ pass: {} }` response. This ensures that a bug in the guardrail logic does not bring down the entire AI toolchain.

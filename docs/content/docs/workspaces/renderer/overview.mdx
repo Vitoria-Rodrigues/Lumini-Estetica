@@ -1,0 +1,56 @@
+---
+title: Renderer Workspace Overview
+sidebar_label: Overview
+sidebar_position: 1
+slug: /renderer
+diataxis_type: overview
+workspace: renderer
+tags:
+  - renderer
+---
+
+The Renderer workspace contains the generic dynamic asset generator and document compilation engine. It is responsible for compiling markdown templates into production-grade documents across the monorepo and generating custom brand-consistent SVG cards.
+
+---
+
+## Directory Structure
+
+```text
+renderer/
+├── src/
+│   ├── index.ts                     # Main runner executing active pipelines
+│   ├── pipelines/                   # Pipelines Layer (SOLID/OCP architecture)
+│   │   ├── types.ts                 # Shared pipeline schemas & types
+│   │   ├── github-renderer.pipeline.ts # Standard renderer README compiler target
+│   │   └── index.ts                 # Central active pipeline registry
+│   ├── templates/                   # Domain-organized template directory
+│   │   ├── cards/                   # Metrics-based and static SVG layouts
+│   │   └── docs/                    # Textual markdown templates (e.g. README)
+│   ├── renderers/                   # Compilation and layout engines (stats, headers)
+│   └── utils/                       # Utilities (glob, font-encoding, template-fill)
+├── generated/                       # Compiled development previews directory
+│   ├── cards/                       # Flat SVG card theme copies (light/dark)
+│   └── docs/                        # Subdivided theme document previews
+├── package.json                     # Workspace dependencies and scripts
+└── tsconfig.json                    # Configuration for TypeScript compilation
+```
+
+---
+
+## Core Architecture & Pipelines
+
+Unlike a simple ad-hoc generation script, the Renderer features an extensible **Pipeline Architecture** complying with the Open/Closed Principle (SOLID).
+
+- **Extensible Registry**: Independent compilation targets (e.g., GitHub renderer READMEs, handbook manuals, or design systems specs) are registered inside `src/pipelines/index.ts`.
+- **Theme-separated Previews**: When executing compilation locally, the generator writes fully rendered light and dark versions into `generated/cards/` and `generated/docs/`. Light markdown previews reference light SVG assets, while dark previews reference dark SVGs, ensuring absolute high-fidelity theme testing.
+
+---
+
+## Scoped Operations
+
+Run these scripts from the monorepo root to manage the renderer generator stack:
+
+- `pnpm --filter @/renderer generate`: Runs the active document compilation pipelines locally, writing previews to `generated/`.
+- `pnpm --filter @/renderer clean`: Removes all compiled files, caches, and output build directories.
+- `pnpm --filter @/renderer typecheck`: Executes TypeScript compiler type validation.
+- `pnpm --filter @/renderer lint`: Performs static ESLint checks.

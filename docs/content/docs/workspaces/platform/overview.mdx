@@ -1,0 +1,62 @@
+---
+title: Platform Workspace Overview
+sidebar_label: Overview
+sidebar_position: 1
+slug: /platform
+diataxis_type: overview
+workspace: platform
+tags:
+  - platform
+---
+
+The Platform workspace manages the operational backend services that support telemetry aggregation and build caching for local development and CI/CD pipelines.
+
+---
+
+## Architecture Overview
+
+The platform workspace manages three core runtime services:
+
+1. **traefik**: The cluster ingress controller and API Gateway, handling external client ingress and internal service-to-service routing.
+2. **otel-collector**: An OpenTelemetry Collector that aggregates telemetry metrics, logs, and distributed traces, exporting them to Sentry and Grafana Cloud.
+3. **turbocache**: A high-performance remote cache server storing Turborepo build and test artifacts to accelerate developer compilation pipelines.
+
+---
+
+## Directory Layout
+
+```text
+platform/
+├── infrastructure/
+│   ├── docker/          # Docker Compose configurations (compose.yaml)
+│   └── kubernetes/      # Kubernetes manifests (traefik, otel, turbocache)
+├── services/
+│   ├── monitor/         # Configuration schemas for the OTLP Collector
+│   └── turbocache/      # Dockerfiles and caching logic
+├── package.json         # Workspace package manifest with platform commands
+└── AGENTS.md            # Scoped developer and AI guidelines
+```
+
+---
+
+## Platform Guardrails
+
+:::info[Service Independence]
+Services in this workspace should expose generic endpoints and avoid tight coupling with specific application logic.
+:::
+
+- **Docker Orchestration**: Always launch services using the scoped commands defined below. Never run container dependencies manually.
+- **Internal Telemetry**: The OpenTelemetry Collector (`otel-collector`) serves as the single entry point for developer telemetry. All runtime platform applications MUST forward stats using OTLP protocols.
+- **Volume Persistence**: Turborepo cache files and OpenTelemetry state directories must map to local host directories to prevent data loss between rebuilds.
+
+---
+
+## Local Operations
+
+All operations are run from the repository root directory:
+
+| Action          | Command               |
+| :-------------- | :-------------------- |
+| **Start Stack** | `pnpm platform:up`    |
+| **Stop Stack**  | `pnpm platform:down`  |
+| **Reset Data**  | `pnpm platform:reset` |

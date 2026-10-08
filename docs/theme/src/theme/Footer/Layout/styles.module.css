@@ -1,0 +1,40 @@
+.__prevent_tree_shake {
+  display: flow-root;
+}
+
+:global(.footer) {
+  background-color: var(--ifm-footer-background-color);
+  position: relative;
+  overflow: hidden;
+  border-top: 6px solid var(--color-identity-primary);
+  padding-top: 5rem;
+  padding-bottom: 0;
+  margin-bottom: 0 !important;
+  display: flow-root;
+}
+
+:global(.footer::before) {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  :global(.footer) {
+    padding-top: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  :global(.footer) {
+    padding-top: 1rem;
+  }
+}

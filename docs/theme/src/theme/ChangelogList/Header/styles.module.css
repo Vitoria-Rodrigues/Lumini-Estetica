@@ -1,0 +1,9 @@
+.rss,
+.rss:hover {
+  color: #f26522;
+}
+
+.github,
+.github:hover {
+  color: var(--ifm-color-primary);
+}

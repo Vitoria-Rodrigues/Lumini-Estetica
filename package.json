@@ -1,36 +1,60 @@
 {
-  "name": "gestao-estetica",
+  "name": "@vitoria-rodrigues/lumini-estetica",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+  "description": "Root monorepo workspace for the ecosystem.",
+  "author": "Vitória Rodrigues Ferreira",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vitoria-Rodrigues/Lumini-Estetica.git"
   },
-  "dependencies": {
-    "@stripe/react-stripe-js": "^6.8.2",
-    "@stripe/stripe-js": "^9.15.0",
-    "@supabase/supabase-js": "^2.106.2",
-    "@tanstack/react-query": "^5.104.0",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "react-icons": "^5.6.0",
-    "react-router-dom": "^7.15.1"
+  "type": "module",
+  "packageManager": "pnpm@12.6.0",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.6.0"
+    }
+  },
+  "scripts": {
+    "app:dev": "pnpm --filter \"@lumini-estetica/app\" dev",
+    "app:build": "turbo run build --filter=\"@lumini-estetica/app\"",
+    "app:typecheck": "turbo run typecheck --filter=\"@lumini-estetica/app\"",
+    "app:lint": "turbo run lint --filter=\"@lumini-estetica/app\"",
+    "docs:dev": "pnpm --filter \"@lumini-estetica/docs\" start",
+    "docs:build": "turbo run build --filter=\"@lumini-estetica/docs\"",
+    "docs:typecheck": "turbo run typecheck --filter=\"@lumini-estetica/docs\"",
+    "docs:lint": "turbo run lint --filter=\"@lumini-estetica/docs\"",
+    "docs:down": "pnpm dlx kill-port 3002",
+    "format:check": "prettier --check --ignore-path .prettierignore .",
+    "format:write": "prettier --write --ignore-path .prettierignore .",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@types/node": "^24.12.3",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "eslint": "^10.3.0",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
-    "globals": "^17.6.0",
-    "typescript": "~6.0.2",
-    "typescript-eslint": "^8.59.2",
-    "vite": "^8.0.12"
+    "@docusaurus/eslint-plugin": "catalog:tooling-stack",
+    "@eslint-react/eslint-plugin": "catalog:web-stack",
+    "@eslint/js": "catalog:tooling-stack",
+    "@types/node": "catalog:",
+    "@typescript-eslint/eslint-plugin": "catalog:tooling-stack",
+    "eslint": "catalog:tooling-stack",
+    "eslint-config-prettier": "catalog:tooling-stack",
+    "eslint-import-resolver-typescript": "catalog:tooling-stack",
+    "eslint-plugin-import-x": "catalog:tooling-stack",
+    "eslint-plugin-mdx": "catalog:tooling-stack",
+    "eslint-plugin-prettier": "catalog:tooling-stack",
+    "eslint-plugin-react-refresh": "catalog:web-stack",
+    "eslint-plugin-react-hooks": "catalog:tooling-stack",
+    "globals": "catalog:tooling-stack",
+    "jiti": "catalog:tooling-stack",
+    "kill-port": "catalog:",
+    "prettier": "catalog:tooling-stack",
+    "rimraf": "catalog:",
+    "tsx": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:tooling-stack"
   }
 }

@@ -1,0 +1,62 @@
+{
+  "link.title.Documentation": {
+    "message": "Documentation",
+    "description": "The title of the footer links column with title=Documentation in the footer"
+  },
+  "link.title.Ecosystem": {
+    "message": "Ecosystem",
+    "description": "The title of the footer links column with title=Ecosystem in the footer"
+  },
+  "link.title.Product": {
+    "message": "Product",
+    "description": "The title of the footer links column with title=Product in the footer"
+  },
+  "link.item.label.Introduction": {
+    "message": "Introduction",
+    "description": "The label of footer link with label=Introduction linking to /docs/intro"
+  },
+  "link.item.label.Architecture": {
+    "message": "Architecture",
+    "description": "The label of footer link with label=Architecture linking to /docs/explanation/architecture-overview"
+  },
+  "link.item.label.Style Guide": {
+    "message": "Style Guide",
+    "description": "The label of footer link with label=Style Guide linking to /docs/reference/styleguide"
+  },
+  "link.item.label.Command Reference": {
+    "message": "Command Reference",
+    "description": "The label of footer link with label=Command Reference linking to /docs/reference/commands"
+  },
+  "link.item.label.Hub Workspace": {
+    "message": "Hub Workspace",
+    "description": "The label of footer link with label=Hub Workspace linking to /workspaces/hub"
+  },
+  "link.item.label.Renderer Workspace": {
+    "message": "Renderer Workspace",
+    "description": "The label of footer link with label=Renderer Workspace linking to /workspaces/renderer"
+  },
+  "link.item.label.Studio Workspace": {
+    "message": "Studio Workspace",
+    "description": "The label of footer link with label=Studio Workspace linking to /workspaces/studio"
+  },
+  "link.item.label.Tools Workspace": {
+    "message": "Tools Workspace",
+    "description": "The label of footer link with label=Tools Workspace linking to /workspaces/tools"
+  },
+  "link.item.label.Master Plan & Vision": {
+    "message": "Master Plan & Vision",
+    "description": "The label of footer link with label=Master Plan & Vision linking to /docs/intro"
+  },
+  "link.item.label.Roadmap": {
+    "message": "Roadmap",
+    "description": "The label of footer link with label=Roadmap linking to /community/roadmap"
+  },
+  "link.item.label.Changelog": {
+    "message": "Changelog",
+    "description": "The label of footer link with label=Changelog linking to /changelog"
+  },
+  "copyright": {
+    "message": "\n        <div class=\"footer__banner-container\">\n          <img src=\"/brand/logos/logo-horizontal-positive.svg\" alt=\"tupynambalucas.dev\" class=\"footer__banner\" />\n        </div>\n        <p>Copyright © 2026 tupynambalucas.dev. High-end, production-grade software engineering. Built with Docusaurus.</p>\n      ",
+    "description": "The footer copyright"
+  }
+}
