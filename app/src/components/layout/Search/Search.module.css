@@ -1,0 +1,29 @@
+.search_container{
+    width: 80%;
+    display: flex;
+    align-items: center;
+}
+
+.input_wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.search_icon {
+    position: absolute;
+    left: 0.8rem;
+    color: #888;
+}
+
+.search_input{
+    width: 100%;
+    padding: .7rem .7rem .7rem 2.6rem;
+    font-weight: 500;
+    outline: none;
+    border-radius: .3rem;
+    border: 1px solid #ccc;
+    -webkit-box-shadow: 3px 5px 5px 5px rgba(0,0,0,0.04); 
+    box-shadow: 4px 5px 5px 3px rgba(0,0,0,0.04);
+}
