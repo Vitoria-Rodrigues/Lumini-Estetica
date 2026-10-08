@@ -66,6 +66,29 @@ serve(async (req: Request): Promise<Response> => {
                 break
             }
 
+            case 'payment_intent.processing': {
+                const paymentIntent = event.data.object as Stripe.PaymentIntent
+                const idConsulta = paymentIntent.metadata?.id_consulta
+
+                console.log(`[Webhook] Pagamento em processamento para consulta ID: ${idConsulta}`)
+
+                if (idConsulta) {
+                    const { error } = await supabaseAdmin
+                        .from('consulta')
+                        .update({
+                            status_pagamento: 'Processando',
+                            edited_at: new Date().toISOString(),
+                        })
+                        .eq('id_consulta', idConsulta)
+                        .neq('status_pagamento', 'Pago')
+
+                    if (error) {
+                        console.error('[Webhook] Erro ao atualizar processamento no Supabase:', error)
+                    }
+                }
+                break
+            }
+
             case 'payment_intent.payment_failed': {
                 const paymentIntent = event.data.object as Stripe.PaymentIntent
                 const idConsulta = paymentIntent.metadata?.id_consulta
