@@ -33,6 +33,9 @@ import { useAuth } from "@/contexts/AuthContext/useAuth";
 //Constants
 import { QUERY_KEYS } from "@/constants/queryKeys";
 
+//Hooks
+import { usePaymentStatusSync, paymentPollingInterval } from "@/hooks/usePaymentStatusSync";
+
 //Utils
 import { formatHour, formatCPF } from "@/utils/formatters";
 
@@ -82,7 +85,11 @@ const Session = () => {
     queryFn: sessionService.listSessions,
     enabled: !!user,
     staleTime: 1000 * 30,
+    refetchOnWindowFocus: false,
+    refetchInterval: (query) => paymentPollingInterval(query.state.data),
   });
+
+  usePaymentStatusSync(!!user);
 
   const { data: customers = [], isLoading: isLoadingCustomers } = useQuery<CustomerDbRow[]>({
     queryKey: QUERY_KEYS.CUSTOMERS.ALL,
@@ -452,7 +459,6 @@ const Session = () => {
       onClose={() => {
         setIsPaymentOpen(false);
         setPaymentSessionId(null);
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SESSIONS.ALL });
       }}
     />
 
