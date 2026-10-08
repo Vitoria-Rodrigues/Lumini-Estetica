@@ -1,0 +1,48 @@
+name: 'Deploy to Vercel'
+description: 'Standardized Vercel deployment composite action'
+
+inputs:
+  vercel_token:
+    description: 'Vercel API Token'
+    required: true
+  is_production:
+    description: 'Whether it is a production deployment (true/false)'
+    required: true
+  cwd:
+    description: 'Working directory (e.g., app or docs)'
+    required: false
+    default: '.'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Vercel CLI
+      shell: bash
+      run: pnpm install --global vercel@latest
+
+    - name: Pull Vercel Environment Information
+      shell: bash
+      run: |
+        if [ "${{ inputs.is_production }}" == 'true' ]; then
+          vercel pull --yes --environment=production --token=${{ inputs.vercel_token }} --cwd ${{ inputs.cwd }}
+        else
+          vercel pull --yes --environment=preview --token=${{ inputs.vercel_token }} --cwd ${{ inputs.cwd }}
+        fi
+
+    - name: Build Project Artifacts
+      shell: bash
+      run: |
+        if [ "${{ inputs.is_production }}" == 'true' ]; then
+          vercel build --prod --token=${{ inputs.vercel_token }} --cwd ${{ inputs.cwd }}
+        else
+          vercel build --token=${{ inputs.vercel_token }} --cwd ${{ inputs.cwd }}
+        fi
+
+    - name: Deploy Project Artifacts to Vercel
+      shell: bash
+      run: |
+        if [ "${{ inputs.is_production }}" == 'true' ]; then
+          vercel deploy --prebuilt --prod --token=${{ inputs.vercel_token }} --cwd ${{ inputs.cwd }}
+        else
+          vercel deploy --prebuilt --token=${{ inputs.vercel_token }} --cwd ${{ inputs.cwd }}
+        fi

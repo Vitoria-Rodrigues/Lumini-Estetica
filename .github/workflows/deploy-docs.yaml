@@ -1,0 +1,31 @@
+name: Deploy Docs to Vercel
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/deploy-docs.yaml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_DOCS }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup PNPM Environment
+        uses: ./.github/actions/setup-pnpm-env
+        with:
+          node-version: 22
+          filter: '@lumini-estetica/docs...'
+
+      - name: Deploy to Vercel
+        uses: ./.github/actions/deploy-vercel
+        with:
+          vercel_token: ${{ secrets.VERCEL_TOKEN }}
+          is_production: ${{ github.ref == 'refs/heads/main' }}
+          cwd: 'docs'

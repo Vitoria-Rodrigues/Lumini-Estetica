@@ -1,0 +1,9 @@
+{
+  "label": "AgentGateway",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "description": "Reference documentation for the AgentGateway ingress proxy routing and policy validation."
+  },
+  "key": "cortex-reference-agentgateway"
+}

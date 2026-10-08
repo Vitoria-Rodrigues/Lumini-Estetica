@@ -1,0 +1,9 @@
+{
+  "label": "Memory MCP",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "Reference documentation for the cortex-memory-mcp adapter service — tool schemas, API client design, and integration with the Memory Subsystem."
+  },
+  "key": "cortex-reference-memory"
+}

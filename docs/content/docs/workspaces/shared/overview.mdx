@@ -1,0 +1,53 @@
+---
+title: Shared Workspace
+sidebar_label: Overview
+sidebar_position: 1
+slug: /shared
+diataxis_type: overview
+workspace: shared
+tags:
+  - shared
+---
+
+The Shared workspace acts as the global, foundational configuration and cross-context utility library of the %PROJECT_DOMAIN% monorepo. It houses centralized metadata, global formatting rules, and standard Git lifecycle configurations designed to be imported by any downstream workspace or package within the monorepo.
+
+By isolating configuration and lifecycle hooks inside a dedicated shared/ workspace, we prevent configuration drift, promote code styling consistency, and enable frictionless monorepo maintenance.
+
+## Directory Structure
+
+`shared/
+├── config/              # Centralized configuration assets
+│   ├── prettierrc.json  # Base Prettier settings
+│   ├── .prettierignore  # Base Prettier ignore rules
+│   ├── tsconfig.base.json # Shared base TypeScript compilation rules
+│   ├── project.config.json # Single source of truth for project domains
+│   └── package.json     # Configuration package (@monorepo/shared-config)
+└── git/                 # Centralized Git hooks and scripts
+    ├── husky/           # Global git hooks definitions
+    ├── scripts/         # Hook execution scripts in TypeScript
+    └── package.json     # Git hooks package (@monorepo/shared-git)`
+
+## Core Packages
+
+### @monorepo/shared-config (Centralized Project Settings)
+
+This package centralizes static configuration rules and project domains across the entire monorepo. Instead of duplicating config files inside every project workspace, each sub-workspace's sconfig.json and formatting tool configs inherit directly from this package.
+
+- **Unified Formatting**: Prettier configuration (prettierrc.json) and ignore rules (.prettierignore) reside here, ensuring perfect styling parity from a single location.
+- **Base TSConfig**: TypeScript base configurations ( sconfig.base.json) establish strict type-checking parameters and module resolutions for all sub-projects.
+- **Project Domains**: The project.config.json file serves as the Single Source of Truth (SSOT) for dynamic variables like %PROJECT_DOMAIN%, which are consumed during Markdown compilation and app runtime.
+
+### @monorepo/shared-git (Centralized Git Hooks)
+
+This package houses our version control guardrails.
+
+- **Husky Integration**: Contains the core mappings inside the husky/ directory for standard Git lifecycle events (e.g., pre-commit, prepare-commit-msg).
+- **Cross-Platform Scripts**: Defines all execution scripts in TypeScript inside scripts/, rather than Bash, ensuring consistent operations across Windows, macOS, and Linux developer environments.
+
+## Workspace Management
+
+The configurations inside the Shared workspace are consumed at the root and package levels. For example, the root package.json coordinates tool inheritance and utilizes @monorepo/shared-config to standardise Prettier across the entire ecosystem.
+
+:::info[Foundational Dependency Rule]
+Files inside shared/ must always remain stateless, generic, and isolated from specific business logic or backend implementations. This context acts purely as the infrastructural base for developer ergonomics and version control.
+:::

@@ -1,0 +1,26 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.defaultSidebar.category.Roadmap": {
+    "message": "Roadmap",
+    "description": "The label for category 'Roadmap' in sidebar 'defaultSidebar'"
+  },
+  "sidebar.defaultSidebar.category.Roadmap.link.generated-index.description": {
+    "message": "Exploration, architecture plans, and milestone progress across monorepo workspaces.",
+    "description": "The generated-index page description for category 'Roadmap' in sidebar 'defaultSidebar'"
+  },
+  "sidebar.community.category.Roadmap": {
+    "message": "Roadmap",
+    "description": "The label for category 'Roadmap' in sidebar 'community'"
+  },
+  "sidebar.community.category.Roadmap.link.generated-index.description": {
+    "message": "Exploration, architecture plans, and milestone progress across monorepo workspaces.",
+    "description": "The generated-index page description for category 'Roadmap' in sidebar 'community'"
+  },
+  "sidebar.community.link.Changelog": {
+    "message": "Changelog",
+    "description": "The label for link 'Changelog' in sidebar 'community', linking to '/changelog'"
+  }
+}

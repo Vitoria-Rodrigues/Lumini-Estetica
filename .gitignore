@@ -1,5 +1,44 @@
-# Logs
-logs
+# ==============================================================================
+# Lumini Estética - Monorepo .gitignore
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Dependencies
+# ------------------------------------------------------------------------------
+node_modules/
+
+# ------------------------------------------------------------------------------
+# 2. Build Outputs & Caches
+# ------------------------------------------------------------------------------
+dist/
+dist-ssr/
+build/
+.turbo/
+.docusaurus/
+.eslintcache
+*.tsbuildinfo
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.eggs/
+*.egg-info/
+
+# ------------------------------------------------------------------------------
+# 3. Environment & Secrets
+# ------------------------------------------------------------------------------
+.env
+.env.*
+*.local
+mcp_config.json
+mcp_config_*.json
+
+# ------------------------------------------------------------------------------
+# 4. Logs
+# ------------------------------------------------------------------------------
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,24 +46,30 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-.agents
-.env
-.gitflow
-
-# Supabase
-supabase/.temp/
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# ------------------------------------------------------------------------------
+# 5. Editors & OS
+# ------------------------------------------------------------------------------
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# ------------------------------------------------------------------------------
+# 6. Specific Workspaces & Tools
+# ------------------------------------------------------------------------------
+# Gitflow
+.gitflow
+
+# Supabase
+supabase/.temp/
+
+# Agents Workspace
+.agents/*
+AGENTS.md
+
+# Python Environments
+.venv/
+venv/

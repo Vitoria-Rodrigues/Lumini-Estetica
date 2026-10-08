@@ -1,0 +1,28 @@
+{
+  "profiles": [
+    {
+      "name": "Tupynamba - Admin CLI",
+      "commandline": "pwsh.exe -NoExit -ExecutionPolicy Bypass -File .vscode/scripts/launch-mage.ps1",
+      "elevate": true,
+      "startingDirectory": "%__CD__%",
+      "colorScheme": "Campbell Powershell",
+      "cursorShape": "vintage",
+      "cursorColor": "#CC0000",
+      "background": "#0F0F0F",
+      "backgroundImage": "C:\\Users\\tupyn\\Pictures\\coolest\\goofywizardgang.jpg",
+      "backgroundImageOpacity": 0.24,
+      "backgroundImageStretchMode": "fill",
+      "icon": "C:\\Users\\tupyn\\Documents\\windows-icons\\g_brxplayer.ico",
+      "tabTitle": "Admin"
+    },
+    {
+      "name": "Tupynamba - Antigravity CLI",
+      "commandline": "pwsh.exe -NoExit -ExecutionPolicy Bypass -File .vscode/scripts/launch-agy.ps1",
+      "elevate": false,
+      "startingDirectory": "%__CD__%",
+      "colorScheme": "One Half Light",
+      "icon": "C:\\Users\\tupyn\\Documents\\Terminal\\Icons\\antigravity_icon.jpg",
+      "tabTitle": "Antigravity CLI"
+    }
+  ]
+}

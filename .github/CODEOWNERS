@@ -1,0 +1,31 @@
+# ==============================================================================
+#  Lumini Estética - Repository CODEOWNERS
+# ==============================================================================
+# This file defines team/user ownership for files and directories in the monorepo.
+# Rules are processed in order, with the last matching rule taking precedence.
+#
+# Technical Standard: en-US, No Emojis, Zero Placeholders.
+# Author: Vitória Rodrigues Ferreira
+# ==============================================================================
+
+# Global fallback (repository-wide ownership)
+*                                                @Vitoria-Rodrigues
+
+# Infrastructure, CI/CD, and Repository Configurations
+/.github/                                        @Vitoria-Rodrigues
+/.vscode/                                        @Vitoria-Rodrigues
+/package.json                                    @Vitoria-Rodrigues
+/pnpm-lock.yaml                                  @Vitoria-Rodrigues
+/pnpm-workspace.yaml                             @Vitoria-Rodrigues
+
+# Bounded Workspace: App (React.js and TypeScript frontend)
+/app/                                            @Vitoria-Rodrigues
+
+# Bounded Workspace: Centralized Documentation (Docusaurus Knowledge Base)
+/docs/                                           @Vitoria-Rodrigues
+
+# Bounded Workspace: Supabase (PostgreSQL database schemas and Deno Edge Functions)
+/supabase/                                       @Vitoria-Rodrigues
+
+# AI & DevOps Automation (Skills, plans, contexts)
+/.agents/                                        @Vitoria-Rodrigues

@@ -1,0 +1,8 @@
+{
+  "label": "Roadmap",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "description": "Exploration, architecture plans, and milestone progress across monorepo workspaces."
+  }
+}

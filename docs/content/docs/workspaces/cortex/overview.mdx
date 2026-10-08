@@ -1,0 +1,51 @@
+---
+title: Cortex Workspace Overview
+sidebar_label: Overview
+sidebar_position: 1
+slug: /cortex
+diataxis_type: overview
+workspace: cortex
+tags:
+  - cortex
+---
+
+The Cortex workspace represents the unified artificial intelligence Bounded Context of the project. It consolidates the API Ingress Gateway, persistent memory database layers, Model Context Protocol (MCP) data plane integrations, and isolated terminal agent execution environments.
+
+---
+
+## Architecture Overview
+
+Cortex is organized using a layered domain architecture, dividing services into four distinct operational planes:
+
+1. **Ingress Gateway Plane (`/gateway`)**: Exposes the visual playground and API endpoints for Downstream clients. Network traffic is routed via Traefik to the AgentGateway, which then federates requests to the MCP pods.
+2. **Memory Layer (`/memory`)**: Self-hosted MongoDB Vector RAG service providing short-term, long-term, and relational reasoning storage layers.
+3. **Data Plane (`/mcp`)**: Houses individual Model Context Protocol adapters (GitHub, Firecrawl, Grafana, Playwright, Memory, Kubectl) that stream tools to active LLM contexts.
+4. **Control Plane (`/agents`)**: Containerized agent shell terminals running the Google Antigravity CLI and GitHub Copilot CLI.
+
+---
+
+## Directory Layout
+
+```text
+cortex/
+├── gateway/             # API Ingress Gateway configuration and playground
+├── memory/              # Self-hosted MongoDB Vector RAG memory (core, api, web)
+├── mcp/                 # MCP server adapters (github, firecrawl, grafana, etc.)
+├── agents/              # AI agent CLI terminals (antigravity, copilot)
+├── infrastructure/
+│   └── docker/          # Docker Compose configurations and environment files
+├── package.json         # Workspace package manifest and scripts
+└── AGENTS.md            # Bounded context developer rules
+```
+
+---
+
+## Core Principles & Security
+
+:::info[Layered Domain Isolation]
+Cortex isolates operational planes at the folder level, keeping lifecycle, network routing, and permission constraints distinct.
+:::
+
+- **Network Sandboxing**: Agent sessions run inside an isolated Docker subnet. They only access local tools and files through the unified gateway proxy.
+- **Self-Hosted Memory**: Memory is kept private and local using a self-hosted MongoDB instance with Vector Search indexes, bypassing external data sharing.
+- **Configuration Parity**: Settings, settings profiles, and secrets are mounted into containers at runtime via environment configurations.

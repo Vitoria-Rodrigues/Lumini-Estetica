@@ -1,0 +1,20 @@
+announcement:
+  description: 'Announcements and major platform updates'
+architecture:
+  description: 'Deep dives into system design and architecture'
+release:
+  description: 'Release notes, changelogs, and version announcements'
+portal:
+  description: 'Updates and features in the documentation portal'
+monorepo:
+  description: 'Monorepo tooling, pnpm workspaces, and build orchestration'
+ai:
+  description: 'AI agent workflows, Cortex Gateway, and automation'
+core:
+  description: 'Core libraries, shared packages, and foundational utilities'
+instance:
+  description: 'Multi-instance architecture and services'
+l10n:
+  description: 'Localization infrastructure and translations'
+i18n:
+  description: 'Internationalization tooling and configuration'

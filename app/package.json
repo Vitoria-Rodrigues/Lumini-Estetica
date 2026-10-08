@@ -1,0 +1,32 @@
+{
+  "name": "@lumini-estetica/app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "typecheck": "tsc -b",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@stripe/react-stripe-js": "catalog:web-stack",
+    "@stripe/stripe-js": "catalog:web-stack",
+    "@supabase/supabase-js": "catalog:web-stack",
+    "@tanstack/react-query": "catalog:web-stack",
+    "react": "catalog:web-stack",
+    "react-dom": "catalog:web-stack",
+    "react-icons": "catalog:web-stack",
+    "react-router-dom": "catalog:web-stack",
+    "zod": "catalog:shared-stack"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/react": "catalog:web-stack",
+    "@types/react-dom": "catalog:web-stack",
+    "@vitejs/plugin-react-swc": "catalog:web-stack",
+    "typescript": "catalog:",
+    "vite": "catalog:web-stack"
+  }
+}

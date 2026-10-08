@@ -1,0 +1,22 @@
+{
+  "title": {
+    "message": "Tupynambalucas Docs",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "Tupynambalucas Logo",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.Documentation": {
+    "message": "Documentation",
+    "description": "Navbar item with label Documentation"
+  },
+  "item.label.Community": {
+    "message": "Community",
+    "description": "Navbar item with label Community"
+  },
+  "item.label.Blog": {
+    "message": "Blog",
+    "description": "Navbar item with label Blog"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "label": "Guardrails ExtMCP",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "description": "Reference documentation for the local cortex-mcp-guardrails gRPC service."
+  }
+}

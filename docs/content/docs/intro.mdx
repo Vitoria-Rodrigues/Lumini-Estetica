@@ -1,0 +1,262 @@
+---
+title: Introduction
+description: Project introduction and overview.
+sidebar_position: 1
+---
+
+import DocCardList from '@theme/DocCardList';
+
+# %PROJECT_DOMAIN% Monorepo
+
+This repository is a monorepo containing a developer profile stats generator, personal website/hub, developer tools, design tokens, and documentation.
+
+---
+
+## 1. Product Overview & Value Proposition
+
+The monorepo coordinates the developer's personal website (`hub`), automated stats visualizations (`renderer`), design systems (`studio`), AI processing hub (`cortex`), and automation tools (`tools`).
+
+The primary customer-facing application is the **Developer Hub** (`@repo/hub/*`):
+
+| For Visitors                                                        | For the Developer (Admin)                                            |
+| :------------------------------------------------------------------ | :------------------------------------------------------------------- |
+| **Portfolio**: View projects, code architectures, and highlights.   | **Blog Publishing**: Publish technical articles and case studies.    |
+| **Contact Form**: Securely submit messages or consulting queries.   | **Lead Collection**: Manage submissions and dashboard data.          |
+| **Services Catalog**: Request custom software development services. | **Profile Automation**: Automatically update GitHub metrics via Zig. |
+
+---
+
+## 2. Operational Flow
+
+The portfolio website and stats generator operate on a streamlined workflow:
+
+1. **Portfolio Presentation**: Visitors explore the frontend `@repo/hub/web`, consuming blog posts and project highlights served by `@repo/hub/api`.
+2. **Contact Submission**: Form inputs are validated via Turnstile anti-spam keys, serialized using Zod schemas from `@repo/hub/core`, and persisted to a MongoDB instance.
+3. **Renderer Statistics Generation**: The `@/renderer` workspace compiles GitHub metrics using a native Zig CLI and dynamically overwrites the root `README.md` file.
+
+---
+
+## 3. Hosting & Deployment Strategy
+
+The monorepo uses Cloudflare and standard VPS environments for zero-maintenance and high-performance operation.
+
+### Infrastructure & Hosting
+
+- **Cloudflare Pages**: The Docusaurus documentation hub (`docs/`) and the developer React SPA frontend (`hub/services/web`) are deployed to Cloudflare Pages for optimized CDN delivery.
+- **Hetzner Cloud VPS / Linux VPS**: The backend Fastify REST API (`hub/services/api`) and MongoDB/Redis compose stacks run on a lightweight VPS instance.
+- **DNS & SSL**: DNS routing and proxy protection are handled globally through Cloudflare.
+
+---
+
+## 4. Architecture & Monorepo Workspaces
+
+We use **PNPM Workspaces** with a **Context-Driven Root** layout to isolate our domains.
+
+For a comprehensive breakdown of our context philosophy, directory structure, and application roles, please read our dedicated architectural guides:
+
+<DocCardList
+  items={[
+    {
+      type: 'link',
+      href: '/docs/explanation/bounded-contexts',
+      label: 'Bounded Context Architecture',
+      description:
+        'Detailed explanation of Bounded Contexts, Monorepo Structure, and Workspace Roles.',
+    },
+    {
+      type: 'link',
+      href: '/docs/explanation/architecture-overview',
+      label: 'Architecture Overview',
+      description: 'Comprehensive technical stack and monorepo strategy overview.',
+    },
+  ]}
+/>
+
+---
+
+## 5. Standalone Workspaces
+
+Our priority is the deployment and maintenance of:
+
+- **`@repo/hub/*`**: Personal React/Fastify hub.
+- **`@/renderer`**: Zig-based GitHub profile stats compiler.
+
+---
+
+## 6. Quick Start
+
+Ensure you have **Node.js 22+**, **PNPM 11+**, **Zig**, **Podman** (with Compose extension), **Minikube**, and **Skaffold** installed.
+
+1. **Install Dependencies:**
+
+   ```bash
+   pnpm install
+   ```
+
+2. **Set Up Environment Files:**
+   Each workspace and service has its own environment file. Copy the example templates and add your local parameters:
+
+   ```bash
+   # Cortex configuration
+   cp cortex/infrastructure/.env.example cortex/infrastructure/.env
+
+   # Hub configuration
+   cp hub/infrastructure/docker/.env.example hub/infrastructure/docker/.env.dev
+   ```
+
+3. **Start Local Infrastructure & Applications:**
+   We provide unified orchestration scripts via Turborepo and Skaffold. You can run in Podman Compose mode (`pnpm cortex:up` and `pnpm hub:dev`) or Kubernetes mode (`pnpm minikube:up` and `pnpm k8s:dev`).
+   See [MONOREPO.readme.md](https://github.com/workspace/workspace/blob/develop/MONOREPO.readme.md) or the [Command Reference](./reference/commands.mdx) for details.
+
+---
+
+## 7. Diátaxis Framework
+
+A systematic approach to technical documentation authoring.
+
+Diátaxis is a way of thinking about and doing documentation.
+
+It prescribes approaches to content, architecture and form that emerge from a systematic approach to understanding the needs of documentation users.
+
+Diátaxis identifies four distinct needs, and four corresponding forms of documentation - _tutorials_, _how-to guides_, _technical reference_ and _explanation_. It places them in a systematic relationship, and proposes that documentation should itself be organised around the structures of those needs.
+
+Diátaxis solves problems related to documentation _content_ (what to write), _style_ (how to write it) and _architecture_ (how to organise it).
+
+As well as serving the users of documentation, Diátaxis has value for documentation creators and maintainers. It is light-weight, easy to grasp and straightforward to apply. It doesn’t impose implementation constraints. It brings an active principle of quality to documentation that helps maintainers think effectively about their own work.
+
+### Getting Started
+
+The best way to get started with Diátaxis is by applying it after reading a brief primer.
+
+<DocCardList
+  items={[
+    {
+      type: 'link',
+      href: '/workspaces/knowledge-base/tutorials/diataxis-start',
+      label: 'Start Here',
+      description: 'A five-minute primer on the Diátaxis framework.',
+    },
+  ]}
+/>
+
+### Practical Application
+
+These pages will help make immediate, concrete sense of the approach.
+
+<DocCardList
+  items={[
+    {
+      type: 'link',
+      href: '/workspaces/knowledge-base/guides/diataxis/applying-diataxis',
+      label: 'Applying Diátaxis',
+      description: 'A practical overview of how to apply the framework.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/knowledge-base/reference/diataxis/tutorials',
+      label: 'Tutorials',
+      description: 'Reference for writing learning-oriented tutorials.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/knowledge-base/reference/diataxis/how-to-guides',
+      label: 'How-to Guides',
+      description: 'Reference for writing goal-oriented how-to guides.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/knowledge-base/reference/diataxis/reference-docs',
+      label: 'Reference',
+      description: 'Reference for writing information-oriented reference docs.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/knowledge-base/reference/diataxis/explanation-docs',
+      label: 'Explanation',
+      description: 'Reference for writing understanding-oriented explanation.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/knowledge-base/reference/diataxis/compass',
+      label: 'The Compass',
+      description: 'A diagnostic tool for documentation quality.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/knowledge-base/guides/diataxis/workflow',
+      label: 'Workflow',
+      description: 'How to use Diátaxis as a guide to documentation work.',
+    },
+  ]}
+/>
+
+### Understanding Diátaxis
+
+This section explores the theory and principles of Diátaxis more deeply, and sets forth the understanding of needs that underpin it.
+
+<DocCardList
+  items={[
+    {
+      type: 'link',
+      href: '/workspaces/knowledge-base/explanation/diataxis/theory',
+      label: 'Understanding Diátaxis',
+      description: 'Towards a theory of quality in documentation.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/knowledge-base/explanation/diataxis/foundations',
+      label: 'Foundations',
+      description: 'The two dimensions that underpin the Diátaxis map.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/knowledge-base/reference/diataxis/map',
+      label: 'The Map',
+      description: 'The two-dimensional structure of documentation.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/knowledge-base/explanation/diataxis/quality',
+      label: 'Quality',
+      description: 'Towards a theory of quality in documentation.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/knowledge-base/explanation/diataxis/tutorials-vs-how-to',
+      label: 'Tutorials and How-to Guides',
+      description: 'The difference between a tutorial and how-to guide.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/knowledge-base/explanation/diataxis/reference-vs-explanation',
+      label: 'Reference and Explanation',
+      description: 'The difference between reference and explanation.',
+    },
+    {
+      type: 'link',
+      href: '/workspaces/knowledge-base/explanation/diataxis/complex-hierarchies',
+      label: 'Complex Hierarchies',
+      description: 'How Diátaxis works in complex documentation systems.',
+    },
+  ]}
+/>
+
+Diátaxis is proven in practice. Its principles have been adopted successfully in hundreds of documentation projects.
+
+:::info[Testimonial]
+Diátaxis has allowed us to build a high-quality set of internal documentation that our users love, and our contributors love adding to.
+
+—Greg Frileux, [Vonage](https://vonage.com/)
+:::
+
+:::info[Testimonial]
+At Gatsby we recently reorganized our open-source documentation, and the Diátaxis framework was our go-to resource throughout the project. The four quadrants helped us prioritize the user’s goal for each type of documentation. By restructuring our documentation around the Diátaxis framework, we made it easier for users to discover the resources that they need when they need them.
+
+— [Megan Sullivan](https://hachyderm.io/@meganesulli)
+:::
+
+:::info[Testimonial]
+While redesigning the [Cloudflare developer docs](https://developers.cloudflare.com/), Diátaxis became our north star for information architecture. When we weren’t sure where a new piece of content should fit in, we’d consult the framework. Our documentation is now clearer than it’s ever been, both for readers and contributors.
+
+— [Adam Schwartz](https://github.com/adamschwartz)
+:::
